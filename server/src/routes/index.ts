@@ -1,0 +1,46 @@
+import { Router } from 'express';
+import authRoutes from './authRoutes';
+import schoolRoutes from './schoolRoutes';
+import academicRoutes from './academicRoutes';
+import studentRoutes from './studentRoutes';
+import attendanceRoutes from './attendanceRoutes';
+import feeRoutes from './feeRoutes';
+import examRoutes from './examRoutes';
+import parentRoutes from './parentRoutes';
+import homeworkRoutes from './homeworkRoutes';
+import noticeRoutes from './noticeRoutes';
+import communicationRoutes from './communicationRoutes';
+import superAdminRoutes from './superAdminRoutes';
+import teacherRoutes from './teacherRoutes';
+import timetableRoutes from './timetableRoutes';
+import curriculumRoutes from './curriculumRoutes';
+
+import analyticsRoutes from './analyticsRoutes';
+import mfaRoutes from './mfaRoutes';
+import marketingRoutes from './marketingRoutes';
+import applicantRoutes from './applicantRoutes';
+
+const router = Router();
+
+router.use('/auth', authRoutes);
+router.use('/schools', schoolRoutes);
+router.use('/academics', academicRoutes);
+router.use('/students', studentRoutes);
+router.use('/attendance', attendanceRoutes);
+router.use('/fees', feeRoutes);
+router.use('/examinations', examRoutes);
+router.use('/parent', parentRoutes);
+router.use('/homework', homeworkRoutes);
+router.use('/notices', noticeRoutes);
+router.use('/communication', communicationRoutes);
+router.use('/superadmin', superAdminRoutes);
+router.use('/teacher', teacherRoutes);
+router.use('/timetable', timetableRoutes);
+router.use('/curriculum', curriculumRoutes);
+
+router.use('/analytics', analyticsRoutes);
+router.use('/mfa', mfaRoutes);
+router.use('/marketing', marketingRoutes);
+router.use('/applicants', applicantRoutes);
+
+export default router;

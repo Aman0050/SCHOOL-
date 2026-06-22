@@ -1,0 +1,14 @@
+import { Request, Response, NextFunction } from 'express';
+import { Schema } from 'zod';
+import { ValidationError } from '../errors/AppError';
+
+export const validateBody = (schema: Schema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return next(new ValidationError('Validation failed', result.error.format()));
+    }
+    req.body = result.data;
+    next();
+  };
+};

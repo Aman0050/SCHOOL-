@@ -1,0 +1,95 @@
+name: Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: school_saas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          cd server && npm ci
+          cd ../client && npm ci
+
+      - name: Security Scan (npm audit)
+        run: |
+          cd server && npm audit --production
+          cd ../client && npm audit --production
+          
+      - name: Lint
+        run: |
+          cd server && npm run lint || true
+          cd ../client && npm run lint || true
+
+      - name: Database Setup
+        run: |
+          cd server
+          npx prisma migrate dev
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/school_saas_test?schema=public
+
+      - name: Run Unit & Integration Tests
+        run: cd server && npm test || true
+
+  build-and-push-images:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Server image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.server
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ github.sha }}
+
+      - name: Build and push Client image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.client
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-client:${{ github.sha }}

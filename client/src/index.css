@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 33% 98%;
+    --foreground: 224 71.4% 4.1%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    --primary: 262.1 83.3% 57.8%; /* Indigo/Purple hybrid */
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 262.1 83.3% 95%;
+    --accent-foreground: 262.1 83.3% 30%;
+
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262.1 83.3% 57.8%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+
+  /* Dark Mode Variables - Notion/Stripe Dark palette */
+  .dark, [data-theme="dark"] {
+    --background: 224 25% 10%;
+    --foreground: 210 20% 98%;
+
+    --card: 224 25% 12%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 224 25% 12%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 262.1 83.3% 65%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 224 20% 16%;
+    --secondary-foreground: 210 20% 98%;
+
+    --muted: 224 20% 16%;
+    --muted-foreground: 220 10% 65%;
+
+    --accent: 262.1 83.3% 20%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 350 89% 50%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 224 20% 18%;
+    --input: 224 20% 18%;
+    --ring: 262.1 83.3% 65%;
+  }
+
+  /* Greenwood school green custom theme context overrides */
+  .theme-greenwood {
+    --primary: 142.1 76.2% 36.3%; /* Forest Green */
+    --primary-foreground: 355.7 100% 97.3%;
+    --accent: 142.1 76.2% 95%;
+    --accent-foreground: 142.1 76.2% 25%;
+    --ring: 142.1 76.2% 36.3%;
+  }
+  .dark .theme-greenwood {
+    --primary: 142.1 70% 45%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --accent: 142.1 70% 15%;
+    --accent-foreground: 142.1 70% 85%;
+  }
+
+  /* Oakridge school amber custom theme context overrides */
+  .theme-oakridge {
+    --primary: 38.2 92% 45%; /* Deep Amber */
+    --primary-foreground: 0 0% 100%;
+    --accent: 38.2 92% 95%;
+    --accent-foreground: 38.2 92% 20%;
+    --ring: 38.2 92% 45%;
+  }
+  .dark .theme-oakridge {
+    --primary: 38.2 90% 55%;
+    --primary-foreground: 0 0% 0%;
+    --accent: 38.2 90% 15%;
+    --accent-foreground: 38.2 90% 85%;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Outfit', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* Glassmorphism utility classes */
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Apple-level micro-interactions */
+.smooth-hover {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+}
+
+.smooth-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.08);
+}
+
+.dark .smooth-hover:hover {
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Notion-style minimal focus ring */
+.focus-ring {
+  outline: none;
+  transition: box-shadow 0.15s ease-in-out;
+}
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+}
+
+/* Stripe-style shimmer animation for loading skeletons */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.15) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 1.6s infinite;
+  content: '';
+}
+
+.dark .shimmer::after {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.03) 20%,
+    rgba(255, 255, 255, 0.06) 60%,
+    rgba(255, 255, 255, 0)
+  );
+}
