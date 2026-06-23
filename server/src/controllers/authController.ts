@@ -631,8 +631,7 @@ export const ssoGoogleLogin = async (req: Request, res: Response, next: NextFunc
       entity: 'User',
       entityId: user.id,
       ipAddress: req.ip,
-      userAgent: userAgentStr,
-      metadata: { details: 'Google SSO Login' }
+      userAgent: userAgentStr
     });
 
     res.status(200).json({
@@ -715,8 +714,7 @@ export const ssoMicrosoftLogin = async (req: Request, res: Response, next: NextF
       entity: 'User',
       entityId: user.id,
       ipAddress: req.ip,
-      userAgent: userAgentStr,
-      details: 'Microsoft SSO Login'
+      userAgent: userAgentStr
     });
 
     res.status(200).json({
