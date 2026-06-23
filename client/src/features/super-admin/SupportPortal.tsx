@@ -140,7 +140,7 @@ export const SupportPortal: React.FC = () => {
                                <span className="text-[10px] text-slate-600">{new Date(activeTicket?.createdAt!).toLocaleString()}</span>
                              </div>
                              <div className="bg-slate-800/50 rounded-2xl rounded-tl-none p-4 text-sm text-slate-300 border border-slate-700/50">
-                               <p className="whitespace-pre-wrap">{activeTicket?.description}</p>
+                               <p className="whitespace-pre-wrap">{(activeTicket as any)?.description}</p>
                              </div>
                            </div>
                         </div>

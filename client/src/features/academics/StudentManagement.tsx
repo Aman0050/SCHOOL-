@@ -175,11 +175,11 @@ export const StudentManagement: React.FC = () => {
           </div>
           <ResponsiveGridLayout
             className="layout"
-            layouts={{ lg: layout }}
+            layouts={{ lg: layout as any }}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
             rowHeight={100}
-            onLayoutChange={(newLayout) => saveLayout(newLayout)}
+            onLayoutChange={(newLayout: any) => saveLayout(newLayout)}
             draggableHandle=".drag-handle"
             isDraggable={true}
             isResizable={true}

@@ -186,7 +186,7 @@ export const ExamSetup: React.FC = () => {
 const DynamicForm = ({ type, onClose, onSubmit, sessions, schools, isSubmitting }: any) => {
   const schema = type === 'sessions' ? sessionSchema : type === 'terms' ? termSchema : subjectSchema;
   
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
       schoolId: schools?.[0]?.id || '',

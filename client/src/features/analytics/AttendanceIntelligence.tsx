@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area
+  LineChart, Line, AreaChart, Area, Cell
 } from 'recharts';
 import { Users, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 

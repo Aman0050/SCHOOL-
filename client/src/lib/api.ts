@@ -94,7 +94,7 @@ api.interceptors.response.use(
           .catch((err) => Promise.reject(err));
       }
 
-      originalRequest._retry = true;
+      (originalRequest as any)._retry = true;
       isRefreshing = true;
 
       try {

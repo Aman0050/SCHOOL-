@@ -62,7 +62,7 @@ export const MarksEntryUI: React.FC = () => {
   const handleSaveDraft = () => {
     if (!marksEntries) return;
     const entriesToSave = marksEntries.map(m => {
-      const updated = marksData[m.studentId] || {};
+      const updated = (marksData[m.studentId] || {}) as { theory?: number; practical?: number; isAbsent?: boolean };
       return {
         studentId: m.studentId,
         subjectId: m.subjectId,
@@ -160,7 +160,7 @@ export const MarksEntryUI: React.FC = () => {
                   <tr><td colSpan={6} className="p-8 text-center text-slate-500">No students found for this subject</td></tr>
                 ) : (
                   marksEntries?.map(m => {
-                    const data = marksData[m.studentId] || {};
+                    const data = (marksData[m.studentId] || {}) as { theory?: number; practical?: number; isAbsent?: boolean };
                     const isReadOnly = m.entryStatus === 'SUBMITTED' || m.entryStatus === 'LOCKED';
                     return (
                       <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
