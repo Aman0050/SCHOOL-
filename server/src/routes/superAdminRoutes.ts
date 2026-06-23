@@ -18,11 +18,11 @@ const router = Router();
 router.use(authenticate);
 router.use(authorizeRoles(SystemRole.SUPER_ADMIN));
 
-router.get('/dashboard', getDashboardStats as (req: Request, res: Response, next: NextFunction) => void);
-router.get('/tenants', getTenants as (req: Request, res: Response, next: NextFunction) => void);
-router.post('/tenants', createTenant as (req: Request, res: Response, next: NextFunction) => void);
-router.patch('/tenants/:id/status', updateTenantStatus as (req: Request, res: Response, next: NextFunction) => void);
-router.delete('/tenants/:id', deleteTenant as (req: Request, res: Response, next: NextFunction) => void);
+router.get('/dashboard', getDashboardStats as any);
+router.get('/tenants', getTenants as any);
+router.post('/tenants', createTenant as any);
+router.patch('/tenants/:id/status', updateTenantStatus as any);
+router.delete('/tenants/:id', deleteTenant as any);
 
 // Subscription Engine
 router.get('/plans', (async (req: Request, res: Response, next: NextFunction) => {
@@ -70,15 +70,15 @@ router.post('/subscriptions/:tenantId/cancel', (async (req: Request, res: Respon
   } catch (error) { next(error); }
 }) as any);
 
-router.get('/invoices', getGlobalInvoices as (req: Request, res: Response, next: NextFunction) => void);
-router.get('/tickets', getGlobalTickets as (req: Request, res: Response, next: NextFunction) => void);
-router.get('/tickets/:id', getTicketDetails as (req: Request, res: Response, next: NextFunction) => void);
-router.post('/tickets/:id/reply', replyToTicket as (req: Request, res: Response, next: NextFunction) => void);
+router.get('/invoices', getGlobalInvoices as any);
+router.get('/tickets', getGlobalTickets as any);
+router.get('/tickets/:id', getTicketDetails as any);
+router.post('/tickets/:id/reply', replyToTicket as any);
 
 router.get('/audit-logs', (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { getGlobalAuditLogs } = await import('../controllers/superAdminController');
-    await getGlobalAuditLogs(req, res, next);
+    await getGlobalAuditLogs(req, res, next as any);
   } catch(error) { next(error); }
 }) as any);
 

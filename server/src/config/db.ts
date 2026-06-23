@@ -17,7 +17,7 @@ let prismaWithReplicas: any = basePrisma;
 if (process.env.DATABASE_URL_REPLICA) {
   prismaWithReplicas = basePrisma.$extends(
     readReplicas({
-      url: process.env.DATABASE_URL_REPLICA,
+      replicas: [new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL_REPLICA } } })],
     })
   );
 }

@@ -68,7 +68,13 @@ export const createLessonPlan = async (req: Request, res: Response) => {
     data: {
       tenantId,
       teacherId,
-      ...validatedData
+      classId: validatedData.classId,
+      subjectId: validatedData.subjectId,
+      title: validatedData.title,
+      description: validatedData.description,
+      date: new Date(validatedData.date),
+      status: validatedData.status,
+      resources: validatedData.resources
     }
   });
 

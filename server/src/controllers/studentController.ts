@@ -248,14 +248,14 @@ export const registerStudent = async (req: Request, res: Response, next: NextFun
     });
 
     // Emit live activity feed for SIS Dashboard
-    req.io?.to(`tenant:${req.user!.tenantId}`).emit('activity_feed', {
+    (req as any).io?.to(`tenant:${req.user!.tenantId}`).emit('activity_feed', {
       type: 'STUDENT',
       text: `New admission registered: ${data.firstName} ${data.lastName}`,
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     });
     // Invalidate Cache for Students Directory
     await cache.invalidatePattern(`tenant:${req.user!.tenantId}:students:*`);
-    req.io?.to(`tenant:${req.user!.tenantId}`).emit('invalidate_cache', { queryKey: ['students-directory'] });
+    (req as any).io?.to(`tenant:${req.user!.tenantId}`).emit('invalidate_cache', { queryKey: ['students-directory'] });
 
   } catch (error) {
     next(error);

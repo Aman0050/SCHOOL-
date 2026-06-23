@@ -606,13 +606,13 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
     await recalcAssignment(collection.assignmentId);
 
     // Emit live activity feed for Finance Dashboard
-    const student = await prisma.student.findUnique({
+    const student = await prisma.user.findUnique({
       where: { id: collection.studentId },
       include: { profile: true }
     });
     const studentName = student?.profile?.firstName ? `${student.profile.firstName} ${student.profile.lastName}` : 'Student';
     
-    req.io?.to(tenantId).emit('activity_feed', {
+    (req as any).io?.to(tenantId).emit('activity_feed', {
       type: 'FEE',
       text: `Fee Collection: ₹${amount} received from ${studentName}`,
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
@@ -1164,9 +1164,9 @@ export const getCollectionReport = async (req: Request, res: Response, next: Nex
       orderBy: { paidAt: 'desc' },
     });
 
-    const totalCollected = payments.reduce((s, p) => s + Number(p.amount), 0);
+    const totalCollected = payments.reduce((s: number, p: any) => s + Number(p.amount), 0);
     const byMethod = payments.reduce(
-      (acc: Record<string, number>, p) => {
+      (acc: Record<string, number>, p: any) => {
         acc[p.method] = (acc[p.method] || 0) + Number(p.amount);
         return acc;
       },
@@ -1258,14 +1258,14 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     const monthlyCollected = payments
-      .filter(p => p.createdAt.getMonth() === currentMonth && p.createdAt.getFullYear() === currentYear)
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+      .filter((p: any) => p.createdAt.getMonth() === currentMonth && p.createdAt.getFullYear() === currentYear)
+      .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
       
     // Today's collection
     const todayStr = now.toDateString();
     const todayCollected = payments
-      .filter(p => p.createdAt.toDateString() === todayStr)
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+      .filter((p: any) => p.createdAt.toDateString() === todayStr)
+      .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
 
     // Collection rate
     const collectionRate = assigned > 0 ? ((totalCollected / assigned) * 100).toFixed(1) : 0;

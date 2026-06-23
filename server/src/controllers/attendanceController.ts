@@ -124,7 +124,7 @@ export const recordBulkAttendance = async (req: Request, res: Response, next: Ne
     });
     const userName = user?.profile?.firstName ? `${user.profile.firstName} ${user.profile.lastName}` : 'Teacher';
     
-    req.io?.to(req.user!.tenantId).emit('activity_feed', {
+    (req as any).io?.to(req.user!.tenantId).emit('activity_feed', {
       type: 'ATTENDANCE',
       text: `Attendance submitted by ${userName} for ${savedRecords.length} students`,
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})

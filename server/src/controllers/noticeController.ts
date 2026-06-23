@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export const getNotices = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const role = req.user?.role;
+    const { tenantId, role } = (req as any).user;
     let audienceFilter: any = {};
 
     // Filter by audience based on the requester's role
@@ -19,7 +19,7 @@ export const getNotices = async (req: Request, res: Response, next: NextFunction
 
     const notices = await prisma.notice.findMany({
       where: {
-        tenantId: req.tenantId!,
+        tenantId: (req as any).tenantId!,
         ...audienceFilter
       },
       include: { attachments: true },
@@ -39,7 +39,7 @@ export const createNotice = async (req: Request, res: Response, next: NextFuncti
     const notice = await prisma.$transaction(async (tx) => {
       const n = await tx.notice.create({
         data: {
-          tenantId: req.tenantId!,
+          tenantId: (req as any).tenantId!,
           title,
           content,
           type: type || 'NOTICE',
@@ -52,7 +52,7 @@ export const createNotice = async (req: Request, res: Response, next: NextFuncti
       if (attachments && Array.isArray(attachments)) {
         await tx.noticeAttachment.createMany({
           data: attachments.map(url => ({
-            tenantId: req.tenantId!,
+            tenantId: (req as any).tenantId!,
             noticeId: n.id,
             fileUrl: url,
             fileType: 'FILE'

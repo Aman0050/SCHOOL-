@@ -10,7 +10,7 @@ export const getHomeworks = async (req: Request, res: Response, next: NextFuncti
     const { classId, subjectId, studentId } = req.query;
     
     // Base filter
-    let whereClause: any = { tenantId: req.tenantId! };
+    let whereClause: any = { tenantId: (req as any).tenantId! };
     if (classId) whereClause.classId = String(classId);
     if (subjectId) whereClause.subjectId = String(subjectId);
 
@@ -18,7 +18,7 @@ export const getHomeworks = async (req: Request, res: Response, next: NextFuncti
     if (studentId) {
       const student = await prisma.user.findUnique({
         where: { id: String(studentId) },
-        include: { enrollments: { where: { isActive: true }, select: { classId: true } } }
+        include: { enrollments: { where: { status: 'ACTIVE' }, select: { classId: true } } }
       });
       if (student?.enrollments?.[0]?.classId) {
         whereClause.classId = student.enrollments[0].classId;
@@ -49,12 +49,12 @@ export const getHomeworks = async (req: Request, res: Response, next: NextFuncti
 export const createHomework = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { classId, subjectId, title, description, dueDate, attachments } = req.body;
-    const teacherId = req.user!.id;
+    const teacherId = (req as any).user!.id;
 
     const homework = await prisma.$transaction(async (tx) => {
       const hw = await tx.homework.create({
         data: {
-          tenantId: req.tenantId!,
+          tenantId: (req as any).tenantId!,
           classId,
           subjectId,
           teacherId,
@@ -67,7 +67,7 @@ export const createHomework = async (req: Request, res: Response, next: NextFunc
       if (attachments && Array.isArray(attachments)) {
         await tx.homeworkAttachment.createMany({
           data: attachments.map(url => ({
-            tenantId: req.tenantId!,
+            tenantId: (req as any).tenantId!,
             homeworkId: hw.id,
             fileUrl: url,
             fileType: 'FILE'
@@ -77,14 +77,14 @@ export const createHomework = async (req: Request, res: Response, next: NextFunc
 
       // Automatically create pending submissions for all active students in the class
       const enrollments = await tx.enrollment.findMany({
-        where: { classId, isActive: true },
+        where: { classId, status: 'ACTIVE' },
         select: { studentId: true }
       });
 
       if (enrollments.length > 0) {
         await tx.homeworkSubmission.createMany({
           data: enrollments.map(e => ({
-            tenantId: req.tenantId!,
+            tenantId: (req as any).tenantId!,
             homeworkId: hw.id,
             studentId: e.studentId,
             status: 'PENDING'

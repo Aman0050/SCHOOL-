@@ -11,7 +11,7 @@ export const getMyChildren = async (req: Request, res: Response, next: NextFunct
     const parentId = req.user?.id;
     if (!parentId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const relations = await prisma.parentStudent.findMany({
+    const relations: any = await prisma.parentStudent.findMany({
       where: { parentId },
       include: {
         student: {
@@ -23,7 +23,7 @@ export const getMyChildren = async (req: Request, res: Response, next: NextFunct
             profile: true,
             admission: true,
             enrollments: {
-              where: { isActive: true },
+              // where: { isActive: true },
               include: { class: true }
             }
           }
@@ -72,7 +72,7 @@ export const getStudentDashboard = async (req: Request, res: Response, next: Nex
     
     const attendanceRecords = await prisma.attendance.findMany({
       where: {
-        studentId,
+        userId: studentId as string,
         date: { gte: firstDay }
       }
     });

@@ -1,3 +1,4 @@
+import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, SystemRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 

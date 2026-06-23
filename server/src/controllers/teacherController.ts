@@ -3,7 +3,7 @@ import { prisma } from '../config/db';
 
 export const getTeacherDashboardSummary = async (req: Request, res: Response) => {
   try {
-    const { tenantId, userId } = req.user!;
+    const { tenantId, id: userId } = req.user!;
     
     // Quick stats: Classes today
     const today = new Date();
@@ -41,7 +41,7 @@ export const getTeacherDashboardSummary = async (req: Request, res: Response) =>
 
 export const getTeacherTimetable = async (req: Request, res: Response) => {
   try {
-    const { tenantId, userId } = req.user!;
+    const { tenantId, id: userId } = req.user!;
     
     const timetable = await prisma.timetablePeriod.findMany({
       where: {
@@ -70,7 +70,7 @@ export const getTeacherTimetable = async (req: Request, res: Response) => {
 
 export const getTeacherClasses = async (req: Request, res: Response) => {
   try {
-    const { tenantId, userId } = req.user!;
+    const { tenantId, id: userId } = req.user!;
     
     const assignedClasses = await prisma.teacherClassAssignment.findMany({
       where: {
