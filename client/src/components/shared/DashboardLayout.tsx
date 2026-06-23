@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useAuth } from '../../features/auth/authContext';
+import { QuickActionsMenu } from '../ui/QuickActionsMenu';
 import { PageSkeleton } from '../ui/skeletons/PageSkeleton';
 import { useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
@@ -48,28 +49,9 @@ export const DashboardLayout: React.FC = () => {
   const queryClient = useQueryClient();
 
   const handlePrefetch = (path: string) => {
-    // Data prefetching for instant module load
-    if (path.includes('/students')) {
-      queryClient.prefetchQuery({
-        queryKey: ['studentStats'],
-        queryFn: () => api.get('/analytics/students').then((res) => res.data.data)
-      });
-    } else if (path.includes('/attendance')) {
-      queryClient.prefetchQuery({
-        queryKey: ['attendanceStats'],
-        queryFn: () => api.get('/analytics/attendance').then((res) => res.data.data)
-      });
-    } else if (path.includes('/fees')) {
-      queryClient.prefetchQuery({
-        queryKey: ['feeIntelligence'],
-        queryFn: () => api.get('/analytics/fees').then((res) => res.data.data)
-      });
-    } else if (path.includes('/academics')) {
-      queryClient.prefetchQuery({
-        queryKey: ['teacherAnalytics'],
-        queryFn: () => api.get('/analytics/teacher').then((res) => res.data.data)
-      });
-    }
+    import('../../lib/prefetch').then(({ prefetchRoute }) => {
+      prefetchRoute(path, queryClient);
+    });
   };
 
   useEffect(() => {
@@ -264,6 +246,7 @@ export const DashboardLayout: React.FC = () => {
               <kbd className="hidden md:inline-flex px-1.5 py-0.5 rounded text-[10px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">⌘K</kbd>
             </button>
 
+            <QuickActionsMenu />
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>

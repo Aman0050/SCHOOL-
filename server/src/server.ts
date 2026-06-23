@@ -12,12 +12,17 @@ import http from 'http';
 import { register } from './lib/metrics';
 import { logger } from './lib/logger';
 import { initSocket } from './lib/socketManager';
+import { initQueues } from './lib/queueManager';
+import morgan from 'morgan';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Setup Request Logging
+app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
 // Security configuration for CORS
 const allowedOrigins = [
@@ -97,6 +102,9 @@ const httpServer = http.createServer(app);
 
 // Setup Socket.IO
 const io = initSocket(httpServer);
+
+// Setup Background Queues
+initQueues();
 
 // Attach io to req so controllers can emit events
 app.use((req, res, next) => {

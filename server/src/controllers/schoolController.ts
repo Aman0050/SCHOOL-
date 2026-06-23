@@ -11,12 +11,42 @@ export const schoolSchema = z.object({
 
 export const getSchools = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const schools = await prisma.school.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const search = req.query.search as string;
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    // Explicitly scope to tenant if not SuperAdmin
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      where.tenantId = req.user!.tenantId;
+    }
+
+    const [total, schools] = await Promise.all([
+      prisma.school.count({ where }),
+      prisma.school.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { tenant: true }, // Include tenant for context
+      }),
+    ]);
+
     res.status(200).json({
       success: true,
-      data: schools,
+      data: {
+        schools,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     next(error);

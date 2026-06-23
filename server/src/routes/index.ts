@@ -19,6 +19,7 @@ import analyticsRoutes from './analyticsRoutes';
 import mfaRoutes from './mfaRoutes';
 import marketingRoutes from './marketingRoutes';
 import applicantRoutes from './applicantRoutes';
+import healthRoutes from './healthRoutes';
 
 const router = Router();
 
@@ -42,5 +43,6 @@ router.use('/analytics', analyticsRoutes);
 router.use('/mfa', mfaRoutes);
 router.use('/marketing', marketingRoutes);
 router.use('/applicants', applicantRoutes);
+router.use('/health', healthRoutes);
 
 export default router;

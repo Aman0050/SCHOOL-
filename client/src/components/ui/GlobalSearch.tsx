@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useDebounce } from '../../hooks/useDebounce';
 import { StudentPreviewCard } from './StudentPreviewCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchResult {
   id: string;
@@ -119,10 +120,12 @@ export const GlobalSearch: React.FC = () => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+        document.getElementById(`search-result-${selectedIndex + 1}`)?.scrollIntoView({ block: 'nearest' });
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
+        document.getElementById(`search-result-${selectedIndex - 1}`)?.scrollIntoView({ block: 'nearest' });
       }
       if (e.key === 'Enter' && results.length > 0 && selectedIndex >= 0) {
         e.preventDefault();
@@ -133,128 +136,163 @@ export const GlobalSearch: React.FC = () => {
     return () => window.removeEventListener('keydown', handleNavigation);
   }, [isOpen, results, selectedIndex, navigate]);
 
-  if (!isOpen) return null;
-
   const selectedItem = results[selectedIndex];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" role="dialog" aria-modal="true">
-      <div className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row h-[70vh] md:h-[600px]">
-        
-        <div className="flex-1 flex flex-col border-r border-slate-100 dark:border-slate-800 relative">
-          <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-slate-800 relative">
-            <Search className="w-5 h-5 text-slate-400" />
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
-              placeholder="Search students, navigate, or run actions..."
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-lg px-4 text-slate-900 dark:text-white placeholder-slate-400"
-              role="combobox"
-              aria-expanded={isOpen}
-              aria-controls="search-results"
-            />
-            {loading && <Loader2 className="w-5 h-5 text-indigo-500 animate-spin absolute right-12" />}
-            <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-              <X className="w-5 h-5 text-slate-500" />
-            </button>
-          </div>
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh]" role="dialog" aria-modal="true">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" 
+          />
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="w-full max-w-4xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200/50 dark:border-slate-800/50 flex flex-col md:flex-row h-[70vh] md:h-[600px] relative z-10"
+          >
+            <div className="flex-1 flex flex-col border-r border-slate-100 dark:border-slate-800 relative">
+              <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-slate-800 relative bg-white/50 dark:bg-slate-900/50">
+                <Search className="w-6 h-6 text-indigo-500 shrink-0" />
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
+                  placeholder="Search students, navigate, or run actions..."
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-xl px-4 text-slate-900 dark:text-white placeholder-slate-400 font-medium"
+                  role="combobox"
+                  aria-expanded={isOpen}
+                  aria-controls="search-results"
+                />
+                {loading && <Loader2 className="w-5 h-5 text-indigo-500 animate-spin absolute right-14" />}
+                <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
 
-          <div id="search-results" className="flex-1 overflow-y-auto p-2" role="listbox">
-            {results.length > 0 ? (
-              <div className="space-y-1">
-                {results.map((item, idx) => {
-                  const isSelected = idx === selectedIndex;
-                  const Icon = item.icon || UserIcon;
-                  return (
-                    <button 
-                      key={item.id}
-                      role="option"
-                      aria-selected={isSelected}
-                      onMouseEnter={() => setSelectedIndex(idx)}
-                      onClick={() => handleSelect(item)}
-                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-colors outline-none ${
-                        isSelected ? 'bg-primary/10 border-l-4 border-primary' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-l-4 border-transparent'
-                      }`}
-                    >
-                      {item.type === 'student' ? (
-                        item.avatarUrl ? (
-                          <img src={item.avatarUrl} alt={item.title} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold border border-primary/30">
-                            {item.title.charAt(0)}
+              <div id="search-results" className="flex-1 overflow-y-auto p-2 custom-scrollbar" role="listbox">
+                {results.length > 0 ? (
+                  <div className="space-y-1">
+                    {results.map((item, idx) => {
+                      const isSelected = idx === selectedIndex;
+                      const Icon = item.icon || UserIcon;
+                      return (
+                        <motion.button 
+                          id={`search-result-${idx}`}
+                          key={item.id}
+                          role="option"
+                          aria-selected={isSelected}
+                          onMouseEnter={() => setSelectedIndex(idx)}
+                          onClick={() => handleSelect(item)}
+                          whileTap={{ scale: 0.98 }}
+                          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all outline-none border border-transparent ${
+                            isSelected ? 'bg-indigo-500/10 border-indigo-500/20 shadow-sm' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          {item.type === 'student' ? (
+                            item.avatarUrl ? (
+                              <img src={item.avatarUrl} alt={item.title} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                            ) : (
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border ${isSelected ? 'bg-indigo-500/20 text-indigo-500 border-indigo-500/30' : 'bg-primary/20 text-primary border-primary/30'}`}>
+                                {item.title.charAt(0)}
+                              </div>
+                            )
+                          ) : (
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-colors ${
+                              item.type === 'action' 
+                                ? isSelected ? 'bg-amber-500/20 border-amber-500/30 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-600 dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-400' 
+                                : isSelected ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-500' : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
+                            }`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                          )}
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className={`font-semibold text-sm truncate transition-colors ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>
+                                {item.title}
+                              </p>
+                              <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded flex-shrink-0 transition-colors ${
+                                isSelected ? 'bg-indigo-500/20 text-indigo-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                              }`}>
+                                {item.type}
+                              </span>
+                            </div>
+                            {item.subtitle && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                {item.subtitle}
+                              </p>
+                            )}
                           </div>
-                        )
-                      ) : (
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                          item.type === 'action' ? 'bg-amber-100 border-amber-200 text-amber-600 dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-400' : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
-                        }`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                      )}
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className={`font-semibold text-sm truncate ${isSelected ? 'text-primary dark:text-primary' : 'text-slate-900 dark:text-white'}`}>
-                            {item.title}
-                          </p>
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded flex-shrink-0">
-                            {item.type}
-                          </span>
-                        </div>
-                        {item.subtitle && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {item.subtitle}
-                          </p>
-                        )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-slate-500 flex flex-col items-center justify-center h-full">
+                    <Command className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-4 opacity-50" />
+                    <p className="text-base font-bold text-slate-600 dark:text-slate-300">No results found</p>
+                    <p className="text-sm mt-1 font-medium text-slate-500">Try searching for a student, "fees", or "attendance"</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-slate-50/80 dark:bg-slate-800/80 backdrop-blur-sm p-3 border-t border-slate-100 dark:border-slate-800 flex justify-center md:justify-between text-xs text-slate-500">
+                <div className="hidden md:flex gap-4">
+                  <span className="flex items-center"><kbd className="bg-white dark:bg-slate-700 border dark:border-slate-600 px-2 py-0.5 rounded shadow-sm mr-2 font-sans font-medium text-slate-700 dark:text-slate-300">↑↓</kbd> navigate</span>
+                  <span className="flex items-center"><kbd className="bg-white dark:bg-slate-700 border dark:border-slate-600 px-2 py-0.5 rounded shadow-sm mr-2 font-sans font-medium text-slate-700 dark:text-slate-300">↵</kbd> select</span>
+                  <span className="flex items-center"><kbd className="bg-white dark:bg-slate-700 border dark:border-slate-600 px-2 py-0.5 rounded shadow-sm mr-2 font-sans font-medium text-slate-700 dark:text-slate-300">esc</kbd> close</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden md:block w-80 bg-slate-50/50 dark:bg-slate-800/30 backdrop-blur-sm overflow-y-auto p-4 border-l border-slate-100 dark:border-slate-800">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedItem?.id || 'empty'}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="h-full"
+                >
+                  {selectedItem?.type === 'student' ? (
+                    <StudentPreviewCard studentId={selectedItem.data} />
+                  ) : selectedItem?.type === 'navigation' ? (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6">
+                        <Navigation className="w-8 h-8 text-blue-500" />
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-slate-500 flex flex-col items-center justify-center h-full">
-                <Command className="w-10 h-10 text-slate-300 dark:text-slate-600 mb-4" />
-                <p className="text-base font-medium text-slate-600 dark:text-slate-300">No results found</p>
-                <p className="text-sm mt-1">Try searching for a student, "fees", or "attendance"</p>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-slate-50 dark:bg-slate-800/50 p-3 border-t border-slate-100 dark:border-slate-800 flex justify-center md:justify-between text-xs text-slate-500">
-            <div className="hidden md:flex gap-4">
-              <span className="flex items-center"><kbd className="bg-white dark:bg-slate-700 border dark:border-slate-600 px-1.5 py-0.5 rounded shadow-sm mr-1.5 font-sans">↑↓</kbd> navigate</span>
-              <span className="flex items-center"><kbd className="bg-white dark:bg-slate-700 border dark:border-slate-600 px-1.5 py-0.5 rounded shadow-sm mr-1.5 font-sans">↵</kbd> select</span>
-              <span className="flex items-center"><kbd className="bg-white dark:bg-slate-700 border dark:border-slate-600 px-1.5 py-0.5 rounded shadow-sm mr-1.5 font-sans">esc</kbd> close</span>
+                      <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">Navigation</h4>
+                      <p className="text-sm text-center mt-2 font-medium px-4">Press enter to quickly jump to the {selectedItem.title.replace('Go to ', '')} module.</p>
+                    </div>
+                  ) : selectedItem?.type === 'action' ? (
+                     <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                      <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-6">
+                        <Zap className="w-8 h-8 text-amber-500" />
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">Quick Action</h4>
+                      <p className="text-sm text-center mt-2 font-medium px-4">Press enter to trigger this action without leaving your current page.</p>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                      <Command className="w-12 h-12 mb-4 opacity-20" />
+                      <p className="text-sm text-center font-medium">Select an item to view details</p>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
         </div>
-
-        <div className="hidden md:block w-80 bg-slate-50 dark:bg-slate-800/30 overflow-y-auto p-4 border-l border-slate-100 dark:border-slate-800">
-          {selectedItem?.type === 'student' ? (
-            <StudentPreviewCard studentId={selectedItem.data} />
-          ) : selectedItem?.type === 'navigation' ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-              <Navigation className="w-12 h-12 mb-4 text-blue-500/50" />
-              <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">Navigation</h4>
-              <p className="text-sm text-center mt-2">Press enter to quickly jump to the {selectedItem.title.replace('Go to ', '')} module.</p>
-            </div>
-          ) : selectedItem?.type === 'action' ? (
-             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-              <Zap className="w-12 h-12 mb-4 text-amber-500/50" />
-              <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">Quick Action</h4>
-              <p className="text-sm text-center mt-2">Press enter to trigger this action without leaving your current page.</p>
-            </div>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-              <Command className="w-12 h-12 mb-4 opacity-20" />
-              <p className="text-sm text-center">Select an item to view details</p>
-            </div>
-          )}
-        </div>
-
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };
 

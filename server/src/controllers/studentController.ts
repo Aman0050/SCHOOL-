@@ -5,6 +5,7 @@ import { prisma } from '../config/db';
 import { AppError } from '../errors/AppError';
 import { createAuditLog, AuditAction } from '../utils/auditLogger';
 import { cache } from '../lib/cache';
+import { parseCSV, generateCSV, generateExcel } from '../utils/csvEngine';
 
 // Validation Schemas
 export const studentRegisterSchema = z.object({
@@ -56,12 +57,10 @@ export const bulkUpdateSchema = z.object({
 export const getStudents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const search = (req.query.search as string) || '';
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const cursor = req.query.cursor as string;
     const classId = req.query.classId as string;
     const status = req.query.status as string;
-
-    const skip = (page - 1) * limit;
 
     // Build query filters
     const where: any = {
@@ -88,58 +87,59 @@ export const getStudents = async (req: Request, res: Response, next: NextFunctio
       ];
     }
 
-    const cacheKey = `tenant:${req.user!.tenantId}:students:pg${page}:l${limit}:s${search}:c${classId}:st${status}`;
+    const cacheKey = `tenant:${req.user!.tenantId}:students:cursor${cursor}:l${limit}:s${search}:c${classId}:st${status}`;
 
     const cachedResult = await cache.remember(cacheKey, 300, async () => {
-      const [total, students] = await Promise.all([
-        prisma.user.count({ where }),
-        prisma.user.findMany({
-          where,
-          skip,
-          take: limit,
-          select: {
-            id: true,
-            email: true,
-            status: true, // Though 'status' might be on Admission for students or User for generic
-            isActive: true,
-            profile: {
-              select: {
-                firstName: true,
-                lastName: true,
-                avatarUrl: true
-              }
-            },
-            admission: {
-              select: {
-                admissionNumber: true,
-                status: true
-              }
-            },
-            enrollments: {
-              take: 1,
-              select: {
-                class: {
-                  select: { name: true }
-                }
-              }
+      const students = await prisma.user.findMany({
+        where,
+        take: limit + 1, // Fetch one extra to determine next cursor
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          profile: {
+            select: {
+              firstName: true,
+              lastName: true,
+              avatarUrl: true
             }
           },
-          orderBy: { firstName: 'asc' },
-        }),
-      ]);
-      return { total, students };
-    });
+          admission: {
+            select: {
+              admissionNumber: true,
+              status: true
+            }
+          },
+          enrollments: {
+            take: 1,
+            select: {
+              class: {
+                select: { name: true }
+              }
+            }
+          }
+        },
+        orderBy: { id: 'asc' }, // MUST order by cursor field
+      });
 
-    const { total, students } = cachedResult;
+      let nextCursor: string | undefined = undefined;
+      if (students.length > limit) {
+        const nextItem = students.pop();
+        nextCursor = nextItem!.id;
+      }
+
+      return { students, nextCursor };
+    });
 
     res.status(200).json({
       success: true,
-      data: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-        students,
+      data: cachedResult.students,
+      pagination: {
+        nextCursor: cachedResult.nextCursor,
+        limit
       },
     });
   } catch (error) {
@@ -551,6 +551,72 @@ export const getParents = async (req: Request, res: Response, next: NextFunction
       success: true,
       data: parents,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const importStudents = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) throw new AppError(400, 'VALIDATION_ERROR', 'No file uploaded');
+    const tenantId = req.user!.tenantId;
+    
+    let parsedData: any[] = [];
+    if (req.file.mimetype === 'text/csv' || req.file.originalname.endsWith('.csv')) {
+      parsedData = parseCSV(req.file.buffer);
+    } else {
+      throw new AppError(400, 'UNSUPPORTED_FORMAT', 'Please upload a valid CSV file');
+    }
+
+    // Format for bulkImportStudents
+    const students = parsedData.map((row: any) => ({
+      email: row.email || row.Email,
+      firstName: row.firstName || row['First Name'],
+      lastName: row.lastName || row['Last Name'],
+      admissionNumber: row.admissionNumber || row['Admission Number'],
+      classId: row.classId || row['Class ID'] || null,
+    }));
+
+    // Reuse bulk import transaction
+    req.body.students = students;
+    await bulkImportStudents(req, res, next);
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportStudents = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user!.tenantId;
+    const { format } = req.query; // 'csv' or 'excel'
+    
+    const students = await prisma.user.findMany({
+      where: { tenantId, role: 'STUDENT' },
+      include: { profile: true, admission: true },
+    });
+
+    const exportData = students.map(s => ({
+      'First Name': s.firstName,
+      'Last Name': s.lastName,
+      'Email': s.email,
+      'Admission Number': s.admission?.admissionNumber || '',
+      'Status': s.isActive ? 'Active' : 'Inactive',
+      'Gender': s.profile?.gender || '',
+      'Date of Birth': s.profile?.dateOfBirth ? new Date(s.profile.dateOfBirth).toLocaleDateString() : ''
+    }));
+
+    if (format === 'excel') {
+      const buffer = await generateExcel(exportData, 'Students');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=students.xlsx');
+      return res.send(buffer);
+    } else {
+      const buffer = generateCSV(exportData);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
+      return res.send(buffer);
+    }
   } catch (error) {
     next(error);
   }

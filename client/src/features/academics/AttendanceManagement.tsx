@@ -19,6 +19,7 @@ import { StudentAnalyticsCharts } from './components/attendance/dashboard/Studen
 import { SmartAlerts } from './components/attendance/dashboard/SmartAlerts';
 import { LiveAttendanceFeed } from './components/attendance/dashboard/LiveAttendanceFeed';
 import { HardwareSyncStatus } from './components/attendance/dashboard/HardwareSyncStatus';
+import { syncEngine } from '../../lib/syncEngine';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -84,13 +85,26 @@ export const AttendanceManagement: React.FC = () => {
   }, [existingLogs]);
 
   const recordBulkMutation = useMutation({
-    mutationFn: (payload: any) => api.post('/attendance/bulk', payload),
+    mutationFn: async (payload: any) => {
+      if (!navigator.onLine) {
+        // Queue the request for offline sync
+        const token = localStorage.getItem('token');
+        await syncEngine.queueRequest({
+          url: '/api/attendance/bulk',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: payload
+        });
+        return { data: { message: 'Queued for sync' } };
+      }
+      return api.post('/attendance/bulk', payload);
+    },
     onMutate: async (newAttendance) => {
       // Cancel any outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: ['existing-attendance', rosterClassId, rosterDate] });
-      
-      // Snapshot the previous value
-      const previousAttendance = queryClient.getQueryData(['existing-attendance', rosterClassId, rosterDate]);
       
       // Optimistically update to the new value
       queryClient.setQueryData(['existing-attendance', rosterClassId, rosterDate], (old: any) => {

@@ -4,15 +4,15 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: \
-      POSTGRES_PASSWORD: \
-      POSTGRES_DB: \
+      POSTGRES_USER: ${POSTGRES_USER:-admin_school}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SecureDBPass_2026!}
+      POSTGRES_DB: ${POSTGRES_DB:-school_management}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin_school}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,9 +32,9 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://\:\@postgres:5432/\?schema=public
+      - DATABASE_URL=${DATABASE_URL:-postgresql://admin_school:SecureDBPass_2026!@postgres:5432/school_management?schema=public}
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=\
+      - JWT_SECRET=${JWT_SECRET:-c8f1e6b3a2d7495088c42b9d1e5a7f9b}
       - CORS_ORIGIN=http://localhost:80
     depends_on:
       postgres:

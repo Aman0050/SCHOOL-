@@ -10,20 +10,24 @@ import {
   revokeSession,
   loginSchema,
   forgotPasswordSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
+  ssoGoogleLogin,
+  ssoMicrosoftLogin
 } from '../controllers/authController';
 import { authenticate } from '../middlewares/auth';
 import { validateBody } from '../middlewares/validation';
 import { rateLimiter } from '../middlewares/rateLimiter';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
 // Rate limiters for brute-force protection
-const loginLimiter = rateLimiter({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5,
-  message: 'Too many login attempts. Please try again after 1 minute.',
-  keyPrefix: 'login'
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per `window` (here, per 15 minutes)
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 const passwordResetLimiter = rateLimiter({
@@ -38,6 +42,10 @@ router.post('/login', loginLimiter, validateBody(loginSchema), login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', authenticate, getMe);
+
+// Enterprise SSO Flow
+router.post('/sso/google', loginLimiter, ssoGoogleLogin);
+router.post('/sso/microsoft', loginLimiter, ssoMicrosoftLogin);
 
 // Forgot/Reset Password endpoints
 router.post('/forgot-password', passwordResetLimiter, validateBody(forgotPasswordSchema), forgotPassword);

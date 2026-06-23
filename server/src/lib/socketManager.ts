@@ -1,6 +1,8 @@
 import { Server as SocketServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
 
 let io: SocketServer | null = null;
 
@@ -10,6 +12,16 @@ export const initSocket = (server: HttpServer) => {
       origin: '*', // Adjust to specific frontend URL in production
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     },
+  });
+
+  const pubClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
+  const subClient = pubClient.duplicate();
+  
+  Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+    io!.adapter(createAdapter(pubClient, subClient));
+    console.log('⚡ Socket.io Redis Adapter connected successfully');
+  }).catch((error) => {
+    console.error('❌ Failed to connect Socket.io Redis Adapter:', error);
   });
 
   // Authentication Middleware

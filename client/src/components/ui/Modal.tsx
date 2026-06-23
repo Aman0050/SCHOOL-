@@ -22,9 +22,13 @@ export const Modal: React.FC<ModalProps> = ({
   width = 'md',
   preventOutsideClick = false
 }) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Focus modal for keyboard events
+      setTimeout(() => modalRef.current?.focus(), 10);
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -33,13 +37,12 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !preventOutsideClick) onClose();
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose, preventOutsideClick]);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && !preventOutsideClick) {
+      e.stopPropagation();
+      onClose();
+    }
+  };
 
   const widthMap = {
     sm: 'max-w-md',
@@ -53,7 +56,12 @@ export const Modal: React.FC<ModalProps> = ({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" 
+          role="dialog" 
+          aria-modal="true" 
+          aria-labelledby="modal-title"
+        >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -65,11 +73,14 @@ export const Modal: React.FC<ModalProps> = ({
           />
 
           <motion.div
+            ref={modalRef}
+            tabIndex={-1}
+            onKeyDown={handleKeyDown}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
-            className={`relative w-full ${widthMap[width]} bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden`}
+            className={`relative w-full ${widthMap[width]} bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden outline-none`}
           >
             {(title || description) && (
               <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800">

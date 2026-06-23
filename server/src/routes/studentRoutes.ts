@@ -7,6 +7,8 @@ import {
   bulkImportStudents,
   bulkUpdateClass,
   getParents,
+  importStudents,
+  exportStudents,
   // searchStudents,
   // getStudentPreview,
   studentRegisterSchema,
@@ -28,10 +30,17 @@ router.get('/parents', getParents);
 // router.get('/:id/preview', getStudentPreview);
 router.get('/:id', getStudentDetail);
 
+import multer from 'multer';
+const upload = multer({ storage: multer.memoryStorage() });
+
 // Admin-only write controls
 router.post('/', authorizeRoles(SystemRole.SCHOOL_ADMIN), validateBody(studentRegisterSchema), registerStudent);
 router.put('/:id', authorizeRoles(SystemRole.SCHOOL_ADMIN), validateBody(studentUpdateSchema), updateStudent);
 router.post('/bulk-import', authorizeRoles(SystemRole.SCHOOL_ADMIN), validateBody(bulkImportSchema), bulkImportStudents);
 router.post('/bulk-update', authorizeRoles(SystemRole.SCHOOL_ADMIN), validateBody(bulkUpdateSchema), bulkUpdateClass);
+
+// CSV / Excel endpoints
+router.post('/import', authorizeRoles(SystemRole.SCHOOL_ADMIN), upload.single('file'), importStudents);
+router.get('/export', authorizeRoles(SystemRole.SCHOOL_ADMIN), exportStudents);
 
 export default router;

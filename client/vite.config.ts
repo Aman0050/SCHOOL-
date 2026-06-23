@@ -78,4 +78,18 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'framer-motion', 'lucide-react'],
+          charts: ['recharts'],
+          query: ['@tanstack/react-query'],
+          virtual: ['@tanstack/react-virtual']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
 })

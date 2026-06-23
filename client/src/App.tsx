@@ -44,6 +44,7 @@ const SchoolSetupWizard = React.lazy(() => import('./features/onboarding/SchoolS
 // Super Admin Imports
 const SuperAdminLayout = React.lazy(() => import('./features/super-admin/SuperAdminLayout'));
 const SuperDashboard = React.lazy(() => import('./features/super-admin/SuperDashboard').then(m => ({ default: m.SuperDashboard })));
+const DataHealthDashboard = React.lazy(() => import('./features/super-admin/DataHealthDashboard').then(m => ({ default: m.DataHealthDashboard })));
 const SchoolsManager = React.lazy(() => import('./features/super-admin/SchoolsManager').then(m => ({ default: m.SchoolsManager })));
 const SubscriptionBilling = React.lazy(() => import('./features/super-admin/SubscriptionBilling').then(m => ({ default: m.SubscriptionBilling })));
 const SupportPortal = React.lazy(() => import('./features/super-admin/SupportPortal').then(m => ({ default: m.SupportPortal })));
@@ -128,7 +129,7 @@ export const App: React.FC = () => {
 
                     {/* Super Admin / Platform Owner Layout */}
                     <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
-                      <Route element={<Suspense fallback={<div>Loading...</div>}><SuperAdminLayout /></Suspense>}>
+                      <Route element={<SuperAdminLayout />}>
                         <Route path="dashboard" element={<SuperDashboard />} />
                         <Route path="schools" element={<SchoolsManager />} />
                         <Route path="billing" element={<SubscriptionBilling />} />
@@ -138,6 +139,7 @@ export const App: React.FC = () => {
                         <Route path="support" element={<SupportPortal />} />
                         <Route path="audit" element={<AuditLogs />} />
                         <Route path="demo-requests" element={<DemoRequestsView />} />
+                        <Route path="data-health" element={<DataHealthDashboard />} />
                       </Route>
                     </Route>
                   </Route>

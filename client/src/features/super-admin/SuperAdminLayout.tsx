@@ -8,7 +8,8 @@ import {
   LifeBuoy,
   LogOut,
   ShieldAlert,
-  PhoneCall
+  PhoneCall,
+  Database
 } from 'lucide-react';
 
 export const SuperAdminLayout: React.FC = () => {
@@ -26,6 +27,7 @@ export const SuperAdminLayout: React.FC = () => {
     { label: 'Schools', path: '/superadmin/schools', icon: Building2 },
     { label: 'Billing & Subscriptions', path: '/superadmin/billing', icon: CreditCard },
     { label: 'Demo Requests', path: '/superadmin/demo-requests', icon: PhoneCall },
+    { label: 'Data Integrity', path: '/superadmin/data-health', icon: Database },
     { label: 'Support Desk', path: '/superadmin/support', icon: LifeBuoy },
     { label: 'Security & Audit', path: '/superadmin/audit', icon: ShieldAlert },
   ];
@@ -91,7 +93,9 @@ export const SuperAdminLayout: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#0B0F19]">
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          <Outlet />
+          <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>}>
+            <Outlet />
+          </React.Suspense>
         </div>
       </main>
     </div>

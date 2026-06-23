@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import type { Layout } from 'react-grid-layout';
+import { useState, useEffect } from 'react';
 
 const DEFAULT_LAYOUT: any[] = [
   { i: 'executiveHero', x: 0, y: 0, w: 12, h: 2, static: true },
@@ -12,17 +11,21 @@ const DEFAULT_LAYOUT: any[] = [
   { i: 'studentIntel', x: 0, y: 15, w: 4, h: 4 },
   { i: 'teacherIntel', x: 4, y: 15, w: 4, h: 4 },
   { i: 'communication', x: 8, y: 15, w: 4, h: 4 },
-  { i: 'quickActions', x: 0, y: 19, w: 4, h: 4 },
-  { i: 'recentActivity', x: 4, y: 19, w: 4, h: 4 },
-  { i: 'upcomingEvents', x: 8, y: 19, w: 4, h: 4 }
+  { i: 'reportsPanel', x: 0, y: 19, w: 4, h: 4 },
+  { i: 'quickActions', x: 4, y: 19, w: 4, h: 4 },
+  { i: 'recentActivity', x: 8, y: 19, w: 4, h: 4 },
+  { i: 'upcomingEvents', x: 0, y: 23, w: 4, h: 4 }
 ];
 
+const DEFAULT_VISIBLE = DEFAULT_LAYOUT.map(l => l.i);
+
 export const useDashboardLayout = (userId: string) => {
-  const storageKey = `dashboard_layout_${userId}`;
+  const layoutKey = `dashboard_layout_${userId}`;
+  const visibleKey = `dashboard_visible_${userId}`;
 
   const [layout, setLayout] = useState<any[]>(() => {
     try {
-      const saved = localStorage.getItem(storageKey);
+      const saved = localStorage.getItem(layoutKey);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Failed to parse dashboard layout from local storage', e);
@@ -30,15 +33,38 @@ export const useDashboardLayout = (userId: string) => {
     return DEFAULT_LAYOUT;
   });
 
+  const [visibleWidgets, setVisibleWidgets] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(visibleKey);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return DEFAULT_VISIBLE;
+  });
+
   const saveLayout = (newLayout: any[]) => {
     setLayout(newLayout);
-    localStorage.setItem(storageKey, JSON.stringify(newLayout));
+    localStorage.setItem(layoutKey, JSON.stringify(newLayout));
+  };
+
+  const toggleWidget = (widgetId: string) => {
+    setVisibleWidgets(prev => {
+      let next;
+      if (prev.includes(widgetId)) {
+        next = prev.filter(id => id !== widgetId);
+      } else {
+        next = [...prev, widgetId];
+      }
+      localStorage.setItem(visibleKey, JSON.stringify(next));
+      return next;
+    });
   };
 
   const resetLayout = () => {
     setLayout(DEFAULT_LAYOUT);
-    localStorage.removeItem(storageKey);
+    setVisibleWidgets(DEFAULT_VISIBLE);
+    localStorage.removeItem(layoutKey);
+    localStorage.removeItem(visibleKey);
   };
 
-  return { layout, saveLayout, resetLayout };
+  return { layout, saveLayout, resetLayout, visibleWidgets, toggleWidget };
 };

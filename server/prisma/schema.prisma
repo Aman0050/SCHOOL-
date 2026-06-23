@@ -53,6 +53,7 @@ model Tenant {
   subscription   Subscription?
   invoices       SaaSInvoice[]
   supportTickets SupportTicket[]
+  dataAnomalies  DataAnomaly[]
 
   @@index([subdomain])
 }
@@ -1723,4 +1724,30 @@ model ApplicantAssessment {
   updatedAt      DateTime @updatedAt
 
   applicant      Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// DATA INTEGRITY & HEALTH (PHASE 0)
+// ==========================================
+
+model DataAnomaly {
+  id            String   @id @default(uuid())
+  tenantId      String
+  module        String   // STUDENT, PARENT, ATTENDANCE, FEE, EXAM, ACADEMIC, TIMETABLE
+  severity      String   // HIGH, MEDIUM, LOW
+  issueType     String   // DUPLICATE, ORPHAN, CONSTRAINT_VIOLATION, DRIFT
+  description   String
+  referenceId   String?  // ID of the corrupted record (e.g. userId or feeId)
+  referenceTable String?
+  resolution    String?  // Suggestion or manual action needed
+  status        String   @default("OPEN") // OPEN, RESOLVED, IGNORED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  resolvedAt    DateTime?
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([module])
+  @@index([status])
 }

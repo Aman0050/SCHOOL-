@@ -5,6 +5,8 @@ import { AppError } from '../errors/AppError';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { generateReceiptPdfBuffer } from '../utils/pdfGenerator';
+import { logAudit } from '../services/auditService';
+import { AuditAction } from '@prisma/client';
 
 // ==================== HELPERS ====================
 
@@ -342,6 +344,15 @@ export const createAssignment = async (req: Request, res: Response, next: NextFu
       }
     }
 
+    await logAudit(
+      AuditAction.CREATE,
+      'StudentFeeAssignment',
+      assignment.id,
+      null,
+      { studentId, feeStructureId, totalAmount: structure.totalAmount },
+      req
+    );
+
     res.status(201).json({ success: true, data: assignment });
   } catch (e) {
     next(e);
@@ -541,13 +552,26 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
       throw new AppError(400, 'VALIDATION_ERROR', 'amount and method are required');
     }
 
-    const collection = await prisma.feeCollection.findUnique({
-      where: { id: collectionId },
-      include: { payments: true },
-    });
-    if (!collection) throw new AppError(404, 'NOT_FOUND', 'Collection not found');
+    let assignmentIdToRecalc = '';
+    let studentIdForEmit = '';
+    let receiptNumberForLedger = '';
+    let oldPaidAmount: any;
+    let oldStatus: any;
 
     const payment = await prisma.$transaction(async (tx) => {
+      // Re-fetch collection inside transaction with lock if possible, or just recalculate
+      const currentCollection = await tx.feeCollection.findUnique({
+        where: { id: collectionId },
+        include: { payments: true },
+      });
+      if (!currentCollection) throw new AppError(404, 'NOT_FOUND', 'Collection not found');
+
+      assignmentIdToRecalc = currentCollection.assignmentId;
+      studentIdForEmit = currentCollection.studentId;
+      receiptNumberForLedger = currentCollection.receiptNumber;
+      oldPaidAmount = currentCollection.paidAmount;
+      oldStatus = currentCollection.status;
+
       const p = await tx.paymentInstallment.create({
         data: {
           tenantId,
@@ -563,12 +587,12 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
         },
       });
 
-      const previouslyPaid = collection.payments
-        .filter((p) => p.status === 'SUCCESS')
-        .reduce((s, p) => s + Number(p.amount), 0);
+      const previouslyPaid = currentCollection.payments
+        .filter((pay) => pay.status === 'SUCCESS')
+        .reduce((s, pay) => s + Number(pay.amount), 0);
       const totalPaid = previouslyPaid + Number(amount);
       const collectionStatus =
-        totalPaid >= Number(collection.totalAmount) ? 'PAID' : ('PARTIAL' as const);
+        totalPaid >= Number(currentCollection.totalAmount) ? 'PAID' : ('PARTIAL' as const);
 
       await tx.feeCollection.update({
         where: { id: collectionId },
@@ -580,7 +604,7 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
 
       // Ledger entry
       const lastLedger = await tx.financialLedger.findFirst({
-        where: { tenantId, studentId: collection.studentId },
+        where: { tenantId, studentId: currentCollection.studentId },
         orderBy: { createdAt: 'desc' },
       });
       const prevBalance = lastLedger ? Number(lastLedger.balance) : 0;
@@ -589,10 +613,10 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
       await tx.financialLedger.create({
         data: {
           tenantId,
-          studentId: collection.studentId,
+          studentId: currentCollection.studentId,
           referenceType: 'PAYMENT',
           referenceId: p.id,
-          description: `Payment via ${method} - Receipt #${collection.receiptNumber}`,
+          description: `Payment via ${method} - Receipt #${receiptNumberForLedger}`,
           type: 'CREDIT',
           amount: new Prisma.Decimal(amount),
           balance: new Prisma.Decimal(newBalance),
@@ -603,11 +627,11 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
       return p;
     });
 
-    await recalcAssignment(collection.assignmentId);
+    await recalcAssignment(assignmentIdToRecalc);
 
     // Emit live activity feed for Finance Dashboard
     const student = await prisma.user.findUnique({
-      where: { id: collection.studentId },
+      where: { id: studentIdForEmit },
       include: { profile: true }
     });
     const studentName = student?.profile?.firstName ? `${student.profile.firstName} ${student.profile.lastName}` : 'Student';
@@ -617,6 +641,15 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
       text: `Fee Collection: ₹${amount} received from ${studentName}`,
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     });
+
+    await logAudit(
+      AuditAction.UPDATE,
+      'FeeCollection',
+      collectionId,
+      { paidAmount: oldPaidAmount, status: oldStatus },
+      { paidAmount: Number(oldPaidAmount) + Number(amount), newPayment: amount },
+      req
+    );
 
     res.json({ success: true, data: payment });
   } catch (e) {
