@@ -39,7 +39,8 @@ app.use(
       
       // Dynamic matching to support school subdomains
       const isAllowed = allowedOrigins.includes(origin) || 
-                        /^[a-zA-Z0-9-]+\.localhost:(5173|5174)$/.test(new URL(origin).host);
+                        /^[a-zA-Z0-9-]+\.localhost:(5173|5174)$/.test(new URL(origin).host) ||
+                        new URL(origin).host.endsWith('.vercel.app');
       
       if (isAllowed) {
         callback(null, true);

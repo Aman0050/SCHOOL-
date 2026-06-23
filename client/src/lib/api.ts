@@ -6,7 +6,7 @@ import { syncEngine } from './syncEngine';
 export const getSubdomain = (): string | null => {
   const host = window.location.host;
   const parts = host.split('.');
-  if (parts.length > 1) {
+  if (parts.length > 1 && !host.includes('vercel.app')) {
     const firstPart = parts[0];
     if (firstPart !== 'www' && firstPart !== 'api' && firstPart !== 'localhost') {
       return firstPart;
