@@ -14,7 +14,7 @@ import {
 const router = Router();
 
 // Analytics is primarily for Admins, SuperAdmins, and Principals
-router.use(authorizeRoles(SystemRole.SUPER_ADMIN, SystemRole.SCHOOL_ADMIN));
+router.use(authenticate, authorizeRoles(SystemRole.SUPER_ADMIN, SystemRole.SCHOOL_ADMIN));
 
 router.get('/students', getStudentIntelligence);
 router.get('/attendance', getAttendanceIntelligence);
