@@ -74,6 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await api.post('/auth/login', { email, password });
       if (response.data.success) {
+        if (response.data.data.mfaRequired || response.data.data.mfaSetupRequired) {
+          throw new Error(response.data.data.message || 'MFA is required but not supported in this client version.');
+        }
         const { accessToken, user: loggedUser } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
         setUser(loggedUser);

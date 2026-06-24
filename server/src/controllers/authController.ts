@@ -98,8 +98,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       );
     }
 
-    // Enterprise MFA Enforcement Policy
-    const requiresMfa = ['SUPER_ADMIN', 'PLATFORM_OWNER', 'SCHOOL_ADMIN', 'FINANCE'].includes(user.role) || user.mfaEnabled;
+    // Enterprise MFA Enforcement Policy (Role-based enforcement temporarily disabled until UI is ready)
+    const requiresMfa = user.mfaEnabled;
 
     if (requiresMfa) {
       if (!user.mfaSecret && !user.mfaEnabled) {
