@@ -151,7 +151,7 @@ model Admission {
   id              String   @id @default(uuid())
   tenantId        String
   studentId       String   @unique
-  admissionNumber String   @unique
+  admissionNumber String
   admissionDate   DateTime @default(now())
   status          String   @default("ACTIVE")
   createdAt       DateTime @default(now())
@@ -160,6 +160,7 @@ model Admission {
   student User @relation("StudentAdmission", fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([admissionNumber])
+  @@unique([tenantId, admissionNumber])
 }
 
 model ParentStudent {
@@ -174,6 +175,9 @@ model ParentStudent {
   student User @relation("StudentRelation", fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([parentId, studentId])
+  @@index([tenantId])
+  @@index([parentId])
+  @@index([studentId])
 }
 
 model StudentDocument {
@@ -289,6 +293,9 @@ model Enrollment {
 
   class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
   student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([studentId])
 }
 
 model AuditLog {
@@ -326,6 +333,9 @@ model Attendance {
   class      Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
 
   @@unique([userId, date, classId])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([date])
 }
 
 // ============ FEE MANAGEMENT ENUMS ============
@@ -414,6 +424,9 @@ model FeeInstallment {
   updatedAt         DateTime  @updatedAt
 
   assignment StudentFeeAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
 }
 
 model FeeCategory {
@@ -484,6 +497,8 @@ model StudentFeeAssignment {
   installments    FeeInstallment[]
 
   @@unique([studentId, feeStructureId, academicYear])
+  @@index([tenantId])
+  @@index([studentId])
 }
 
 model FeeDiscount {
@@ -522,7 +537,7 @@ model FeeCollection {
   tenantId      String
   assignmentId  String
   studentId     String
-  receiptNumber String    @unique
+  receiptNumber String
   totalAmount   Decimal   @db.Decimal(12, 2)
   paidAmount    Decimal   @db.Decimal(12, 2)
   status        FeeStatus @default(PENDING)
@@ -535,6 +550,11 @@ model FeeCollection {
   student         User                 @relation("StudentCollections", fields: [studentId], references: [id])
   collectedByUser User                 @relation("CollectedByUser", fields: [collectedBy], references: [id])
   payments        PaymentInstallment[]
+
+  @@unique([tenantId, receiptNumber])
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([status])
 }
 
 model PaymentInstallment {
@@ -553,6 +573,9 @@ model PaymentInstallment {
   createdAt        DateTime      @default(now())
 
   collection FeeCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
 }
 
 model FineRecord {
@@ -875,6 +898,9 @@ model MarksEntry {
   verifiedByUser User?       @relation("MarksVerifiedBy", fields: [verifiedBy], references: [id])
 
   @@unique([examId, subjectId, studentId])
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([examId])
 }
 
 model GradeRule {
@@ -939,6 +965,9 @@ model StudentResult {
   gradeConfig GradeConfig? @relation(fields: [gradeConfigId], references: [id])
 
   @@unique([examId, studentId, subjectId])
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([examId])
 }
 
 model ReportCard {
@@ -957,6 +986,9 @@ model ReportCard {
   student User @relation("StudentReportCards", fields: [studentId], references: [id])
 
   @@unique([examId, studentId])
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([examId])
 }
 
 model StudentRanking {
@@ -1049,6 +1081,9 @@ model Homework {
   teacher     User                 @relation("HomeworkGivenBy", fields: [teacherId], references: [id])
   attachments HomeworkAttachment[]
   submissions HomeworkSubmission[]
+
+  @@index([tenantId])
+  @@index([teacherId])
 }
 
 model HomeworkAttachment {
@@ -1148,11 +1183,13 @@ model DeviceToken {
   id        String   @id @default(uuid())
   tenantId  String
   userId    String
-  token     String   @unique
+  token     String
   platform  Platform
   createdAt DateTime @default(now())
 
   user User @relation("UserDevices", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, token])
 }
 
 // ============ SAAS CONTROL CENTER ENUMS ============
@@ -1277,6 +1314,8 @@ model TeacherClassAssignment {
   class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@unique([teacherId, classId])
+  @@index([tenantId])
+  @@index([teacherId])
 }
 
 model TeacherSubjectAssignment {
@@ -1323,6 +1362,9 @@ model TimetablePeriod {
   class   Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
   subject ExamSubject? @relation(fields: [subjectId], references: [id])
   teacher User?        @relation("TeacherTimetable", fields: [teacherId], references: [id])
+
+  @@index([tenantId])
+  @@index([teacherId])
 }
 
 // ============ ANALYTICS & INTELLIGENCE LAYER ============

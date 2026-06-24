@@ -76,7 +76,7 @@ export const StudentManagement: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState<'dashboard' | 'directory' | 'admissions'>('dashboard');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  
+  const handleRowClick = React.useCallback((id: string) => setSelectedStudentId(id), []);
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState('');
@@ -256,7 +256,7 @@ export const StudentManagement: React.FC = () => {
                             key={virtualRow.key}
                             student={student}
                             virtualRow={virtualRow}
-                            onClick={() => setSelectedStudentId(student.id)}
+                            onClick={() => handleRowClick(student.id)}
                           />
                         );
                       })

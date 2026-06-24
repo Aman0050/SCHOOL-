@@ -23,6 +23,52 @@ import { syncEngine } from '../../lib/syncEngine';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
+const AttendanceRow = React.memo(({ 
+  student, 
+  idx, 
+  currentStatus, 
+  onStatusChange 
+}: { 
+  student: any, 
+  idx: number, 
+  currentStatus: string, 
+  onStatusChange: (id: string, status: string) => void 
+}) => {
+  return (
+    <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+      <td className="px-6 py-4 font-medium">{student.rollNumber || idx + 1}</td>
+      <td className="px-6 py-4">
+        <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-3">
+          <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
+            {student.profile?.firstName?.[0]}
+          </div>
+          {student.profile?.firstName} {student.profile?.lastName}
+        </div>
+      </td>
+      <td className="px-6 py-4 text-right">
+        <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-900">
+          {['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'].map((status) => (
+            <button
+              key={status}
+              onClick={() => onStatusChange(student.id, status)}
+              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
+                currentStatus === status
+                  ? status === 'PRESENT' ? 'bg-emerald-500 text-white shadow-sm'
+                  : status === 'ABSENT' ? 'bg-red-500 text-white shadow-sm'
+                  : status === 'LATE' ? 'bg-amber-500 text-white shadow-sm'
+                  : 'bg-purple-500 text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </td>
+    </tr>
+  );
+});
+
 export const AttendanceManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -106,6 +152,9 @@ export const AttendanceManagement: React.FC = () => {
       // Cancel any outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: ['existing-attendance', rosterClassId, rosterDate] });
       
+      // Snapshot the previous value
+      const previousAttendance = queryClient.getQueryData(['existing-attendance', rosterClassId, rosterDate]);
+      
       // Optimistically update to the new value
       queryClient.setQueryData(['existing-attendance', rosterClassId, rosterDate], (old: any) => {
         return newAttendance.records.map((rec: any) => ({
@@ -154,6 +203,10 @@ export const AttendanceManagement: React.FC = () => {
     });
     setAttendanceStates(updated);
   };
+
+  const handleStatusChange = React.useCallback((studentId: string, status: string) => {
+    setAttendanceStates(prev => ({ ...prev, [studentId]: status }));
+  }, []);
 
   if (statsLoading && activeTab === 'dashboard') {
     return <PageSkeleton />;
@@ -285,37 +338,13 @@ export const AttendanceManagement: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                     {students.map((student: any, idx: number) => (
-                      <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="px-6 py-4 font-medium">{student.rollNumber || idx + 1}</td>
-                        <td className="px-6 py-4">
-                          <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
-                              {student.profile?.firstName?.[0]}
-                            </div>
-                            {student.profile?.firstName} {student.profile?.lastName}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-900">
-                            {['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'].map((status) => (
-                              <button
-                                key={status}
-                                onClick={() => setAttendanceStates(prev => ({ ...prev, [student.id]: status }))}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                                  attendanceStates[student.id] === status
-                                    ? status === 'PRESENT' ? 'bg-emerald-500 text-white shadow-sm'
-                                    : status === 'ABSENT' ? 'bg-red-500 text-white shadow-sm'
-                                    : status === 'LATE' ? 'bg-amber-500 text-white shadow-sm'
-                                    : 'bg-purple-500 text-white shadow-sm'
-                                    : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800'
-                                }`}
-                              >
-                                {status}
-                              </button>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
+                      <AttendanceRow 
+                        key={student.id} 
+                        student={student} 
+                        idx={idx} 
+                        currentStatus={attendanceStates[student.id]} 
+                        onStatusChange={handleStatusChange} 
+                      />
                     ))}
                   </tbody>
                 </table>

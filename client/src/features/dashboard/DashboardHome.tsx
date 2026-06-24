@@ -11,20 +11,20 @@ import { Settings2, RotateCcw, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Components
-import { ExecutiveHero } from './components/ExecutiveHero';
-import { HealthScore } from './components/HealthScore';
-import { Operations } from './components/Operations';
-import { CriticalAction } from './components/CriticalAction';
-import { AttendanceAnalytics } from './components/AttendanceAnalytics';
-import { FeeAnalytics } from './components/FeeAnalytics';
-import { AcademicAnalytics } from './components/AcademicAnalytics';
-import { StudentIntel } from './components/StudentIntel';
-import { TeacherIntel } from './components/TeacherIntel';
-import { Communication } from './components/Communication';
-import { QuickActions } from './components/QuickActions';
-import { RecentActivity } from './components/RecentActivity';
-import { UpcomingEvents } from './components/UpcomingEvents';
-import { ReportsPanel } from './components/ReportsPanel';
+import { ExecutiveHero } from './components/ExecutiveHero'; // Keep hero static for LCP optimization
+const HealthScore = React.lazy(() => import('./components/HealthScore').then(m => ({ default: m.HealthScore })));
+const Operations = React.lazy(() => import('./components/Operations').then(m => ({ default: m.Operations })));
+const CriticalAction = React.lazy(() => import('./components/CriticalAction').then(m => ({ default: m.CriticalAction })));
+const AttendanceAnalytics = React.lazy(() => import('./components/AttendanceAnalytics').then(m => ({ default: m.AttendanceAnalytics })));
+const FeeAnalytics = React.lazy(() => import('./components/FeeAnalytics').then(m => ({ default: m.FeeAnalytics })));
+const AcademicAnalytics = React.lazy(() => import('./components/AcademicAnalytics').then(m => ({ default: m.AcademicAnalytics })));
+const StudentIntel = React.lazy(() => import('./components/StudentIntel').then(m => ({ default: m.StudentIntel })));
+const TeacherIntel = React.lazy(() => import('./components/TeacherIntel').then(m => ({ default: m.TeacherIntel })));
+const Communication = React.lazy(() => import('./components/Communication').then(m => ({ default: m.Communication })));
+const QuickActions = React.lazy(() => import('./components/QuickActions').then(m => ({ default: m.QuickActions })));
+const RecentActivity = React.lazy(() => import('./components/RecentActivity').then(m => ({ default: m.RecentActivity })));
+const UpcomingEvents = React.lazy(() => import('./components/UpcomingEvents').then(m => ({ default: m.UpcomingEvents })));
+const ReportsPanel = React.lazy(() => import('./components/ReportsPanel').then(m => ({ default: m.ReportsPanel })));
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -51,46 +51,36 @@ export const DashboardHome: React.FC = () => {
   const [isWidgetMenuOpen, setIsWidgetMenuOpen] = useState(false);
 
   // Fetch Dashboard Analytics
-  const { data: attendanceData } = useQuery({
-    queryKey: ['analytics', 'attendance'],
-    queryFn: () => api.get('/analytics/attendance').then(res => res.data.data),
+  const { data: aggregateData } = useQuery({
+    queryKey: ['analytics', 'dashboard-aggregate'],
+    queryFn: () => api.get('/analytics/dashboard-aggregate').then(res => res.data.data),
   });
 
-  const { data: feeData } = useQuery({
-    queryKey: ['analytics', 'fees'],
-    queryFn: () => api.get('/analytics/fees').then(res => res.data.data),
-  });
+  const attendanceData = aggregateData?.attendance;
+  const feeData = aggregateData?.fees;
+  const healthData = aggregateData?.health;
+  const alertsData = aggregateData?.alerts;
 
-  const { data: healthData } = useQuery({
-    queryKey: ['analytics', 'health'],
-    queryFn: () => api.get('/analytics/health').then(res => res.data.data),
-  });
-
-  const { data: alertsData } = useQuery({
-    queryKey: ['analytics', 'alerts'],
-    queryFn: () => api.get('/analytics/alerts').then(res => res.data.data),
-  });
-
-  const onLayoutChange = (newLayout: any) => {
+  const onLayoutChange = React.useCallback((newLayout: any) => {
     saveLayout(newLayout);
-  };
+  }, [saveLayout]);
 
   const renderWidget = (id: string) => {
     switch (id) {
       case 'executiveHero': return <ExecutiveHero healthScore={healthData?.overallScore || 0} attendanceRate={attendanceData?.students?.rate?.toFixed(1) || 0} feeCollection={feeData?.collection?.percentage || 0} alertsCount={alertsData?.alerts?.length || 0} />;
-      case 'healthScore': return <HealthScore />;
-      case 'operations': return <Operations />;
-      case 'criticalAction': return <CriticalAction />;
-      case 'attendanceAnalytics': return <AttendanceAnalytics />;
-      case 'feeAnalytics': return <FeeAnalytics />;
-      case 'academicAnalytics': return <AcademicAnalytics />;
-      case 'studentIntel': return <StudentIntel />;
-      case 'teacherIntel': return <TeacherIntel />;
-      case 'communication': return <Communication />;
-      case 'reportsPanel': return <ReportsPanel />;
-      case 'quickActions': return <QuickActions />;
-      case 'recentActivity': return <RecentActivity />;
-      case 'upcomingEvents': return <UpcomingEvents />;
+      case 'healthScore': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><HealthScore /></React.Suspense>;
+      case 'operations': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><Operations /></React.Suspense>;
+      case 'criticalAction': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><CriticalAction /></React.Suspense>;
+      case 'attendanceAnalytics': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><AttendanceAnalytics /></React.Suspense>;
+      case 'feeAnalytics': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><FeeAnalytics /></React.Suspense>;
+      case 'academicAnalytics': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><AcademicAnalytics /></React.Suspense>;
+      case 'studentIntel': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><StudentIntel /></React.Suspense>;
+      case 'teacherIntel': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><TeacherIntel /></React.Suspense>;
+      case 'communication': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><Communication /></React.Suspense>;
+      case 'reportsPanel': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><ReportsPanel /></React.Suspense>;
+      case 'quickActions': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><QuickActions /></React.Suspense>;
+      case 'recentActivity': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><RecentActivity /></React.Suspense>;
+      case 'upcomingEvents': return <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>}><UpcomingEvents /></React.Suspense>;
       default: return null;
     }
   };

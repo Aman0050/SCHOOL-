@@ -8,8 +8,8 @@ const queryClient = new QueryClient({
       refetchOnMount: true,
       refetchOnReconnect: true,
       retry: 2,
-      staleTime: 1 * 60 * 1000, // 1 minute (stale fast, fetch fast)
-      gcTime: 15 * 60 * 1000, // 15 minutes memory cache
+      staleTime: 30 * 1000, // 30 seconds (fetch fast in background)
+      gcTime: 24 * 60 * 60 * 1000, // 24 hours memory cache (instant navigation)
     },
   },
 });

@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../features/auth/authContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -16,6 +16,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const { tenantSubdomain } = useAuth();
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // We connect to the backend only when we know the tenant
@@ -37,11 +39,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('connect', () => setIsConnected(true));
     newSocket.on('disconnect', () => setIsConnected(false));
+    
+    // Global Cache Invalidation across all React Query components
+    newSocket.on('invalidate_cache', (data: { queryKey: string[] }) => {
+      queryClient.invalidateQueries({ queryKey: data.queryKey });
+    });
 
     return () => {
+      newSocket.off('invalidate_cache');
       newSocket.close();
     };
-  }, [tenantSubdomain]);
+  }, [tenantSubdomain, queryClient]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

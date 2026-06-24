@@ -178,6 +178,23 @@
   box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe Areas for iOS Notches & Home Bars */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 44px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 16px);
+  }
+}
+
 /* Custom Scrollbar for dropdowns and palettes */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

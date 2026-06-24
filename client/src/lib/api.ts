@@ -65,11 +65,11 @@ api.interceptors.response.use(
       
       // Only queue mutations (POST, PUT, DELETE, PATCH)
       if (method && ['post', 'put', 'patch', 'delete'].includes(method.toLowerCase())) {
-        await syncEngine.enqueue({
+        await syncEngine.queueRequest({
           url: url || '',
-          method,
-          data: data ? JSON.parse(data as string) : undefined,
-          headers
+          method: method.toUpperCase() as 'POST' | 'PUT' | 'DELETE',
+          body: data ? JSON.parse(data as string) : undefined,
+          headers: headers as Record<string, string>
         });
         
         // Return a mock success response so the UI doesn't crash

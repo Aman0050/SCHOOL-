@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchResult {
   id: string;
-  type: 'student' | 'navigation' | 'action';
+  type: 'student' | 'navigation' | 'action' | 'fee' | 'exam' | 'teacher';
   title: string;
   subtitle?: string;
   icon?: any;
@@ -32,11 +32,29 @@ export const GlobalSearch: React.FC = () => {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 300);
   const [results, setResults] = useState<SearchResult[]>(STATIC_RESULTS);
+  const [recentSearches, setRecentSearches] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  const saveRecentSearch = (item: SearchResult) => {
+    // Only save dynamic items
+    if (item.type === 'navigation' || item.type === 'action') return;
+    const newRecents = [item, ...recentSearches.filter(r => r.id !== item.id)].slice(0, 5);
+    setRecentSearches(newRecents);
+    localStorage.setItem('recentSearches', JSON.stringify(newRecents));
+  };
 
   // Listen for Cmd+K / Ctrl+K and open-search
   useEffect(() => {
@@ -66,15 +84,15 @@ export const GlobalSearch: React.FC = () => {
       inputRef.current.focus();
       setQuery('');
       setSelectedIndex(0);
-      setResults(STATIC_RESULTS);
+      setResults(recentSearches.length > 0 ? recentSearches : STATIC_RESULTS);
     }
-  }, [isOpen]);
+  }, [isOpen, recentSearches]);
 
-  // Fetch student results and merge with static filtering
+  // Fetch search results and merge with static filtering
   useEffect(() => {
     const q = debouncedQuery.toLowerCase().trim();
     if (q.length < 2) {
-      setResults(STATIC_RESULTS);
+      setResults(recentSearches.length > 0 && q.length === 0 ? recentSearches : STATIC_RESULTS);
       return;
     }
     
@@ -83,19 +101,11 @@ export const GlobalSearch: React.FC = () => {
     // Filter static
     const staticMatches = STATIC_RESULTS.filter(r => r.title.toLowerCase().includes(q) || r.subtitle?.toLowerCase().includes(q));
 
-    // Fetch dynamic (Students)
-    api.get(`/students/search?q=${encodeURIComponent(q)}`)
+    // Fetch dynamic unified search
+    api.get(`/search?q=${encodeURIComponent(q)}`)
       .then(res => {
-        const studentMatches: SearchResult[] = res.data.data.map((s: any) => ({
-          id: `stu-${s.id}`,
-          type: 'student',
-          title: s.name,
-          subtitle: `${s.classInfo} • ${s.admissionNumber}`,
-          avatarUrl: s.avatarUrl,
-          data: s.id
-        }));
-        
-        setResults([...staticMatches, ...studentMatches]);
+        const dynamicMatches = res.data.data;
+        setResults([...staticMatches, ...dynamicMatches]);
         setSelectedIndex(0);
       })
       .catch(console.error)
@@ -104,12 +114,19 @@ export const GlobalSearch: React.FC = () => {
 
   const handleSelect = (item: SearchResult) => {
     setIsOpen(false);
+    saveRecentSearch(item);
     if (item.type === 'navigation') {
       navigate(item.data);
     } else if (item.type === 'action') {
       window.dispatchEvent(new CustomEvent(item.data));
     } else if (item.type === 'student') {
       navigate(`/dashboard/students/${item.data}`);
+    } else if (item.type === 'fee') {
+      navigate(`/dashboard/fees`);
+    } else if (item.type === 'exam') {
+      navigate(`/dashboard/examinations`);
+    } else if (item.type === 'teacher') {
+      navigate(`/dashboard/staff`);
     }
   };
 
@@ -179,9 +196,17 @@ export const GlobalSearch: React.FC = () => {
               <div id="search-results" className="flex-1 overflow-y-auto p-2 custom-scrollbar" role="listbox">
                 {results.length > 0 ? (
                   <div className="space-y-1">
+                    {query.length === 0 && recentSearches.length > 0 && (
+                      <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        <History className="w-3 h-3" /> Recent Searches
+                      </div>
+                    )}
                     {results.map((item, idx) => {
                       const isSelected = idx === selectedIndex;
-                      const Icon = item.icon || UserIcon;
+                      let Icon = item.icon || UserIcon;
+                      if (item.type === 'fee') Icon = IndianRupee;
+                      if (item.type === 'exam') Icon = FileText;
+                      
                       return (
                         <motion.button 
                           id={`search-result-${idx}`}
@@ -195,7 +220,7 @@ export const GlobalSearch: React.FC = () => {
                             isSelected ? 'bg-indigo-500/10 border-indigo-500/20 shadow-sm' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700'
                           }`}
                         >
-                          {item.type === 'student' ? (
+                          {item.type === 'student' || item.type === 'teacher' ? (
                             item.avatarUrl ? (
                               <img src={item.avatarUrl} alt={item.title} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                             ) : (
@@ -207,6 +232,8 @@ export const GlobalSearch: React.FC = () => {
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-colors ${
                               item.type === 'action' 
                                 ? isSelected ? 'bg-amber-500/20 border-amber-500/30 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-600 dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-400' 
+                                : item.type === 'fee'
+                                ? isSelected ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-500' : 'bg-emerald-100 border-emerald-200 text-emerald-600 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-400'
                                 : isSelected ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-500' : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
                             }`}>
                               <Icon className="w-5 h-5" />

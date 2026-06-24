@@ -9,9 +9,20 @@ const connection = {
   port: parseInt(process.env.REDIS_PORT || '6379'),
 };
 
-export const integrityQueue = new Queue('integrity-checks', { connection });
+export const integrityQueue = new Queue('integrity-checks', { 
+  connection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 },
+    removeOnComplete: true,
+  }
+});
 
 // Initialize the worker that processes the queue
+import '../workers/exportQueue';
+import '../workers/communicationQueue';
+import { analyticsQueue } from '../workers/analyticsQueue';
+
 export const initQueues = () => {
   const worker = new Worker(
     'integrity-checks',
@@ -37,6 +48,13 @@ export const initQueues = () => {
   integrityQueue.add('daily-scan', {}, {
     repeat: {
       pattern: '0 2 * * *',
+    },
+  });
+
+  // Schedule analytics precomputation every 5 minutes
+  analyticsQueue.add('refresh-all-analytics', {}, {
+    repeat: {
+      pattern: '*/5 * * * *',
     },
   });
 

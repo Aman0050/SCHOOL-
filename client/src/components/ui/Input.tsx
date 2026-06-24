@@ -34,7 +34,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             className={twMerge(
               clsx(
-                'w-full rounded-xl border bg-white dark:bg-slate-900 py-3 text-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-primary/10',
+                'w-full rounded-xl border bg-white dark:bg-slate-900 py-3 text-sm min-h-[44px] outline-none transition-all duration-200 focus:ring-4 focus:ring-primary/10',
                 icon ? 'pl-10 pr-4' : 'px-4',
                 error
                   ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10'

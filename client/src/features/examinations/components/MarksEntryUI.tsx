@@ -7,6 +7,61 @@ import { Save, Check, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { examApi } from '../api/examApi';
 import type {  Exam, ExamSubject, MarksEntry  } from '../types/exam.types';
 
+const MarksEntryRow = React.memo(({ 
+  m, data, isReadOnly, onMarksChange 
+}: { 
+  m: any, 
+  data: any, 
+  isReadOnly: boolean, 
+  onMarksChange: (id: string, field: 'theory'|'practical'|'isAbsent', val: any) => void 
+}) => {
+  return (
+    <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+      <td className="px-5 py-4 font-medium text-slate-900 dark:text-white">{m.student?.firstName} {m.student?.lastName}</td>
+      <td className="px-5 py-4 text-slate-500">{m.student?.admission?.admissionNumber || 'N/A'}</td>
+      <td className="px-5 py-4">
+        <input
+          type="checkbox"
+          checked={data.isAbsent || false}
+          onChange={(e) => onMarksChange(m.studentId, 'isAbsent', e.target.checked)}
+          disabled={isReadOnly}
+          className="rounded text-primary focus:ring-primary w-4 h-4"
+        />
+      </td>
+      <td className="px-5 py-4">
+        <input
+          type="number"
+          value={data.theory || ''}
+          onChange={(e) => onMarksChange(m.studentId, 'theory', Number(e.target.value))}
+          disabled={isReadOnly || data.isAbsent}
+          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm disabled:opacity-50"
+          placeholder="0"
+        />
+      </td>
+      <td className="px-5 py-4">
+        <input
+          type="number"
+          value={data.practical || ''}
+          onChange={(e) => onMarksChange(m.studentId, 'practical', Number(e.target.value))}
+          disabled={isReadOnly || data.isAbsent}
+          className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm disabled:opacity-50"
+          placeholder="0"
+        />
+      </td>
+      <td className="px-5 py-4">
+        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${
+          m.entryStatus === 'LOCKED' ? 'bg-red-100 text-red-700' :
+          m.entryStatus === 'SUBMITTED' ? 'bg-yellow-100 text-yellow-700' :
+          'bg-slate-100 text-slate-700'
+        }`}>
+          {m.entryStatus === 'LOCKED' && <Lock className="w-3 h-3" />}
+          {m.entryStatus}
+        </span>
+      </td>
+    </tr>
+  );
+});
+
 export const MarksEntryUI: React.FC = () => {
   const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
@@ -74,7 +129,7 @@ export const MarksEntryUI: React.FC = () => {
     bulkSaveMutation.mutate(entriesToSave);
   };
 
-  const handleMarksChange = (studentId: string, field: 'theory' | 'practical' | 'isAbsent', value: any) => {
+  const handleMarksChange = React.useCallback((studentId: string, field: 'theory' | 'practical' | 'isAbsent', value: any) => {
     setMarksData(prev => ({
       ...prev,
       [studentId]: {
@@ -82,7 +137,7 @@ export const MarksEntryUI: React.FC = () => {
         [field]: value
       }
     }));
-  };
+  }, []);
 
   const isAllSubmitted = marksEntries && marksEntries.length > 0 && marksEntries.every(m => m.entryStatus === 'SUBMITTED' || m.entryStatus === 'LOCKED');
   const isAllLocked = marksEntries && marksEntries.length > 0 && marksEntries.every(m => m.entryStatus === 'LOCKED');
@@ -163,49 +218,13 @@ export const MarksEntryUI: React.FC = () => {
                     const data = (marksData[m.studentId] || {}) as { theory?: number; practical?: number; isAbsent?: boolean };
                     const isReadOnly = m.entryStatus === 'SUBMITTED' || m.entryStatus === 'LOCKED';
                     return (
-                      <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="px-5 py-4 font-medium text-slate-900 dark:text-white">{m.student?.firstName} {m.student?.lastName}</td>
-                        <td className="px-5 py-4 text-slate-500">{m.student?.admission?.admissionNumber || 'N/A'}</td>
-                        <td className="px-5 py-4">
-                          <input
-                            type="checkbox"
-                            checked={data.isAbsent || false}
-                            onChange={(e) => handleMarksChange(m.studentId, 'isAbsent', e.target.checked)}
-                            disabled={isReadOnly}
-                            className="rounded text-primary focus:ring-primary w-4 h-4"
-                          />
-                        </td>
-                        <td className="px-5 py-4">
-                          <input
-                            type="number"
-                            value={data.theory || ''}
-                            onChange={(e) => handleMarksChange(m.studentId, 'theory', Number(e.target.value))}
-                            disabled={isReadOnly || data.isAbsent}
-                            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm disabled:opacity-50"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="px-5 py-4">
-                          <input
-                            type="number"
-                            value={data.practical || ''}
-                            onChange={(e) => handleMarksChange(m.studentId, 'practical', Number(e.target.value))}
-                            disabled={isReadOnly || data.isAbsent}
-                            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm disabled:opacity-50"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${
-                            m.entryStatus === 'LOCKED' ? 'bg-red-100 text-red-700' :
-                            m.entryStatus === 'SUBMITTED' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>
-                            {m.entryStatus === 'LOCKED' && <Lock className="w-3 h-3" />}
-                            {m.entryStatus}
-                          </span>
-                        </td>
-                      </tr>
+                      <MarksEntryRow 
+                        key={m.id} 
+                        m={m} 
+                        data={data} 
+                        isReadOnly={isReadOnly} 
+                        onMarksChange={handleMarksChange} 
+                      />
                     );
                   })
                 )}

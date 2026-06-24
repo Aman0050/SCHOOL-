@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../config/db';
 import { AppError } from '../errors/AppError';
 import { createAuditLog, AuditAction } from '../utils/auditLogger';
+import { broadcastCacheInvalidation } from '../lib/socketManager';
 
 // Validation Schemas
 export const bulkAttendanceSchema = z.object({
@@ -94,9 +95,10 @@ export const recordBulkAttendance = async (req: Request, res: Response, next: Ne
             recordedById,
           },
           create: {
+            tenantId: req.user!.tenantId,
             userId: rec.userId,
             date: targetDate,
-            classId: classId || '',
+            classId: classId || null,
             status: rec.status,
             remarks: rec.remarks || null,
             mode: rec.mode || 'MANUAL',
@@ -132,10 +134,14 @@ export const recordBulkAttendance = async (req: Request, res: Response, next: Ne
 
     res.status(200).json({
       success: true,
-      data: {
-        message: `Successfully recorded ${savedRecords.length} attendance logs.`,
-      },
+      message: `Successfully recorded bulk attendance for ${records.length} students`,
     });
+    
+    // Broadcast real-time invalidation
+    broadcastCacheInvalidation(req.user!.tenantId, ['attendance']);
+    broadcastCacheInvalidation(req.user!.tenantId, ['studentStats']);
+    broadcastCacheInvalidation(req.user!.tenantId, ['dashboard']);
+    
   } catch (error) {
     next(error);
   }
@@ -148,25 +154,39 @@ export const getAttendanceAnalytics = async (req: Request, res: Response, next: 
 
     // 1. Get recent trends (last N days)
     const trends = [];
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysLimit);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const whereClause: any = { date: { gte: startDate } };
+    if (classId) whereClause.classId = classId;
+
+    const groupedAttendance = await prisma.attendance.groupBy({
+      by: ['date', 'status'],
+      where: whereClause,
+      _count: { id: true },
+    });
+
     for (let i = daysLimit - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       date.setUTCHours(0, 0, 0, 0);
+      const dateStr = date.toISOString().split('T')[0];
 
-      const whereClause: any = { date };
-      if (classId) whereClause.classId = classId;
+      let presentCount = 0;
+      let totalCount = 0;
 
-      const [presentCount, totalCount] = await Promise.all([
-        prisma.attendance.count({
-          where: { ...whereClause, status: 'PRESENT' },
-        }),
-        prisma.attendance.count({
-          where: whereClause,
-        }),
-      ]);
+      for (const group of groupedAttendance) {
+        if (group.date.toISOString().split('T')[0] === dateStr) {
+          if (group.status === 'PRESENT') {
+            presentCount += group._count.id;
+          }
+          totalCount += group._count.id;
+        }
+      }
 
       trends.push({
-        date: date.toISOString().split('T')[0],
+        date: dateStr,
         present: presentCount,
         total: totalCount,
         rate: totalCount > 0 ? parseFloat(((presentCount / totalCount) * 100).toFixed(1)) : 100,

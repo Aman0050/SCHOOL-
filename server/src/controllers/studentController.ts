@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { prisma } from '../config/db';
 import { AppError } from '../errors/AppError';
 import { createAuditLog, AuditAction } from '../utils/auditLogger';
+import { exportQueue } from '../workers/exportQueue';
 import { cache } from '../lib/cache';
 import { parseCSV, generateCSV, generateExcel } from '../utils/csvEngine';
 
@@ -591,32 +592,14 @@ export const exportStudents = async (req: Request, res: Response, next: NextFunc
     const tenantId = req.user!.tenantId;
     const { format } = req.query; // 'csv' or 'excel'
     
-    const students = await prisma.user.findMany({
-      where: { tenantId, role: 'STUDENT' },
-      include: { profile: true, admission: true },
+    // Enqueue the job
+    const job = await exportQueue.add('export_students', { 
+      tenantId,
+      format,
+      userId: req.user!.id
     });
 
-    const exportData = students.map(s => ({
-      'First Name': s.firstName,
-      'Last Name': s.lastName,
-      'Email': s.email,
-      'Admission Number': s.admission?.admissionNumber || '',
-      'Status': s.isActive ? 'Active' : 'Inactive',
-      'Gender': s.profile?.gender || '',
-      'Date of Birth': s.profile?.dateOfBirth ? new Date(s.profile.dateOfBirth).toLocaleDateString() : ''
-    }));
-
-    if (format === 'excel') {
-      const buffer = await generateExcel(exportData, 'Students');
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename=students.xlsx');
-      return res.send(buffer);
-    } else {
-      const buffer = generateCSV(exportData);
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
-      return res.send(buffer);
-    }
+    res.json({ success: true, jobId: job.id, message: 'Export generation queued' });
   } catch (error) {
     next(error);
   }

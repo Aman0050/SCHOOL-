@@ -20,6 +20,8 @@ import mfaRoutes from './mfaRoutes';
 import marketingRoutes from './marketingRoutes';
 import applicantRoutes from './applicantRoutes';
 import healthRoutes from './healthRoutes';
+import searchRoutes from './searchRoutes';
+import jobRoutes from './jobRoutes';
 
 const router = Router();
 
@@ -44,5 +46,7 @@ router.use('/mfa', mfaRoutes);
 router.use('/marketing', marketingRoutes);
 router.use('/applicants', applicantRoutes);
 router.use('/health', healthRoutes);
+router.use('/search', searchRoutes);
+router.use('/jobs', jobRoutes);
 
 export default router;

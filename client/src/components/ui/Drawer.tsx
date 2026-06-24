@@ -70,22 +70,33 @@ export const Drawer: React.FC<DrawerProps> = ({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0.5 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200, duration: 0.2 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={{ left: 0, right: 0.8 }}
+            onDragEnd={(e, info) => {
+              if (info.offset.x > 100 || info.velocity.x > 500) {
+                onClose();
+              }
+            }}
             className={`relative w-full ${widthMap[width]} bg-white dark:bg-slate-900 shadow-2xl flex flex-col h-full ${width === 'full' ? 'h-[calc(100vh-2rem)]' : ''}`}
           >
+            {/* Mobile Drag Indicator */}
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-slate-200 dark:bg-slate-700 rounded-full sm:hidden" />
+            
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
               <h2 id="drawer-title" className="text-xl font-semibold text-slate-900 dark:text-white">
                 {title}
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-300 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-300 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Close drawer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 pb-safe">
               {children}
             </div>
           </motion.div>

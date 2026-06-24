@@ -10,7 +10,8 @@ import {
   getStudentIntelligence,
   getTeacherWorkloadAnalytics,
   downloadDailyReport,
-  downloadExcelReport
+  downloadExcelReport,
+  getDashboardAggregate
 } from '../controllers/analyticsController';
 
 const router = Router();
@@ -18,6 +19,7 @@ const router = Router();
 // Analytics is primarily for Admins, SuperAdmins, and Principals
 router.use(authenticate, authorizeRoles(SystemRole.SUPER_ADMIN, SystemRole.SCHOOL_ADMIN));
 
+router.get('/dashboard-aggregate', getDashboardAggregate);
 router.get('/students', cacheMiddleware(300), getStudentIntelligence);
 router.get('/attendance', cacheMiddleware(300), getAttendanceIntelligence);
 router.get('/fees', cacheMiddleware(300), getFeeIntelligence);

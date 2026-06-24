@@ -6,7 +6,14 @@ const redisConnection = new IORedis(process.env.REDIS_URL || 'redis://localhost:
   maxRetriesPerRequest: null,
 });
 
-export const communicationQueue = new Queue('communication', { connection: redisConnection as any });
+export const communicationQueue = new Queue('communication', { 
+  connection: redisConnection as any,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 },
+    removeOnComplete: true,
+  }
+});
 
 const worker = new Worker('communication', async (job: Job) => {
   const { logId, channel, target, content } = job.data;

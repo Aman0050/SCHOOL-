@@ -97,3 +97,21 @@ export const notifyLessonPlanUpdate = (tenantId: string, teacherId: string, payl
     io.to(`role:${tenantId}:SCHOOL_ADMIN`).emit('lesson_plan_updated', payload);
   }
 };
+
+export const broadcastCacheInvalidation = (tenantId: string, queryKey: string[]) => {
+  if (io) {
+    io.to(`tenant:${tenantId}`).emit('invalidate_cache', { queryKey });
+  }
+};
+
+export const broadcastEvent = (tenantId: string, event: string, payload?: any) => {
+  if (io) {
+    io.to(`tenant:${tenantId}`).emit(event, payload);
+  }
+};
+
+export const notifyUserEvent = (userId: string, event: string, payload?: any) => {
+  if (io) {
+    io.to(`user:${userId}`).emit(event, payload);
+  }
+};

@@ -84,7 +84,15 @@ export const prisma = prismaWithReplicas.$extends({
           }
         }
 
-        return query(args);
+        const start = performance.now();
+        const result = await query(args);
+        const duration = performance.now() - start;
+
+        if (duration > 50) {
+          console.warn(`[SLOW_QUERY] ${model}.${operation} took ${duration.toFixed(2)}ms`);
+        }
+
+        return result;
       },
     },
   },

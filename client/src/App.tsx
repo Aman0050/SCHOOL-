@@ -7,6 +7,7 @@ import ProtectedRoute from './routes/ProtectedRoutes';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
 import './lib/i18n';
+import { TopBarLoader } from './components/ui/TopBarLoader';
 
 // Lazy loaded feature views
 const Login = React.lazy(() => import('./features/auth/Login'));
@@ -74,23 +75,23 @@ export const App: React.FC = () => {
               <Routes>
                   {/* Public Marketing Route */}
                   <Route path="/" element={
-                    <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center">Loading...</div>}>
+                    <Suspense fallback={<TopBarLoader />}>
                       <LandingPage />
                     </Suspense>
                   } />
-                  <Route path="/enterprise" element={<Suspense fallback={<div>Loading...</div>}><EnterprisePage /></Suspense>} />
-                  <Route path="/security" element={<Suspense fallback={<div>Loading...</div>}><DocumentationPage /></Suspense>} />
-                  <Route path="/documentation" element={<Suspense fallback={<div>Loading...</div>}><DocumentationPage /></Suspense>} />
-                  <Route path="/help-center" element={<Suspense fallback={<div>Loading...</div>}><HelpCenterPage /></Suspense>} />
-                  <Route path="/api-reference" element={<Suspense fallback={<div>Loading...</div>}><ApiReferencePage /></Suspense>} />
-                  <Route path="/blog" element={<Suspense fallback={<div>Loading...</div>}><BlogPage /></Suspense>} />
-                  <Route path="/privacy" element={<Suspense fallback={<div>Loading...</div>}><PrivacyPolicyPage /></Suspense>} />
-                  <Route path="/terms" element={<Suspense fallback={<div>Loading...</div>}><TermsOfServicePage /></Suspense>} />
-                  <Route path="/cookies" element={<Suspense fallback={<div>Loading...</div>}><CookiePolicyPage /></Suspense>} />
+                  <Route path="/enterprise" element={<Suspense fallback={<TopBarLoader />}><EnterprisePage /></Suspense>} />
+                  <Route path="/security" element={<Suspense fallback={<TopBarLoader />}><DocumentationPage /></Suspense>} />
+                  <Route path="/documentation" element={<Suspense fallback={<TopBarLoader />}><DocumentationPage /></Suspense>} />
+                  <Route path="/help-center" element={<Suspense fallback={<TopBarLoader />}><HelpCenterPage /></Suspense>} />
+                  <Route path="/api-reference" element={<Suspense fallback={<TopBarLoader />}><ApiReferencePage /></Suspense>} />
+                  <Route path="/blog" element={<Suspense fallback={<TopBarLoader />}><BlogPage /></Suspense>} />
+                  <Route path="/privacy" element={<Suspense fallback={<TopBarLoader />}><PrivacyPolicyPage /></Suspense>} />
+                  <Route path="/terms" element={<Suspense fallback={<TopBarLoader />}><TermsOfServicePage /></Suspense>} />
+                  <Route path="/cookies" element={<Suspense fallback={<TopBarLoader />}><CookiePolicyPage /></Suspense>} />
 
                   {/* Public Entry Routes */}
-                  <Route path="/login" element={<Suspense fallback={<div className="h-screen w-screen flex items-center justify-center">Loading...</div>}><Login /></Suspense>} />
-                  <Route path="/unauthorized" element={<Suspense fallback={<div>Loading...</div>}><Unauthorized /></Suspense>} />
+                  <Route path="/login" element={<Suspense fallback={<TopBarLoader />}><Login /></Suspense>} />
+                  <Route path="/unauthorized" element={<Suspense fallback={<TopBarLoader />}><Unauthorized /></Suspense>} />
 
                   {/* Core Protected App Layout (Checks Tenant Resolution & Auth) */}
                   <Route element={<ProtectedRoute />}>
@@ -125,7 +126,7 @@ export const App: React.FC = () => {
                     </Route>
 
                     {/* Self-Serve Onboarding */}
-                    <Route path="/onboarding" element={<Suspense fallback={<div>Loading...</div>}><SchoolSetupWizard /></Suspense>} />
+                    <Route path="/onboarding" element={<Suspense fallback={<TopBarLoader />}><SchoolSetupWizard /></Suspense>} />
 
                     {/* Super Admin / Platform Owner Layout */}
                     <Route path="/superadmin" element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>

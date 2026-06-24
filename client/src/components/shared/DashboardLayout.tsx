@@ -10,6 +10,8 @@ import { GlobalSearchPalette } from './GlobalSearchPalette';
 import { MobileNav } from './MobileNav';
 import { Breadcrumbs } from '../ui/Breadcrumbs';
 import { NotificationCenter } from '../ui/NotificationCenter';
+import { useSocket } from '../../contexts/SocketContext';
+import toast from 'react-hot-toast';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -61,6 +63,28 @@ export const DashboardLayout: React.FC = () => {
       navigate('/teacher/dashboard', { replace: true });
     }
   }, [user, navigate]);
+
+  const { socket } = useSocket();
+  
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleNewAnnouncement = (data: { title: string }) => {
+      toast.success(`New Announcement: ${data.title}`, { icon: '📢' });
+    };
+    
+    const handleResultsUpdated = (data: { title: string }) => {
+      toast.success(`Exam Results Published: ${data.title}`, { icon: '🎓' });
+    };
+    
+    socket.on('new_announcement', handleNewAnnouncement);
+    socket.on('results_updated', handleResultsUpdated);
+    
+    return () => {
+      socket.off('new_announcement', handleNewAnnouncement);
+      socket.off('results_updated', handleResultsUpdated);
+    };
+  }, [socket]);
 
   const handleLogout = async () => {
     await logout();

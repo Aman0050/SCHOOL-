@@ -1,57 +1,102 @@
 version: '3.8'
 
 services:
-  postgres:
+  # Primary Transactional Database
+  postgres-primary:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-admin_school}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SecureDBPass_2026!}
-      POSTGRES_DB: ${POSTGRES_DB:-school_management}
+      POSTGRES_USER: eduxeno
+      POSTGRES_PASSWORD: secure_db_password
+      POSTGRES_DB: eduxeno_db
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata-primary:/var/lib/postgresql/data
+    networks:
+      - eduxeno-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin_school}"]
+      test: ["CMD-SHELL", "pg_isready -U eduxeno"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # Analytical Read Replica
+  postgres-replica:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: eduxeno
+      POSTGRES_PASSWORD: secure_db_password
+      POSTGRES_DB: eduxeno_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-replica:/var/lib/postgresql/data
+    networks:
+      - eduxeno-net
+    depends_on:
+      - postgres-primary
+
+  # Connection Pooler
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    environment:
+      DATABASE_URL: "postgres://eduxeno:secure_db_password@postgres-primary:5432/eduxeno_db"
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 50
+    ports:
+      - "6432:6432"
+    networks:
+      - eduxeno-net
+    depends_on:
+      - postgres-primary
+
+  # Enterprise Redis Cluster for Cache & Socket.io
   redis:
     image: redis:7-alpine
+    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru --appendonly yes
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redisdata:/data
+    networks:
+      - eduxeno-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
-    ports:
-      - "5000:5000"
+  # Node API Servers (Horizontally Scaled)
+  api:
+    build: 
+      context: ./server
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL:-postgresql://admin_school:SecureDBPass_2026!@postgres:5432/school_management?schema=public}
+      - DATABASE_URL=postgres://eduxeno:secure_db_password@pgbouncer:6432/eduxeno_db?pgbouncer=true
+      - DATABASE_URL_REPLICA=postgres://eduxeno:secure_db_password@postgres-replica:5432/eduxeno_db
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET:-c8f1e6b3a2d7495088c42b9d1e5a7f9b}
-      - CORS_ORIGIN=http://localhost:80
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    command: sh -c "npx prisma migrate deploy && npm start"
-
-  client:
-    build:
-      context: .
-      dockerfile: Dockerfile.client
+      - AWS_REGION=us-east-1
+      - AWS_S3_BUCKET=eduxeno-assets-prod
     ports:
-      - "80:80"
+      - "5000:5000"
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - eduxeno-net
     depends_on:
-      - server
+      - pgbouncer
+      - redis
 
 volumes:
-  postgres_data:
-  redis_data:
+  pgdata-primary:
+  pgdata-replica:
+  redisdata:
+
+networks:
+  eduxeno-net:
+    driver: bridge

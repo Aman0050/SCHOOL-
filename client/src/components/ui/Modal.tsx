@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -57,7 +57,7 @@ export const Modal: React.FC<ModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" 
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6" 
           role="dialog" 
           aria-modal="true" 
           aria-labelledby="modal-title"
@@ -76,12 +76,17 @@ export const Modal: React.FC<ModalProps> = ({
             ref={modalRef}
             tabIndex={-1}
             onKeyDown={handleKeyDown}
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: '100%' }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            exit={{ opacity: 0, scale: 0.95, y: '100%' }}
             transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
-            className={`relative w-full ${widthMap[width]} bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden outline-none`}
+            className={`relative w-full ${widthMap[width]} bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[90vh] pb-safe sm:pb-0 overflow-hidden outline-none`}
           >
+            {/* Mobile Drag Indicator */}
+            <div className="w-full flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full" />
+            </div>
+            
             {(title || description) && (
               <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start justify-between">

@@ -3,6 +3,8 @@ import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/db';
 import { createAuditLog, AuditAction } from '../utils/auditLogger';
+import { broadcastEvent, broadcastCacheInvalidation } from '../lib/socketManager';
+import { AppError } from '../errors/AppError';
 
 // ==================== GRADE ENGINE ====================
 
@@ -254,6 +256,11 @@ export const publishExam = async (req: Request, res: Response, next: NextFunctio
       ipAddress: req.ip, userAgent: req.headers['user-agent']
     });
     
+    // Broadcast real-time results updates
+    broadcastEvent(req.user!.tenantId, 'results_updated', { title: exam.name });
+    broadcastCacheInvalidation(req.user!.tenantId, ['exams']);
+    broadcastCacheInvalidation(req.user!.tenantId, ['results']);
+
     res.json({ success: true, data: exam });
   } catch (e) { next(e); }
 };
@@ -330,33 +337,50 @@ export const bulkSaveMarks = async (req: Request, res: Response, next: NextFunct
     const { id: examId } = req.params;
     const { entries } = req.body; 
 
-    const results = await prisma.$transaction(
-      entries.map((e: any) => {
-        const totalMarks = e.isAbsent ? 0 : ((e.theoryMarks || 0) + (e.practicalMarks || 0));
-        return prisma.marksEntry.upsert({
-          where: { examId_subjectId_studentId: { examId, subjectId: e.subjectId, studentId: e.studentId } },
-          create: {
-            tenantId, examId, subjectId: e.subjectId, studentId: e.studentId,
-            theoryMarks: e.isAbsent ? null : (e.theoryMarks != null ? new Prisma.Decimal(e.theoryMarks) : null),
-            practicalMarks: e.isAbsent ? null : (e.practicalMarks != null ? new Prisma.Decimal(e.practicalMarks) : null),
-            totalMarks: new Prisma.Decimal(totalMarks),
-            isAbsent: e.isAbsent || false,
-            remarks: e.remarks,
-            entryStatus: 'DRAFT',
-            enteredBy: req.user!.id,
-          },
-          update: {
-            theoryMarks: e.isAbsent ? null : (e.theoryMarks != null ? new Prisma.Decimal(e.theoryMarks) : undefined),
-            practicalMarks: e.isAbsent ? null : (e.practicalMarks != null ? new Prisma.Decimal(e.practicalMarks) : undefined),
-            totalMarks: new Prisma.Decimal(totalMarks),
-            isAbsent: e.isAbsent || false,
-            remarks: e.remarks,
-            entryStatus: 'DRAFT',
-            enteredBy: req.user!.id,
-          },
-        });
-      })
-    );
+    // Fetch schedules to validate max marks
+    const schedules = await prisma.examSubjectSchedule.findMany({ where: { examId } });
+    const scheduleMap = new Map(schedules.map(s => [s.subjectId, s]));
+
+    const operations = entries.map((e: any) => {
+      const schedule = scheduleMap.get(e.subjectId) as any;
+      const maxTheory = schedule?.maxMarks || 100;
+      const maxPractical = schedule?.practicalMaxMarks || 0;
+
+      if (!e.isAbsent) {
+        if (e.theoryMarks !== undefined && e.theoryMarks !== null && (e.theoryMarks < 0 || e.theoryMarks > maxTheory)) {
+          throw new AppError(400, 'VALIDATION_ERROR', `Theory marks for subject ${e.subjectId} must be 0-${maxTheory}`);
+        }
+        if (e.practicalMarks !== undefined && e.practicalMarks !== null && (e.practicalMarks < 0 || e.practicalMarks > maxPractical)) {
+          throw new AppError(400, 'VALIDATION_ERROR', `Practical marks for subject ${e.subjectId} must be 0-${maxPractical}`);
+        }
+      }
+
+      const totalMarks = e.isAbsent ? 0 : ((e.theoryMarks || 0) + (e.practicalMarks || 0));
+      return prisma.marksEntry.upsert({
+        where: { examId_subjectId_studentId: { examId, subjectId: e.subjectId, studentId: e.studentId } },
+        create: {
+          tenantId, examId, subjectId: e.subjectId, studentId: e.studentId,
+          theoryMarks: e.isAbsent ? null : (e.theoryMarks != null ? new Prisma.Decimal(e.theoryMarks) : null),
+          practicalMarks: e.isAbsent ? null : (e.practicalMarks != null ? new Prisma.Decimal(e.practicalMarks) : null),
+          totalMarks: new Prisma.Decimal(totalMarks),
+          isAbsent: e.isAbsent || false,
+          remarks: e.remarks,
+          entryStatus: 'DRAFT',
+          enteredBy: req.user!.id,
+        },
+        update: {
+          theoryMarks: e.isAbsent ? null : (e.theoryMarks != null ? new Prisma.Decimal(e.theoryMarks) : undefined),
+          practicalMarks: e.isAbsent ? null : (e.practicalMarks != null ? new Prisma.Decimal(e.practicalMarks) : undefined),
+          totalMarks: new Prisma.Decimal(totalMarks),
+          isAbsent: e.isAbsent || false,
+          remarks: e.remarks,
+          entryStatus: 'DRAFT',
+          enteredBy: req.user!.id,
+        },
+      });
+    });
+
+    const results = await prisma.$transaction(operations);
     res.json({ success: true, data: { saved: results.length } });
   } catch (e) { next(e); }
 };

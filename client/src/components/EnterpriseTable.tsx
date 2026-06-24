@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, ChevronDown, ChevronUp, MoreHorizontal, Filter } from 'lucide-react';
 
@@ -21,6 +21,14 @@ export function EnterpriseTable<T>({ data, columns, onSearch, title, description
   const parentRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: keyof T, direction: 'asc'|'desc' } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const filteredData = useMemo(() => {
     let result = [...data];
@@ -42,7 +50,7 @@ export function EnterpriseTable<T>({ data, columns, onSearch, title, description
   const rowVirtualizer = useVirtualizer({
     count: filteredData.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 56, // Row height
+    estimateSize: () => isMobile ? (columns.length * 36 + 24) : 56, // Row height
     overscan: 5,
   });
 
@@ -83,8 +91,8 @@ export function EnterpriseTable<T>({ data, columns, onSearch, title, description
         </div>
       </div>
 
-      {/* Table Header */}
-      <div className="grid border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
+      {/* Table Header (Hidden on Mobile) */}
+      <div className="hidden sm:grid border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
         {columns.map((col, i) => (
           <div 
             key={i} 
@@ -115,12 +123,25 @@ export function EnterpriseTable<T>({ data, columns, onSearch, title, description
                   height: `${virtualRow.size}px`,
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
-                className="grid border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group p-4 sm:p-0"
               >
-                <div className="grid w-full h-full" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
+                {/* Desktop Grid */}
+                <div className="hidden w-full h-full sm:grid" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
                   {columns.map((col, i) => (
                     <div key={i} className="px-6 py-4 flex items-center text-sm text-slate-700 dark:text-slate-300 truncate">
                       {col.cell ? col.cell({ row: rowData }) : col.accessorKey ? String(rowData[col.accessorKey] || '') : ''}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Mobile Card */}
+                <div className="flex flex-col sm:hidden space-y-2 h-full justify-center">
+                  {columns.map((col, i) => (
+                    <div key={i} className="flex justify-between items-start border-b border-slate-50 dark:border-slate-800/50 pb-2 last:border-0 last:pb-0">
+                      <span className="text-xs font-semibold text-slate-500 uppercase">{col.header}</span>
+                      <div className="text-sm text-slate-900 dark:text-slate-100 text-right font-medium max-w-[60%]">
+                        {col.cell ? col.cell({ row: rowData }) : col.accessorKey ? String(rowData[col.accessorKey] || '') : ''}
+                      </div>
                     </div>
                   ))}
                 </div>

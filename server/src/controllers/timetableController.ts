@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+
 import { z } from 'zod';
 import { AppError } from '../errors/AppError';
 
-const prisma = new PrismaClient();
+import { prisma } from '../config/db';
 
 // Validation Schemas
 export const timetableSaveSchema = z.object({

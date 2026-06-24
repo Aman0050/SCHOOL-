@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
+import { prisma } from '../config/db';
+import { broadcastEvent, broadcastCacheInvalidation } from '../lib/socketManager';
 
 // ==================== NOTICES & CIRCULARS ====================
 
@@ -62,6 +63,12 @@ export const createNotice = async (req: Request, res: Response, next: NextFuncti
 
       return n;
     });
+
+    // Broadcast real-time updates
+    const tenantIdStr = (req as any).tenantId!;
+    broadcastEvent(tenantIdStr, 'new_announcement', { title: notice.title });
+    broadcastCacheInvalidation(tenantIdStr, ['notices']);
+    broadcastCacheInvalidation(tenantIdStr, ['dashboard']);
 
     res.status(201).json({ success: true, data: notice });
   } catch (error) {

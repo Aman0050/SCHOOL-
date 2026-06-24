@@ -2,11 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../config/db';
 import { AppError } from '../errors/AppError';
-import Razorpay from 'razorpay';
-import crypto from 'crypto';
-import { generateReceiptPdfBuffer } from '../utils/pdfGenerator';
 import { logAudit } from '../services/auditService';
 import { AuditAction } from '@prisma/client';
+import { broadcastCacheInvalidation } from '../lib/socketManager';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import { exportQueue } from '../workers/exportQueue';
 
 // ==================== HELPERS ====================
 
@@ -559,12 +560,25 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
     let oldStatus: any;
 
     const payment = await prisma.$transaction(async (tx) => {
-      // Re-fetch collection inside transaction with lock if possible, or just recalculate
+      // Database-level row lock to prevent race conditions for concurrent identical requests
+      await tx.$executeRaw`SELECT * FROM "FeeCollection" WHERE id = ${collectionId} FOR UPDATE`;
+
+      // Re-fetch collection inside transaction
       const currentCollection = await tx.feeCollection.findUnique({
         where: { id: collectionId },
         include: { payments: true },
       });
       if (!currentCollection) throw new AppError(404, 'NOT_FOUND', 'Collection not found');
+
+      if (gatewayPaymentId || transactionId) {
+        const existing = await tx.paymentInstallment.findFirst({
+          where: { OR: [
+            { gatewayPaymentId: gatewayPaymentId || undefined },
+            { transactionId: transactionId || undefined }
+          ].filter(x => Object.values(x)[0] !== undefined) }
+        });
+        if (existing) throw new AppError(400, 'DUPLICATE_PAYMENT', 'A payment with this transaction or gateway ID already exists');
+      }
 
       assignmentIdToRecalc = currentCollection.assignmentId;
       studentIdForEmit = currentCollection.studentId;
@@ -651,6 +665,11 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
       req
     );
 
+    // Broadcast real-time invalidation
+    broadcastCacheInvalidation(tenantId, ['fees']);
+    broadcastCacheInvalidation(tenantId, ['studentStats']);
+    broadcastCacheInvalidation(tenantId, ['dashboard']);
+
     res.json({ success: true, data: payment });
   } catch (e) {
     next(e);
@@ -716,15 +735,14 @@ export const getReceiptPdf = async (req: Request, res: Response, next: NextFunct
 
     if (!collection) throw new AppError(404, 'NOT_FOUND', 'Receipt not found');
     
-    const pdfBuffer = await generateReceiptPdfBuffer(collection);
-    
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=Receipt-${collection.receiptNumber}.pdf`,
-      'Content-Length': pdfBuffer.length,
+    // Enqueue the job
+    const job = await exportQueue.add('generate_fee_receipt', { 
+      collectionId: id,
+      tenantId: (req as any).tenantId,
+      userId: req.user!.id
     });
     
-    res.end(pdfBuffer);
+    res.json({ success: true, jobId: job.id, message: 'Receipt generation queued' });
   } catch (e) {
     next(e);
   }

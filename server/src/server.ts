@@ -24,6 +24,10 @@ const PORT = process.env.PORT || 5000;
 // Setup Request Logging
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
+// Serve Static Exports
+import path from 'path';
+app.use('/downloads', express.static(path.join(__dirname, '../public/downloads')));
+
 // Security configuration for CORS
 const allowedOrigins = [
   'http://localhost:5173',          // Vite default port
