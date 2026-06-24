@@ -554,17 +554,9 @@ export const revokeSession = async (req: Request, res: Response, next: NextFunct
 // ==================== ENTERPRISE SSO ====================
 
 import { OAuth2Client } from 'google-auth-library';
-import * as msal from '@azure/msal-node';
+
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const msalConfig = {
-  auth: {
-    clientId: process.env.MSAL_CLIENT_ID || '',
-    authority: `https://login.microsoftonline.com/${process.env.MSAL_TENANT_ID || 'common'}`,
-    clientSecret: process.env.MSAL_CLIENT_SECRET || '',
-  }
-};
-const msalClient = new msal.ConfidentialClientApplication(msalConfig);
 
 export const ssoGoogleLogin = async (req: Request, res: Response, next: NextFunction) => {
   try {
