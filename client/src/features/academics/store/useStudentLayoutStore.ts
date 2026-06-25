@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { Layout } from 'react-grid-layout';
 
 const DEFAULT_LAYOUT: any[] = [
@@ -22,10 +22,23 @@ export const useStudentLayoutStore = (userId: string) => {
     return DEFAULT_LAYOUT;
   });
 
-  const saveLayout = (newLayout: any[]) => {
-    setLayout(newLayout);
-    localStorage.setItem(storageKey, JSON.stringify(newLayout));
-  };
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveLayout = useCallback((newLayout: any[]) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setLayout(newLayout);
+      localStorage.setItem(storageKey, JSON.stringify(newLayout));
+    }, 500);
+  }, [storageKey]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const resetLayout = () => {
     setLayout(DEFAULT_LAYOUT);

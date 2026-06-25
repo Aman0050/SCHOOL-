@@ -184,14 +184,15 @@ export const StudentManagement: React.FC = () => {
             isDraggable={true}
             isResizable={true}
             margin={[16, 16]}
+            useCSSTransforms={true}
           >
             <div key="studentHero" data-grid={{ x: 0, y: 0, w: 12, h: 2, static: true }}>
               <StudentExecutiveHero stats={stats} />
             </div>
-            <div key="enrollmentAnalytics" className="drag-handle cursor-move h-full"><EnrollmentAnalytics /></div>
-            <div key="studentRisk" className="drag-handle cursor-move h-full"><StudentRiskMonitor /></div>
-            <div key="demographics" className="drag-handle cursor-move h-full"><DemographicDistribution /></div>
-            <div key="liveActivity" className="drag-handle cursor-move h-full"><LiveStudentActivity /></div>
+            <div key="enrollmentAnalytics" data-grid={{ x: 0, y: 2, w: 8, h: 4 }} className="drag-handle cursor-move h-full"><EnrollmentAnalytics /></div>
+            <div key="studentRisk" data-grid={{ x: 8, y: 2, w: 4, h: 4 }} className="drag-handle cursor-move h-full"><StudentRiskMonitor /></div>
+            <div key="demographics" data-grid={{ x: 0, y: 6, w: 6, h: 4 }} className="drag-handle cursor-move h-full"><DemographicDistribution /></div>
+            <div key="liveActivity" data-grid={{ x: 6, y: 6, w: 6, h: 4 }} className="drag-handle cursor-move h-full"><LiveStudentActivity /></div>
           </ResponsiveGridLayout>
         </div>
       )}

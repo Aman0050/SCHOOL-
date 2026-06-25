@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 const DEFAULT_LAYOUT: any[] = [
   { i: 'executiveHero', x: 0, y: 0, w: 12, h: 2, static: true },
@@ -41,10 +41,23 @@ export const useDashboardLayout = (userId: string) => {
     return DEFAULT_VISIBLE;
   });
 
-  const saveLayout = (newLayout: any[]) => {
-    setLayout(newLayout);
-    localStorage.setItem(layoutKey, JSON.stringify(newLayout));
-  };
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveLayout = useCallback((newLayout: any[]) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setLayout(newLayout);
+      localStorage.setItem(layoutKey, JSON.stringify(newLayout));
+    }, 500);
+  }, [layoutKey]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const toggleWidget = (widgetId: string) => {
     setVisibleWidgets(prev => {
