@@ -25,8 +25,15 @@ export const uploadBufferToS3 = async (
 
   await s3Client.send(command);
 
+  // Return CDN URL if configured, otherwise fallback to S3 Presigned URL
+  const cdnDomain = process.env.CLOUDFRONT_DOMAIN;
+  if (cdnDomain) {
+    // Note: If files are private, you'd generate a CloudFront signed URL here.
+    // For now, returning the public CDN URL.
+    return `https://${cdnDomain}/${filename}`;
+  }
+
   // Generate a signed URL valid for 1 hour
-  // If using CloudFront, you'd replace this logic with CloudFront signing
   const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
   
   return signedUrl;

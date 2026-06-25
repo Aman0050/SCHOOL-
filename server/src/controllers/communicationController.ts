@@ -8,8 +8,11 @@ import { communicationQueue } from '../workers/communicationQueue';
 export const getCommunicationStats = async (req: Request, res: Response) => {
   try {
     const tenantId = req.user!.tenantId;
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
 
     const totalLogs = await prisma.communicationLog.count({ where: { tenantId } });
+    const todayLogs = await prisma.communicationLog.count({ where: { tenantId, sentAt: { gte: startOfDay } } });
     const delivered = await prisma.communicationLog.count({ where: { tenantId, status: 'DELIVERED' } });
     const failed = await prisma.communicationLog.count({ where: { tenantId, status: 'FAILED' } });
     const read = await prisma.communicationLog.count({ where: { tenantId, status: 'READ' } });
@@ -24,7 +27,7 @@ export const getCommunicationStats = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: {
-        totalSentToday: totalLogs, // Mocking "today" for simplicity
+        totalSentToday: todayLogs,
         deliveryRate: totalLogs > 0 ? ((delivered + read) / totalLogs) * 100 : 0,
         failedMessages: failed,
         readRate: totalLogs > 0 ? (read / totalLogs) * 100 : 0,

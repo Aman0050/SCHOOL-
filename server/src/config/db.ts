@@ -90,6 +90,35 @@ export const prisma = prismaWithReplicas.$extends({
 
         if (duration > 50) {
           console.warn(`[SLOW_QUERY] ${model}.${operation} took ${duration.toFixed(2)}ms`);
+          const { alertManager } = require('../lib/alerting');
+          alertManager.send({
+            title: 'Database Slow Query Detected',
+            message: `${model}.${operation} took ${duration.toFixed(2)}ms`,
+            severity: 'WARNING',
+            metadata: { model, operation, duration }
+          }).catch(console.error);
+        }
+
+        // Elasticsearch Sync Logic
+        const searchSyncModels = ['Student']; // Expand to others as needed
+        if (searchSyncModels.includes(model)) {
+          // Import here to avoid circular dependency in some setups, or rely on hoisting if safe
+          const { searchQueue } = require('../lib/queueManager');
+          
+          if (operation === 'create' || operation === 'update') {
+            searchQueue.add('index-entity', {
+              entity: model.toLowerCase() + 's', // e.g. students
+              operation: 'upsert',
+              id: result.id,
+              payload: result
+            }).catch(console.error);
+          } else if (operation === 'delete') {
+            searchQueue.add('index-entity', {
+              entity: model.toLowerCase() + 's',
+              operation: 'delete',
+              id: args.where.id
+            }).catch(console.error);
+          }
         }
 
         return result;

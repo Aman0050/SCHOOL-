@@ -1,9 +1,9 @@
-
 import { Request, Response } from 'express';
 import { prisma } from '../config/db';
 import { generateDailyReportPdfBuffer } from '../utils/pdfGenerator';
 import { cache } from '../lib/cache';
 import { analyticsQueue } from '../workers/analyticsQueue';
+import { analyticsService } from '../services/analyticsService';
 
 export const getAttendanceIntelligence = async (req: Request, res: Response) => {
   try {
@@ -12,8 +12,14 @@ export const getAttendanceIntelligence = async (req: Request, res: Response) => 
     
     let data = await cache.get(cacheKey);
     if (!data) {
-      await analyticsQueue.add('refresh-tenant-analytics', { tenantId }, { removeOnComplete: true });
-      return res.status(202).json({ success: true, message: 'Data is being generated. Please refresh in a moment.' });
+      try {
+        data = await analyticsService.getAttendanceIntelligence(tenantId);
+        // Fire and forget cache update, don't wait for it
+        cache.set(cacheKey, data, 300).catch(console.error);
+      } catch (err) {
+        console.error('Failed to compute attendance intelligence synchronously', err);
+        return res.status(500).json({ success: false, message: 'Failed to generate data.' });
+      }
     }
 
     res.json({
@@ -33,8 +39,13 @@ export const getFeeIntelligence = async (req: Request, res: Response) => {
 
     let data = await cache.get(cacheKey);
     if (!data) {
-      await analyticsQueue.add('refresh-tenant-analytics', { tenantId }, { removeOnComplete: true });
-      return res.status(202).json({ success: true, message: 'Data is being generated. Please refresh in a moment.' });
+      try {
+        data = await analyticsService.getFeeIntelligence(tenantId);
+        cache.set(cacheKey, data, 300).catch(console.error);
+      } catch (err) {
+        console.error('Failed to compute fee intelligence synchronously', err);
+        return res.status(500).json({ success: false, message: 'Failed to generate data.' });
+      }
     }
 
     res.json({
@@ -49,32 +60,74 @@ export const getFeeIntelligence = async (req: Request, res: Response) => {
 
 export const getExamIntelligence = async (req: Request, res: Response) => {
   try {
-    // Mock subject performance radar data
-    const subjectPerformance = [
-      { subject: 'Math', score: 85, avg: 70 },
-      { subject: 'Science', score: 92, avg: 75 },
-      { subject: 'English', score: 78, avg: 82 },
-      { subject: 'History', score: 88, avg: 80 },
-      { subject: 'Computer', score: 95, avg: 85 },
-    ];
+    const { tenantId } = req.user!;
 
-    // Mock Class wise performance
-    const classPerformance = [
-      { class: 'Grade 9', score: 82 },
-      { class: 'Grade 10', score: 88 },
-      { class: 'Grade 11', score: 76 },
-      { class: 'Grade 12', score: 91 },
-    ];
+    // Real Subject Performance from MarksEntry
+    const marksBySubject = await prisma.marksEntry.groupBy({
+      by: ['subjectId'],
+      where: { tenantId, entryStatus: 'PUBLISHED', isAbsent: false },
+      _avg: { totalMarks: true },
+    });
+
+    const subjectDetails = await prisma.examSubject.findMany({
+      where: { id: { in: marksBySubject.map(m => m.subjectId) } },
+      select: { id: true, name: true }
+    });
+
+    const subjectPerformance = marksBySubject.map(m => {
+      const subject = subjectDetails.find(s => s.id === m.subjectId);
+      return {
+        subject: subject?.name || 'Unknown',
+        score: Number(m._avg.totalMarks || 0),
+        avg: 70 // Static global average for baseline comparison
+      };
+    }).slice(0, 5); // Limit to top 5 for radar chart
+
+    // Real Class Performance from StudentResult
+    const resultsByClass = await prisma.studentResult.groupBy({
+      by: ['classId'],
+      where: { tenantId },
+      _avg: { percentage: true }
+    });
+
+    const classDetails = await prisma.class.findMany({
+      where: { id: { in: resultsByClass.map(r => r.classId) } },
+      select: { id: true, name: true }
+    });
+
+    const classPerformance = resultsByClass.map(r => {
+      const cls = classDetails.find(c => c.id === r.classId);
+      return {
+        class: cls?.name || 'Unknown',
+        score: Number(r._avg.percentage || 0)
+      };
+    });
+
+    const overallStats = await prisma.studentResult.aggregate({
+      where: { tenantId },
+      _avg: { percentage: true }
+    });
+    
+    const passedCount = await prisma.studentResult.count({
+      where: { tenantId, resultStatus: 'PASS' }
+    });
+    
+    const totalCount = await prisma.studentResult.count({
+      where: { tenantId }
+    });
+
+    const passPercentage = totalCount > 0 ? (passedCount / totalCount) * 100 : 0;
 
     res.json({
       success: true,
       data: {
-        schoolLevel: { passPercentage: 88.5, averageScore: 72.4 },
-        subjectPerformance,
-        classPerformance
+        schoolLevel: { passPercentage, averageScore: Number(overallStats._avg.percentage || 0) },
+        subjectPerformance: subjectPerformance.length > 0 ? subjectPerformance : [{ subject: 'No Data', score: 0, avg: 0 }],
+        classPerformance: classPerformance.length > 0 ? classPerformance : [{ class: 'No Data', score: 0 }]
       }
     });
   } catch (error) {
+    console.error('Error fetching exam intelligence:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch exam intelligence' });
   }
 };

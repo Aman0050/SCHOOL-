@@ -27,6 +27,7 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 // Serve Static Exports
 import path from 'path';
 app.use('/downloads', express.static(path.join(__dirname, '../public/downloads')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Security configuration for CORS
 const allowedOrigins = [

@@ -18,10 +18,21 @@ export const integrityQueue = new Queue('integrity-checks', {
   }
 });
 
+export const searchQueue = new Queue('search-sync', {
+  connection,
+  defaultJobOptions: {
+    attempts: 5,
+    backoff: { type: 'exponential', delay: 1000 },
+    removeOnComplete: true,
+  }
+});
+
 // Initialize the worker that processes the queue
 import '../workers/exportQueue';
 import '../workers/communicationQueue';
 import { analyticsQueue } from '../workers/analyticsQueue';
+import '../workers/searchSyncQueue';
+import { superAdminQueue } from '../workers/superAdminQueue';
 
 export const initQueues = () => {
   const worker = new Worker(
@@ -57,6 +68,16 @@ export const initQueues = () => {
       pattern: '*/5 * * * *',
     },
   });
+
+  // Schedule the Super Admin dashboard aggregation every 5 minutes
+  superAdminQueue.add('aggregate-dashboard', {}, {
+    repeat: {
+      pattern: '*/5 * * * *',
+    }
+  });
+  
+  // Kick off an initial aggregation on startup
+  superAdminQueue.add('aggregate-dashboard', {});
 
   logger.info('[Queue] BullMQ initialized and cron jobs scheduled.');
 };

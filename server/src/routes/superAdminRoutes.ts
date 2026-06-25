@@ -5,11 +5,14 @@ import {
   getTenants,
   createTenant,
   updateTenantStatus,
+  updateTenant,
   deleteTenant,
+  resetAdminPassword,
   getGlobalInvoices,
   getGlobalTickets,
   getTicketDetails,
-  replyToTicket
+  replyToTicket,
+  exportDashboard
 } from '../controllers/superAdminController';
 
 const router = Router();
@@ -19,10 +22,13 @@ router.use(authenticate);
 router.use(authorizeRoles(SystemRole.SUPER_ADMIN));
 
 router.get('/dashboard', getDashboardStats as any);
+router.get('/export/dashboard', exportDashboard as any);
 router.get('/tenants', getTenants as any);
 router.post('/tenants', createTenant as any);
 router.patch('/tenants/:id/status', updateTenantStatus as any);
+router.put('/tenants/:id', updateTenant as any);
 router.delete('/tenants/:id', deleteTenant as any);
+router.post('/users/:userId/reset-password', resetAdminPassword as any);
 
 // Subscription Engine
 router.get('/plans', (async (req: Request, res: Response, next: NextFunction) => {

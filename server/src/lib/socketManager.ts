@@ -58,12 +58,33 @@ export const initSocket = (server: HttpServer) => {
       socket.join(`role:${user.tenantId}:${user.role}`);
     }
 
+    if (user?.role === 'SUPER_ADMIN') {
+      socket.join('superadmin:dashboard');
+    }
+
     socket.on('join_class', (classId: string) => {
       socket.join(`class:${classId}`);
     });
 
     socket.on('leave_class', (classId: string) => {
       socket.leave(`class:${classId}`);
+    });
+
+    // Support / Live Chat
+    socket.on('support:join_ticket', (ticketId: string) => {
+      socket.join(`ticket:${ticketId}`);
+    });
+
+    socket.on('support:leave_ticket', (ticketId: string) => {
+      socket.leave(`ticket:${ticketId}`);
+    });
+
+    socket.on('support:typing', (data: { ticketId: string, isTyping: boolean }) => {
+      socket.to(`ticket:${data.ticketId}`).emit('support:typing', {
+        userId: user?.id,
+        firstName: user?.firstName,
+        isTyping: data.isTyping
+      });
     });
 
     socket.on('disconnect', () => {
@@ -101,6 +122,12 @@ export const notifyLessonPlanUpdate = (tenantId: string, teacherId: string, payl
 export const broadcastCacheInvalidation = (tenantId: string, queryKey: string[]) => {
   if (io) {
     io.to(`tenant:${tenantId}`).emit('invalidate_cache', { queryKey });
+  }
+};
+
+export const broadcastSuperAdminUpdate = (event: string, payload: any = {}) => {
+  if (io) {
+    io.to('superadmin:dashboard').emit('superadmin:update', { event, ...payload });
   }
 };
 

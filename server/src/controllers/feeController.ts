@@ -932,40 +932,44 @@ export const createFine = async (req: Request, res: Response, next: NextFunction
       throw new AppError(400, 'VALIDATION_ERROR', 'studentId, type, amount, and reason are required');
     }
 
-    const fine = await prisma.fineRecord.create({
-      data: {
-        tenantId,
-        studentId,
-        assignmentId: assignmentId || null,
-        type,
-        amount: new Prisma.Decimal(amount),
-        reason,
-        createdBy: userId,
-      },
+    const fine = await prisma.$transaction(async (tx) => {
+      const createdFine = await tx.fineRecord.create({
+        data: {
+          tenantId,
+          studentId,
+          assignmentId: assignmentId || null,
+          type,
+          amount: new Prisma.Decimal(amount),
+          reason,
+          createdBy: userId,
+        },
+      });
+
+      // Ledger debit for fine
+      const lastLedger = await tx.financialLedger.findFirst({
+        where: { tenantId, studentId },
+        orderBy: { createdAt: 'desc' },
+      });
+      const prevBal = lastLedger ? Number(lastLedger.balance) : 0;
+
+      await tx.financialLedger.create({
+        data: {
+          tenantId,
+          studentId,
+          referenceType: 'FINE',
+          referenceId: createdFine.id,
+          description: `Fine: ${type} - ${reason}`,
+          type: 'DEBIT',
+          amount: new Prisma.Decimal(amount),
+          balance: new Prisma.Decimal(prevBal + Number(amount)),
+          createdBy: userId,
+        },
+      });
+
+      return createdFine;
     });
 
     if (assignmentId) await recalcAssignment(assignmentId);
-
-    // Ledger debit for fine
-    const lastLedger = await prisma.financialLedger.findFirst({
-      where: { tenantId, studentId },
-      orderBy: { createdAt: 'desc' },
-    });
-    const prevBal = lastLedger ? Number(lastLedger.balance) : 0;
-
-    await prisma.financialLedger.create({
-      data: {
-        tenantId,
-        studentId,
-        referenceType: 'FINE',
-        referenceId: fine.id,
-        description: `Fine: ${type} - ${reason}`,
-        type: 'DEBIT',
-        amount: new Prisma.Decimal(amount),
-        balance: new Prisma.Decimal(prevBal + Number(amount)),
-        createdBy: userId,
-      },
-    });
 
     res.status(201).json({ success: true, data: fine });
   } catch (e) {

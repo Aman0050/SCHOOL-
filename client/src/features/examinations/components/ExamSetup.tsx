@@ -108,8 +108,9 @@ export const ExamSetup: React.FC = () => {
       </div>
 
       {/* Tables */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
-        <table className="w-full text-left text-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left text-sm whitespace-nowrap min-w-[600px]">
           <thead className="bg-slate-50 dark:bg-slate-900/40 text-slate-500 font-semibold uppercase tracking-wider text-xs border-b border-slate-200 dark:border-slate-800">
             {activeSubTab === 'sessions' && (
               <tr><th className="px-5 py-3">Name</th><th className="px-5 py-3">School</th><th className="px-5 py-3">Duration</th><th className="px-5 py-3">Status</th></tr>
@@ -154,6 +155,7 @@ export const ExamSetup: React.FC = () => {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal with React Hook Form */}

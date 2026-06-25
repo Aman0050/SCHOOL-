@@ -201,13 +201,13 @@ export const DashboardLayout: React.FC = () => {
         <div className="p-4 border-t border-slate-800/50 bg-[#0A1128] space-y-4">
           {/* Action Icons */}
           <div className="flex items-center justify-center gap-8 py-2">
-            <button className="text-slate-400 hover:text-slate-200 transition-colors">
+            <Link to="/dashboard/settings" className="text-slate-400 hover:text-slate-200 transition-colors">
               <Settings className="h-5 w-5" />
-            </button>
+            </Link>
             <NotificationCenter />
-            <button className="text-slate-400 hover:text-slate-200 transition-colors">
+            <Link to="/dashboard/support" className="text-slate-400 hover:text-slate-200 transition-colors">
               <HelpCircle className="h-5 w-5" />
-            </button>
+            </Link>
           </div>
 
           {/* User Profile */}

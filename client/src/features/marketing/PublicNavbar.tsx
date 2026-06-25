@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { GraduationCap, Menu, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BookDemoModal } from './BookDemoModal';
+import { useAuth } from '../auth/authContext';
 
 export const PublicNavbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,7 +45,11 @@ export const PublicNavbar: React.FC = () => {
           <a href="#pricing" className="hover:text-indigo-600 transition-colors">Pricing</a>
           
           <div className="flex items-center gap-4 ml-4">
-            <Link to="/login" className="text-slate-700 hover:text-indigo-600 transition-colors">Sign In</Link>
+            {isAuthenticated ? (
+              <Link to={user?.role === 'SUPER_ADMIN' ? '/superadmin/dashboard' : '/dashboard'} className="text-slate-700 hover:text-indigo-600 transition-colors">Dashboard</Link>
+            ) : (
+              <Link to="/login" className="text-slate-700 hover:text-indigo-600 transition-colors">Sign In</Link>
+            )}
             <button 
               onClick={() => setDemoModalOpen(true)}
               className="bg-indigo-600 text-white px-5 py-2.5 rounded-full font-semibold hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"

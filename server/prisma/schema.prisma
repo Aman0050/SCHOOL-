@@ -38,7 +38,7 @@ enum AuditAction {
 model Tenant {
   id             String   @id @default(uuid())
   name           String
-  domain         String   @unique
+  domain         String?  @unique
   subdomain      String   @unique
   isActive       Boolean  @default(true)
   branding       Json?
@@ -142,6 +142,11 @@ model User {
   lessonPlans         LessonPlan[]
   resourcesUploaded   ResourceLibrary[]
   academicActivities  AcademicActivityFeed[]
+  preferences         Json?
+  ticketAssignments   SupportTicket[]      @relation("TicketAssignee")
+  ticketActivities    TicketActivity[]     @relation("TicketActivityUser")
+  kbArticles          KnowledgeBaseArticle[] @relation("KnowledgeBaseAuthor")
+  supportAgent        SupportAgent?
 
   @@index([firstName, lastName])
   @@index([role])
@@ -614,6 +619,10 @@ model FinancialLedger {
 
   student       User @relation("StudentLedger", fields: [studentId], references: [id])
   createdByUser User @relation("LedgerCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([tenantId, studentId])
 }
 
 model FeeReceiptCounter {
@@ -1260,14 +1269,18 @@ model SupportTicket {
   tenantId    String
   title       String
   description String   @db.Text
-  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  category    String   @default("TECHNICAL") // TECHNICAL, BILLING, TRAINING
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, WAITING, RESOLVED, CLOSED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  category    String   @default("TECHNICAL")
+  assignedToId String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  messages TicketMessage[]
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedTo   User?               @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  messages     TicketMessage[]
+  activities   TicketActivity[]
+  attachments  SupportAttachment[]
 }
 
 model TicketMessage {
@@ -1279,6 +1292,54 @@ model TicketMessage {
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   sender User          @relation("TicketSender", fields: [senderId], references: [id])
+}
+
+model SupportAttachment {
+  id          String   @id @default(uuid())
+  ticketId    String
+  fileUrl     String
+  fileName    String
+  fileType    String
+  fileSize    Int
+  uploadedAt  DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model TicketActivity {
+  id        String   @id @default(uuid())
+  ticketId  String
+  userId    String
+  action    String
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User          @relation("TicketActivityUser", fields: [userId], references: [id])
+}
+
+model SupportAgent {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  status        String   @default("OFFLINE") // ONLINE, OFFLINE, AWAY
+  maxTickets    Int      @default(5)
+  activeTickets Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model KnowledgeBaseArticle {
+  id          String   @id @default(uuid())
+  tenantId    String
+  title       String
+  content     String   @db.Text
+  category    String
+  authorId    String
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User @relation("KnowledgeBaseAuthor", fields: [authorId], references: [id])
 }
 
 model AnalyticsMetric {

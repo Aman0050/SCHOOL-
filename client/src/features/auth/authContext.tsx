@@ -4,6 +4,7 @@ import api, { getSubdomain } from '../../lib/api';
 interface Profile {
   phoneNumber?: string;
   address?: string;
+  avatarUrl?: string;
 }
 
 interface User {
@@ -13,6 +14,8 @@ interface User {
   lastName: string;
   role: 'SUPER_ADMIN' | 'SCHOOL_ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT' | 'STAFF';
   tenantId: string;
+  mfaEnabled?: boolean;
+  preferences?: any;
   profile?: Profile;
 }
 
@@ -63,9 +66,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
     };
 
+    // Listener for cross-tab logout (multi-tab sync)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'accessToken' && !e.newValue) {
+        // Token was removed in another tab
+        setUser(null);
+      }
+    };
+
     window.addEventListener('auth-expired', handleAuthExpired);
+    window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('auth-expired', handleAuthExpired);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 

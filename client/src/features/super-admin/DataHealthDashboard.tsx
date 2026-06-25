@@ -110,7 +110,8 @@ export const DataHealthDashboard = () => {
             <p>No relational or mathematical inconsistencies detected.</p>
           </div>
         ) : (
-          <table className="w-full text-left">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left whitespace-nowrap min-w-[600px]">
             <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 text-xs uppercase font-medium">
               <tr>
                 <th className="px-6 py-3">Module</th>
@@ -147,6 +148,7 @@ export const DataHealthDashboard = () => {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

@@ -19,7 +19,11 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   const token = authHeader.split(' ')[1];
 
   try {
-    const secret = process.env.JWT_SECRET || 'super-secret-enterprise-access-token-key-change-this-in-production';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('[FATAL SECURITY ERROR] JWT_SECRET is missing from environment variables.');
+      process.exit(1);
+    }
     const decoded = jwt.verify(token, secret) as TokenPayload;
 
     // Verify tenant match if tenant context is active

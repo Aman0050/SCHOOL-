@@ -67,6 +67,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # Search Engine Layer
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - eduxeno-net
+
   # Node API Servers (Horizontally Scaled)
   api:
     build: 
@@ -96,6 +110,7 @@ volumes:
   pgdata-primary:
   pgdata-replica:
   redisdata:
+  esdata:
 
 networks:
   eduxeno-net:

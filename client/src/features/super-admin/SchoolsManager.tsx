@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superAdminApi } from './api/superAdminApi';
 import { Building2, Search, Filter, Loader2 } from 'lucide-react';
 import { OnboardSchoolModal } from './OnboardSchoolModal';
+import { SchoolDetailsModal } from './SchoolDetailsModal';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 export const SchoolsManager: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState<any>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const { data: schools, isLoading } = useQuery({
@@ -51,6 +53,7 @@ export const SchoolsManager: React.FC = () => {
       </div>
 
       {isModalOpen && <OnboardSchoolModal onClose={() => setIsModalOpen(false)} />}
+      {selectedSchool && <SchoolDetailsModal school={selectedSchool} onClose={() => setSelectedSchool(null)} />}
 
       <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl flex flex-col h-[700px]">
         {/* Toolbar */}
@@ -101,7 +104,8 @@ export const SchoolsManager: React.FC = () => {
                 return (
                   <div
                     key={school.id}
-                    className="flex items-center hover:bg-slate-800/30 transition-colors group absolute top-0 left-0 w-full border-b border-slate-800/50"
+                    onClick={() => setSelectedSchool(school)}
+                    className="flex items-center hover:bg-slate-800/80 cursor-pointer transition-colors group absolute top-0 left-0 w-full border-b border-slate-800/50"
                     style={{
                       height: `${virtualRow.size}px`,
                       transform: `translateY(${virtualRow.start}px)`,
@@ -145,7 +149,10 @@ export const SchoolsManager: React.FC = () => {
                     </div>
                     <div className="flex-1 p-4 pr-6 text-right relative flex justify-end">
                       <button 
-                        onClick={() => toggleStatusMutation.mutate({ id: school.id, isActive: !school.isActive })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStatusMutation.mutate({ id: school.id, isActive: !school.isActive });
+                        }}
                         className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors ${
                           school.isActive 
                             ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20' 

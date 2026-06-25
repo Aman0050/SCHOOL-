@@ -22,6 +22,8 @@ import applicantRoutes from './applicantRoutes';
 import healthRoutes from './healthRoutes';
 import searchRoutes from './searchRoutes';
 import jobRoutes from './jobRoutes';
+import settingsRoutes from './settingsRoutes';
+import supportRoutes from './supportRoutes';
 
 const router = Router();
 
@@ -48,5 +50,7 @@ router.use('/applicants', applicantRoutes);
 router.use('/health', healthRoutes);
 router.use('/search', searchRoutes);
 router.use('/jobs', jobRoutes);
+router.use('/settings', settingsRoutes);
+router.use('/support', supportRoutes);
 
 export default router;

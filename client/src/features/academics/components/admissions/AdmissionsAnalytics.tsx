@@ -32,15 +32,25 @@ export const AdmissionsAnalytics: React.FC<AdmissionsAnalyticsProps> = ({ applic
     { name: 'Rejected', value: rejected },
   ];
 
-  // Dummy monthly trend data (in real app, group applicants by createdAt)
-  const monthlyData = [
-    { month: 'Jan', applications: 12, approved: 4 },
-    { month: 'Feb', applications: 19, approved: 8 },
-    { month: 'Mar', applications: 25, approved: 12 },
-    { month: 'Apr', applications: 32, approved: 20 },
-    { month: 'May', applications: 45, approved: 28 },
-    { month: 'Jun', applications: Math.max(total, 50), approved: Math.max(approved, 30) },
-  ];
+  // Calculate monthly trend data from actual applicants
+  const monthlyDataMap: Record<string, { applications: number; approved: number }> = {};
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  applicants.forEach(app => {
+    const d = app.createdAt ? new Date(app.createdAt) : new Date();
+    const monthKey = months[d.getMonth()];
+    if (!monthlyDataMap[monthKey]) monthlyDataMap[monthKey] = { applications: 0, approved: 0 };
+    monthlyDataMap[monthKey].applications++;
+    if (app.stage === 'approved' || app.stage === 'enrolled') {
+      monthlyDataMap[monthKey].approved++;
+    }
+  });
+
+  const monthlyData = Object.keys(monthlyDataMap).map(key => ({
+    month: key,
+    ...monthlyDataMap[key]
+  }));
+
 
   return (
     <div className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-900">

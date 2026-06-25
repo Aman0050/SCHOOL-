@@ -20,6 +20,8 @@ const AttendanceManagement = React.lazy(() => import('./features/academics/Atten
 const AuditLogsView = React.lazy(() => import('./features/dashboard/AuditLogsView'));
 const ExaminationManagement = React.lazy(() => import('./features/examinations/ExaminationManagement').then(m => ({ default: m.ExaminationManagement })));
 const FeeManagement = React.lazy(() => import('./features/fees/FeeManagement').then(m => ({ default: m.FeeManagement })));
+const SchoolSettings = React.lazy(() => import('./features/settings/SchoolSettings'));
+const SupportCenter = React.lazy(() => import('./features/support/SupportCenter'));
 
 
 
@@ -99,14 +101,20 @@ export const App: React.FC = () => {
                       {/* Available to all authenticated Tenant users */}
                       <Route path="/dashboard" element={<DashboardHome />} />
                       
-                      {/* Available to School Admin & Teachers (Legacy fallback) */}
-                      <Route element={<ProtectedRoute allowedRoles={['SCHOOL_ADMIN']} />}>
+                      <Route element={<ProtectedRoute allowedRoles={['SCHOOL_ADMIN', 'TEACHER', 'PRINCIPAL']} />}>
                         <Route path="/dashboard/academics" element={<AcademicManagement />} />
                         <Route path="/dashboard/students" element={<StudentManagement />} />
                         <Route path="/dashboard/attendance" element={<AttendanceManagement />} />
                         <Route path="/dashboard/examinations" element={<ExaminationManagement />} />
-                        <Route path="/dashboard/fees" element={<FeeManagement />} />
                       </Route>
+                      
+                      <Route element={<ProtectedRoute allowedRoles={['SCHOOL_ADMIN', 'PRINCIPAL']} />}>
+                        <Route path="/dashboard/fees" element={<FeeManagement />} />
+                        <Route path="/dashboard/settings" element={<Suspense fallback={<TopBarLoader />}><SchoolSettings /></Suspense>} />
+                      </Route>
+                      
+                      {/* Available to all tenant users */}
+                      <Route path="/dashboard/support" element={<Suspense fallback={<TopBarLoader />}><SupportCenter /></Suspense>} />
                       
 
                       {/* Intelligence & Analytics */}

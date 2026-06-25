@@ -43,6 +43,11 @@ export const useSocket = () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
     });
 
+    socket.on('superadmin:update', (payload) => {
+      console.log('[Real-Time] Super Admin Dashboard Update:', payload);
+      queryClient.invalidateQueries({ queryKey: ['superAdminDashboard'] });
+    });
+
     return () => {
       socket?.disconnect();
     };

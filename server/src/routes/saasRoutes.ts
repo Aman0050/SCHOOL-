@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { onboardTenant, getBranding, updateBranding } from '../controllers/tenantController';
 import { getPlans, getMySubscription, upgradeSubscription, cancelSubscription } from '../controllers/subscriptionController';
-import { getTickets, createTicket, getTicketMessages, replyToTicket } from '../controllers/supportController';
 import { getGlobalMetrics, getTenantsList, disableTenant } from '../controllers/saasAnalyticsController';
 import { submitDemoRequest, submitLead, getLeads, updateLeadStatus } from '../controllers/publicController';
 import { authenticate, authorizeRoles, SystemRole } from '../middlewares/auth';
@@ -23,11 +22,7 @@ router.post('/subscription/cancel', authenticate, authorizeRoles(SystemRole.PLAT
 router.get('/branding', authenticate, getBranding);
 router.put('/branding', authenticate, authorizeRoles(SystemRole.PLATFORM_OWNER), updateBranding);
 
-// 4. Customer Support Routes
-router.get('/support/tickets', authenticate, getTickets);
-router.post('/support/tickets', authenticate, createTicket);
-router.get('/support/tickets/:id/messages', authenticate, getTicketMessages);
-router.post('/support/tickets/:id/reply', authenticate, replyToTicket);
+
 
 // 5. Super Admin Routes
 router.get('/admin/metrics', authenticate, authorizeRoles(SystemRole.SUPER_ADMIN), getGlobalMetrics);

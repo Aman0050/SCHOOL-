@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 export const PageSkeleton: React.FC = () => {
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="w-full space-y-6"

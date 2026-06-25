@@ -19,6 +19,7 @@
     "@aws-sdk/client-s3": "^3.1071.0",
     "@aws-sdk/s3-request-presigner": "^3.1073.0",
     "@azure/msal-node": "^5.2.5",
+    "@elastic/elasticsearch": "^9.4.2",
     "@prisma/client": "^5.14.0",
     "@prisma/extension-read-replicas": "^0.5.0",
     "@sentry/node": "^10.58.0",

@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, SystemRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import PDFDocument from 'pdfkit';
+import { stringify } from 'csv-stringify/sync';
+import { broadcastSuperAdminUpdate } from '../lib/socketManager';
 
 const prisma = new PrismaClient();
 
@@ -8,48 +11,103 @@ const prisma = new PrismaClient();
 
 export const getDashboardStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { getOrSetCache } = await import('../config/redis');
+    const { cache } = await import('../lib/cache');
+    const { superAdminQueue } = await import('../workers/superAdminQueue');
     
-    const stats = await getOrSetCache('superadmin:dashboard-stats', 300, async () => {
-      const tenants = await prisma.tenant.findMany({
-        include: {
-          subscription: { include: { plan: true } },
-          _count: { select: { users: { where: { role: 'STUDENT' } } } }
-        }
+    // Attempt to get the latest 60-second TTL pre-aggregated dashboard data
+    const cachedData = await cache.get('superadmin:dashboard:data');
+    
+    if (cachedData) {
+      return res.json({
+        success: true,
+        data: cachedData
       });
+    }
 
-      const totalSchools = tenants.length;
-      const activeSchools = tenants.filter(t => t.isActive && t.subscription?.status === 'ACTIVE').length;
-      const trialSchools = tenants.filter(t => t.isActive && t.subscription?.status === 'TRIAL').length;
-      const expiredSchools = tenants.filter(t => t.subscription?.status === 'EXPIRED').length;
-
-      const totalStudents = tenants.reduce((sum, t) => sum + t._count.users, 0);
-
-      // Calculate MRR & ARR from active subscriptions
-      const activeSubs = tenants.filter(t => t.subscription?.status === 'ACTIVE' && t.subscription.plan);
-      const mrr = activeSubs.reduce((sum, t) => sum + Number(t.subscription!.plan.priceMonthly), 0);
-      const arr = mrr * 12; // Simplified calculation
-
-      // Get recent support tickets across all tenants
-      const recentTickets = await prisma.supportTicket.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: { tenant: { select: { name: true } } }
-      });
-
-      return {
-        metrics: {
-          totalSchools, activeSchools, trialSchools, expiredSchools,
-          mrr, arr, totalStudents
-        },
-        recentTickets
-      };
-    });
-
-    res.json({
+    // If cache missed, fire background job and return pending structure
+    // (This usually only happens on cold boot before cron fires)
+    superAdminQueue.add('aggregate-dashboard', {});
+    
+    return res.json({
       success: true,
-      data: stats
+      data: {
+        metrics: { totalSchools: 0, activeSchools: 0, trialSchools: 0, expiredSchools: 0, mrr: 0, arr: 0, totalStudents: 0, churnRate: "0.0", mrrLost: 0, healthScore: 100, healthStatus: 'Loading...' },
+        revenueTrend: [],
+        alerts: [{ id: 99, type: 'warning', message: 'Aggregating live analytics. Dashboard will refresh momentarily.' }],
+        forecasts: []
+      }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportDashboard = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { format } = req.query;
+    const { cache } = await import('../lib/cache');
+    const cachedData = await cache.get('superadmin:dashboard:data') as any;
+
+    if (!cachedData) {
+      return res.status(400).json({ success: false, message: 'Data not aggregated yet. Please wait a moment.' });
+    }
+
+    const { metrics } = cachedData;
+
+    if (format === 'csv') {
+      const csvData = [
+        ['Metric', 'Value'],
+        ['Total Organizations', metrics.totalSchools],
+        ['Paid Subscriptions', metrics.activeSchools],
+        ['Active Trials', metrics.trialSchools],
+        ['Churned / Expired', metrics.expiredSchools],
+        ['Monthly Recurring Revenue (MRR)', metrics.mrr],
+        ['Annual Recurring Revenue (ARR)', metrics.arr],
+        ['Active Students (Global)', metrics.totalStudents],
+        ['Global Health Score', metrics.healthScore],
+        ['Health Status', metrics.healthStatus]
+      ];
+      
+      const csvString = stringify(csvData);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="eduxeno-executive-report.csv"');
+      return res.send(csvString);
+    } 
+    
+    if (format === 'pdf') {
+      const doc = new PDFDocument({ margin: 50 });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="eduxeno-executive-report.pdf"');
+      
+      doc.pipe(res);
+      
+      doc.fontSize(24).text('EduXeno Executive Dashboard Report', { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
+      doc.moveDown(2);
+      
+      doc.fontSize(16).text('Key Performance Indicators', { underline: true });
+      doc.moveDown();
+      
+      const addMetric = (label: string, value: any) => {
+        doc.fontSize(12).text(`${label}:`, { continued: true }).text(` ${value}`, { align: 'right' });
+        doc.moveDown(0.5);
+      };
+
+      addMetric('Total Organizations', metrics.totalSchools);
+      addMetric('Paid Subscriptions', metrics.activeSchools);
+      addMetric('Active Trials', metrics.trialSchools);
+      addMetric('Churned / Expired', metrics.expiredSchools);
+      addMetric('Monthly Recurring Revenue (MRR)', `$${metrics.mrr.toLocaleString()}`);
+      addMetric('Annual Recurring Revenue (ARR)', `$${metrics.arr.toLocaleString()}`);
+      addMetric('Active Students (Global)', metrics.totalStudents.toLocaleString());
+      addMetric('Global Health Score', `${metrics.healthScore} (${metrics.healthStatus})`);
+      
+      doc.end();
+      return;
+    }
+
+    res.status(400).json({ success: false, message: 'Invalid format requested' });
   } catch (error) {
     next(error);
   }
@@ -63,7 +121,11 @@ export const getTenants = async (req: Request, res: Response, next: NextFunction
       include: {
         subscription: { include: { plan: true } },
         _count: { select: { users: true } },
-        schools: true
+        schools: true,
+        users: {
+          where: { role: 'SCHOOL_ADMIN' },
+          select: { id: true, firstName: true, lastName: true, email: true }
+        }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -107,6 +169,7 @@ export const createTenant = async (req: Request, res: Response, next: NextFuncti
     });
 
     res.status(201).json({ success: true, data: tenant });
+    broadcastSuperAdminUpdate('tenant_created', { tenantId: tenant.id });
   } catch (error) {
     next(error);
   }
@@ -117,6 +180,7 @@ export const deleteTenant = async (req: Request, res: Response, next: NextFuncti
     const { id } = req.params;
     await prisma.tenant.delete({ where: { id } });
     res.json({ success: true, message: 'Tenant deleted successfully' });
+    broadcastSuperAdminUpdate('tenant_deleted', { tenantId: id });
   } catch (error) {
     next(error);
   }
@@ -133,6 +197,78 @@ export const updateTenantStatus = async (req: Request, res: Response, next: Next
     });
     
     res.json({ success: true, data: tenant });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTenant = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { name, subdomain, domain, adminUserId, adminFirstName, adminLastName, adminEmail, adminPassword, planId } = req.body;
+    
+    // Start a transaction if we need to update multiple tables
+    const tenant = await prisma.$transaction(async (tx) => {
+      // 1. Update Tenant
+      const updatedTenant = await tx.tenant.update({
+        where: { id },
+        data: { name, subdomain, domain: domain || null }
+      });
+
+      // 2. Update Primary Admin if details provided
+      if (adminUserId && adminEmail) {
+        const updateData: any = {
+          firstName: adminFirstName,
+          lastName: adminLastName,
+          email: adminEmail
+        };
+
+        if (adminPassword) {
+          const salt = await bcrypt.genSalt(10);
+          updateData.passwordHash = await bcrypt.hash(adminPassword, salt);
+        }
+
+        await tx.user.update({
+          where: { id: adminUserId },
+          data: updateData
+        });
+      }
+
+      // 3. Update Subscription if planId provided
+      if (planId) {
+        await tx.subscription.update({
+          where: { tenantId: id },
+          data: { planId }
+        });
+      }
+
+      return updatedTenant;
+    });
+
+    res.json({ success: true, data: tenant });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetAdminPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+    
+    // Generate a random 10-character password
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let tempPassword = '';
+    for (let i = 0; i < 10; i++) tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(tempPassword, salt);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash }
+    });
+
+    res.json({ success: true, tempPassword });
   } catch (error) {
     next(error);
   }

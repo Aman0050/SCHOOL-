@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,7 +14,7 @@ const loginFormSchema = z.object({
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export const Login: React.FC = () => {
-  const { login, tenantSubdomain } = useAuth();
+  const { login, isAuthenticated, user, tenantSubdomain } = useAuth();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +22,16 @@ export const Login: React.FC = () => {
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'SUPER_ADMIN') {
+        navigate('/superadmin/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const {
     register,
@@ -203,6 +213,39 @@ export const Login: React.FC = () => {
             </div>
           </form>
 
+          {/* DEV ONLY: Tenant Switcher */}
+          {import.meta.env.DEV && (
+            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 bg-amber-500/5 p-4 rounded-xl border-dashed">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <label className="block text-xs font-bold text-amber-500 uppercase tracking-wider">Dev Mode: Tenant Override</label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  id="dev-tenant-input"
+                  defaultValue={localStorage.getItem('tenant_subdomain') || 'greenwood'}
+                  className="flex-1 bg-white dark:bg-slate-900 border border-amber-500/30 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-amber-500/60 font-mono"
+                />
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const val = (document.getElementById('dev-tenant-input') as HTMLInputElement).value;
+                    if(val) {
+                      localStorage.setItem('tenant_subdomain', val);
+                      window.location.reload();
+                    }
+                  }}
+                  className="bg-amber-500 text-white text-xs px-4 rounded-lg font-bold hover:bg-amber-600 transition-colors shadow-sm"
+                >
+                  Apply
+                </button>
+              </div>
+              <p className="text-[10.5px] font-medium text-slate-500 mt-3 leading-relaxed">
+                Because you are on <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">localhost</code>, the system cannot automatically detect the school from the URL. Set the subdomain here (e.g., <strong>aman</strong> or <strong>greenwood</strong>).
+              </p>
+            </div>
+          )}
 
         </div>
       </div>
