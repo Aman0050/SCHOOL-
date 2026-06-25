@@ -3,7 +3,7 @@ import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { useAuth } from '../auth/authContext';
-import { useDashboardLayout } from './store/useDashboardLayout';
+import { useDashboardLayout, DEFAULT_LAYOUT } from './store/useDashboardLayout';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
@@ -169,10 +169,11 @@ export const DashboardHome: React.FC = () => {
         useCSSTransforms={true}
       >
         {visibleWidgets.map(id => {
-          // Find if it has a static layout predefined in DEFAULT_LAYOUT or is dynamic
           const isStatic = id === 'executiveHero';
+          const defaultLayoutItem = DEFAULT_LAYOUT.find(l => l.i === id);
+          
           return (
-            <div key={id} className={isStatic ? '' : 'drag-handle cursor-move h-full group relative'} data-grid={isStatic ? { x: 0, y: 0, w: 12, h: 2, static: true } : undefined}>
+            <div key={id} className={isStatic ? '' : 'drag-handle cursor-move h-full group relative'} data-grid={defaultLayoutItem}>
               {!isStatic && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded shadow-sm z-10 transition-opacity">
                   <div className="flex gap-1">

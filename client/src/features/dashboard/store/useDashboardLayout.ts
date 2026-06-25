@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-const DEFAULT_LAYOUT: any[] = [
+export const DEFAULT_LAYOUT: any[] = [
   { i: 'executiveHero', x: 0, y: 0, w: 12, h: 2, static: true },
   { i: 'healthScore', x: 0, y: 2, w: 4, h: 3 },
   { i: 'operations', x: 4, y: 2, w: 8, h: 3 },
