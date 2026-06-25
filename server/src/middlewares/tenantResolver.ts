@@ -25,7 +25,7 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
 
   // Safeguard for Vercel/Render deployments testing:
   if (subdomain && (subdomain.includes('school-j8gv') || subdomain.includes('school-mqot') || subdomain.includes('vercel') || subdomain.includes('onrender'))) {
-    subdomain = 'greenwood';
+    subdomain = 'aman';
   }
 
   // If no subdomain is resolved, tenant is null (could be super admin route, landing page, etc.)
