@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { SystemRole } from '@prisma/client';
 import { AppError } from '../errors/AppError';
+import { tenantStorage } from '../utils/tenantContext';
 
 interface TokenPayload {
   userId: string;
@@ -38,7 +39,16 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       tenantId: decoded.tenantId,
     };
 
-    next();
+    // Run the remainder of the request in the tenantStorage context.
+    // This is the backbone of the Global Auth Architecture: the JWT proves the tenant, 
+    // and the backend automatically scopes all DB interactions to it.
+    if (decoded.tenantId) {
+      tenantStorage.run({ tenantId: decoded.tenantId }, () => {
+        next();
+      });
+    } else {
+      next();
+    }
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       return next(new AppError(401, 'TOKEN_EXPIRED', 'Authorization token has expired'));

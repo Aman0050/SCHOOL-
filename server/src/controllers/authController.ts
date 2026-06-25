@@ -33,16 +33,13 @@ export const resetPasswordSchema = z.object({
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.tenant) {
-      throw new AppError(400, 'TENANT_CONTEXT_REQUIRED', 'Please login via your school subdomain');
-    }
-
     const { email, password, mfaToken } = req.body;
 
+    // GLOBAL USER DISCOVERY
+    // Search the user globally across the entire SaaS platform by email.
     const user = await dbRaw.user.findFirst({
       where: {
         email,
-        tenantId: req.tenant.id,
       },
     });
 
@@ -560,8 +557,6 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const ssoGoogleLogin = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.tenant) throw new AppError(400, 'TENANT_CONTEXT_REQUIRED', 'Please login via your school subdomain');
-    
     const { idToken } = req.body;
     if (!idToken) throw new AppError(400, 'VALIDATION_ERROR', 'Google ID Token is required');
 
@@ -574,21 +569,21 @@ export const ssoGoogleLogin = async (req: Request, res: Response, next: NextFunc
 
     const email = payload.email;
 
-    // Strict Tenant Matching (No JIT Provisioning)
+    // Strict Global Matching 
     const user = await dbRaw.user.findFirst({
-      where: { email, tenantId: req.tenant.id },
+      where: { email },
     });
 
     if (!user) {
       await createAuditLog({
-        tenantId: req.tenant.id,
+        tenantId: 'system', // or omit if optional
         action: AuditAction.LOGIN,
         entity: 'System',
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'] || '',
         newValues: { detail: `Suspicious Google SSO login rejected for email: ${email}` }
       });
-      throw new AppError(403, 'ACCESS_DENIED', 'Account not found in this school. Please contact your administrator.');
+      throw new AppError(403, 'ACCESS_DENIED', 'Account not found. Please contact your administrator.');
     }
 
     if (!user.isActive) throw new AppError(401, 'ACCOUNT_DEACTIVATED', 'Your account has been deactivated');
@@ -640,8 +635,6 @@ export const ssoGoogleLogin = async (req: Request, res: Response, next: NextFunc
 
 export const ssoMicrosoftLogin = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.tenant) throw new AppError(400, 'TENANT_CONTEXT_REQUIRED', 'Please login via your school subdomain');
-    
     const { accessToken } = req.body; // MS Graph token
     if (!accessToken) throw new AppError(400, 'VALIDATION_ERROR', 'Microsoft Access Token is required');
 
@@ -657,21 +650,21 @@ export const ssoMicrosoftLogin = async (req: Request, res: Response, next: NextF
     
     if (!email) throw new AppError(400, 'INVALID_TOKEN', 'No email found in Microsoft profile');
 
-    // Strict Tenant Matching (No JIT Provisioning)
+    // Strict Global Matching 
     const user = await dbRaw.user.findFirst({
-      where: { email, tenantId: req.tenant.id },
+      where: { email },
     });
 
     if (!user) {
       await createAuditLog({
-        tenantId: req.tenant.id,
+        tenantId: 'system',
         action: AuditAction.LOGIN,
         entity: 'System',
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'] || '',
         newValues: { detail: `Suspicious Microsoft SSO login rejected for email: ${email}` }
       });
-      throw new AppError(403, 'ACCESS_DENIED', 'Account not found in this school. Please contact your administrator.');
+      throw new AppError(403, 'ACCESS_DENIED', 'Account not found. Please contact your administrator.');
     }
 
     if (!user.isActive) throw new AppError(401, 'ACCOUNT_DEACTIVATED', 'Your account has been deactivated');

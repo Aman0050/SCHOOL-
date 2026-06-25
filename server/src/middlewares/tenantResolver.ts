@@ -23,12 +23,7 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     }
   }
 
-  // Safeguard for Vercel/Render deployments testing:
-  if (subdomain && (subdomain.includes('school-j8gv') || subdomain.includes('school-mqot') || subdomain.includes('vercel') || subdomain.includes('onrender'))) {
-    subdomain = 'aman';
-  }
-
-  // If no subdomain is resolved, tenant is null (could be super admin route, landing page, etc.)
+  // If no subdomain is resolved, tenant is null (global routes, login, super admin)
   if (!subdomain) {
     req.tenant = null;
     return next();
@@ -40,7 +35,11 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!tenant) {
-      return next(new AppError(404, 'TENANT_NOT_FOUND', `School subdomain '${subdomain}' does not exist`));
+      // Don't throw 404 here anymore. 
+      // Vercel deployments (school-j8gv) won't have a valid DB tenant.
+      // Global routes (like Login) don't need a tenant initially.
+      req.tenant = null;
+      return next();
     }
 
     if (!tenant.isActive) {
@@ -50,6 +49,7 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     req.tenant = tenant;
 
     // Run the request in the tenantStorage AsyncLocalStorage context
+    // This provides context for public routes that rely on tenant (e.g. public settings)
     tenantStorage.run({ tenantId: tenant.id }, () => {
       next();
     });

@@ -12,8 +12,8 @@ export const getSubdomain = (): string | null => {
       return firstPart;
     }
   }
-  // Allow localstorage fallback for dev testing/mocking
-  return localStorage.getItem('tenant_subdomain') || 'greenwood';
+  // Removed localStorage fallback to support global authentication architecture
+  return null;
 };
 
 export const api = axios.create({
