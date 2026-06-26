@@ -145,26 +145,18 @@ export const DashboardHome: React.FC = () => {
             </AnimatePresence>
           </DropdownMenu.Root>
 
-          <button 
-            onClick={resetLayout}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 border border-transparent rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            title="Reset to default layout"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
+
         </div>
       </div>
 
       <ResponsiveGridLayout
         className="layout"
-        layouts={{ lg: layout as any }}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={100}
-        onLayoutChange={onLayoutChange}
         draggableHandle=".drag-handle"
-        isDraggable={true}
-        isResizable={true}
+        isDraggable={false}
+        isResizable={false}
         margin={[16, 16]}
         useCSSTransforms={true}
       >
@@ -173,7 +165,7 @@ export const DashboardHome: React.FC = () => {
           const defaultLayoutItem = DEFAULT_LAYOUT.find(l => l.i === id);
           
           return (
-            <div key={id} className={isStatic ? '' : 'drag-handle cursor-move h-full group relative'} data-grid={defaultLayoutItem}>
+            <div key={id} className={isStatic ? '' : 'h-full group relative'} data-grid={defaultLayoutItem}>
               {!isStatic && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded shadow-sm z-10 transition-opacity">
                   <div className="flex gap-1">

@@ -5,10 +5,11 @@ import { Activity } from 'lucide-react';
 export const LiveStudentActivity: React.FC<any> = () => {
   const { socket } = useSocket();
   const [feed, setFeed] = useState<any[]>([
-    { type: 'STUDENT', text: 'New admission registered: Emily Davis', time: 'Just now' },
-    { type: 'STUDENT', text: 'Transfer request approved for Michael Brown', time: '10 mins ago' }
+    { text: 'Student10 Demo paid $450.00 for Q3 Tuition', time: '2 minutes ago' },
+    { text: 'Alice Smith marked present in Physics 101', time: '15 minutes ago' },
+    { text: 'Michael Chang uploaded medical clearance', time: '1 hour ago' },
+    { text: 'Student6 Demo accessed Student Portal', time: '2 hours ago' }
   ]);
-
   useEffect(() => {
     if (!socket) return;
     socket.on('activity_feed', (newActivity) => {
@@ -33,17 +34,23 @@ export const LiveStudentActivity: React.FC<any> = () => {
         </h3>
       </div>
       <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-        {feed.map((item, idx) => (
-          <div key={idx} className="flex gap-3 items-start border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-            <div className="mt-0.5 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-full border border-indigo-100 dark:border-indigo-800">
-              <Activity className="h-4 w-4 text-indigo-500" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.text}</p>
-              <span className="text-xs text-slate-400">{item.time}</span>
-            </div>
+        {feed.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-sm text-slate-400">
+            No recent activity recorded.
           </div>
-        ))}
+        ) : (
+          feed.map((item, idx) => (
+            <div key={idx} className="flex gap-3 items-start border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
+              <div className="mt-0.5 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-full border border-indigo-100 dark:border-indigo-800">
+                <Activity className="h-4 w-4 text-indigo-500" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.text}</p>
+                <span className="text-xs text-slate-400">{item.time}</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

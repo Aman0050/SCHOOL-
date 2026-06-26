@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
-  X, User, Users, FileText, CheckCircle2, Clock, Calculator, 
-  ChevronRight, Check, XCircle, FileCheck, ClipboardList, 
-  MessageSquare, History, Edit, Download, Eye, Upload
+  X, User, Users, FileText, CheckCircle2, Clock, 
+  Check, XCircle, FileCheck, ClipboardList, 
+  Download, Eye, Upload, Loader2, Plus
 } from 'lucide-react';
+import { api } from '../../../../lib/api';
+import toast from 'react-hot-toast';
 
 interface ApplicationProfileDrawerProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface ApplicationProfileDrawerProps {
   applicant: any | null;
   onEnroll: () => void;
   onUpdateStage: (stage: string, status: string) => void;
+  onRefresh: () => void;
 }
 
 const TABS = [
@@ -19,7 +22,6 @@ const TABS = [
   { id: 'assessment', label: 'Assessment', icon: ClipboardList },
   { id: 'student', label: 'Student', icon: User },
   { id: 'parents', label: 'Parents', icon: Users },
-  { id: 'activity', label: 'Activity', icon: History },
 ];
 
 const PIPELINE_STEPS = [
@@ -30,8 +32,319 @@ const PIPELINE_STEPS = [
   { id: 'enrolled', label: 'Student Created' },
 ];
 
-export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> = ({ 
-  isOpen, onClose, applicant, onEnroll, onUpdateStage 
+const DOC_TYPES = [
+  'Birth Certificate',
+  'Aadhaar / National ID',
+  'Transfer Certificate',
+  'Passport Photo',
+  'Medical Certificate',
+  'Address Proof',
+  'Other',
+];
+
+// ── Document Center ────────────────────────────────────────────────────────────
+const DocumentCenter: React.FC<{ applicant: any; onRefresh: () => void }> = ({ applicant, onRefresh }) => {
+  const docs: any[] = applicant.documents || [];
+  const verifiedCount = docs.filter(d => d.status === 'Verified').length;
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedType, setSelectedType] = useState('Birth Certificate');
+  const [showUploadPanel, setShowUploadPanel] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', selectedType);
+      formData.append('name', selectedType);
+      await api.post(`/applicants/${applicant.id}/documents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success('Document uploaded successfully!');
+      setShowUploadPanel(false);
+      onRefresh();
+    } catch {
+      toast.error('Failed to upload document.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleVerify = async (docId: string, status: 'Verified' | 'Rejected') => {
+    setUpdatingId(docId);
+    try {
+      await api.put(`/applicants/${applicant.id}/documents/${docId}/status`, { status });
+      toast.success(`Document marked as ${status}`);
+      onRefresh();
+    } catch {
+      toast.error('Failed to update document status.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleView = (fileUrl: string) => {
+    window.open(`http://localhost:5000${fileUrl}`, '_blank');
+  };
+
+  const handleDownload = (fileUrl: string, name: string) => {
+    const link = document.createElement('a');
+    link.href = `http://localhost:5000${fileUrl}`;
+    link.download = name;
+    link.click();
+  };
+
+  return (
+    <div className="flex flex-col gap-5 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-lg text-slate-900 dark:text-white">Document Center</h3>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded">
+            {verifiedCount} / {docs.length} Verified
+          </span>
+          <button
+            onClick={() => setShowUploadPanel(p => !p)}
+            className="flex items-center gap-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" /> Upload Document
+          </button>
+        </div>
+      </div>
+
+      {/* Upload panel */}
+      {showUploadPanel && (
+        <div className="p-4 border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex flex-col gap-3">
+          <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Upload a new document</p>
+          <div className="flex gap-3">
+            <select
+              value={selectedType}
+              onChange={e => setSelectedType(e.target.value)}
+              className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            >
+              {DOC_TYPES.map(t => <option key={t}>{t}</option>)}
+            </select>
+            <label className={`flex items-center gap-2 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {uploading ? 'Uploading…' : 'Choose File'}
+              <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Document list */}
+      {docs.length === 0 ? (
+        <div className="text-center py-10 text-slate-400 text-sm bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+          No documents uploaded yet. Click "Upload Document" to add one.
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {docs.map((doc: any) => (
+            <div key={doc.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  doc.status === 'Verified' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' :
+                  doc.status === 'Rejected' ? 'bg-red-100 text-red-600 dark:bg-red-500/20' :
+                  'bg-amber-100 text-amber-600 dark:bg-amber-500/20'
+                }`}>
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">{doc.name}</p>
+                  <p className={`text-xs font-bold uppercase tracking-wider mt-0.5 ${
+                    doc.status === 'Verified' ? 'text-emerald-600' :
+                    doc.status === 'Rejected' ? 'text-red-600' :
+                    'text-amber-600'
+                  }`}>{doc.status}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={() => handleView(doc.fileUrl)}
+                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded transition-colors"
+                  title="Preview"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => handleDownload(doc.fileUrl, doc.name)}
+                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded transition-colors"
+                  title="Download"
+                >
+                  <Download className="h-4 w-4" />
+                </button>
+                {doc.status !== 'Verified' && (
+                  <button
+                    onClick={() => handleVerify(doc.id, 'Verified')}
+                    disabled={updatingId === doc.id}
+                    className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded transition-colors"
+                    title="Mark as Verified"
+                  >
+                    {updatingId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  </button>
+                )}
+                {doc.status !== 'Rejected' && (
+                  <button
+                    onClick={() => handleVerify(doc.id, 'Rejected')}
+                    disabled={updatingId === doc.id}
+                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
+                    title="Mark as Rejected"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Assessment Tab ─────────────────────────────────────────────────────────────
+const AssessmentTab: React.FC<{ applicant: any; onRefresh: () => void }> = ({ applicant, onRefresh }) => {
+  const assessments: any[] = applicant.assessments || [];
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    assessmentType: 'Entrance Exam',
+    date: new Date().toISOString().split('T')[0],
+    score: '',
+    remarks: '',
+    decision: 'Pending',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await api.post(`/applicants/${applicant.id}/assessments`, form);
+      toast.success('Assessment recorded!');
+      setShowForm(false);
+      setForm({ assessmentType: 'Entrance Exam', date: new Date().toISOString().split('T')[0], score: '', remarks: '', decision: 'Pending' });
+      onRefresh();
+    } catch {
+      toast.error('Failed to record assessment.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-5 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-lg text-slate-900 dark:text-white">Assessment Results</h3>
+        <button
+          onClick={() => setShowForm(p => !p)}
+          className="flex items-center gap-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+        >
+          <Plus className="h-3.5 w-3.5" /> Record Results
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="p-4 border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex flex-col gap-3">
+          <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">New Assessment Entry</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Type</label>
+              <select value={form.assessmentType} onChange={e => setForm(f => ({ ...f, assessmentType: e.target.value }))}
+                className="px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option>Entrance Exam</option>
+                <option>Interview</option>
+                <option>Written Test</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Date</label>
+              <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                className="px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Score (out of 100)</label>
+              <input type="number" min={0} max={100} value={form.score} onChange={e => setForm(f => ({ ...f, score: e.target.value }))}
+                placeholder="e.g. 85"
+                className="px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Decision</label>
+              <select value={form.decision} onChange={e => setForm(f => ({ ...f, decision: e.target.value }))}
+                className="px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option>Pending</option>
+                <option>Selected</option>
+                <option>Rejected</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Remarks</label>
+            <textarea value={form.remarks} onChange={e => setForm(f => ({ ...f, remarks: e.target.value }))}
+              rows={2} placeholder="Optional notes..."
+              className="px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" />
+          </div>
+          <button type="submit" disabled={submitting}
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {submitting ? 'Saving…' : 'Save Assessment'}
+          </button>
+        </form>
+      )}
+
+      {assessments.length === 0 && !showForm ? (
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center">
+          <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center mb-4">
+            <ClipboardList className="h-8 w-8 text-slate-400" />
+          </div>
+          <h4 className="font-bold text-slate-900 dark:text-white mb-1">No Assessment Recorded</h4>
+          <p className="text-sm text-slate-500 max-w-sm mb-4">Click "Record Results" to log the assessment for this applicant.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {assessments.map((a: any) => (
+            <div key={a.id} className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="font-semibold text-sm text-slate-900 dark:text-white">{a.assessmentType}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {a.score != null && (
+                    <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{Number(a.score).toFixed(0)}<span className="text-xs text-slate-400">/100</span></span>
+                  )}
+                  <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                    a.decision === 'Selected' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                    a.decision === 'Rejected' ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' :
+                    'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
+                  }`}>{a.decision || 'Pending'}</span>
+                </div>
+              </div>
+              {a.remarks && <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 italic">"{a.remarks}"</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Info Row helper ────────────────────────────────────────────────────────────
+const InfoRow: React.FC<{ label: string; value?: string }> = ({ label, value }) => (
+  <div>
+    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-0.5">{label}</p>
+    <p className="text-sm font-medium text-slate-900 dark:text-white">{value || <span className="text-slate-400 italic">N/A</span>}</p>
+  </div>
+);
+
+// ── Main Drawer ────────────────────────────────────────────────────────────────
+export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> = ({
+  isOpen, onClose, applicant, onEnroll, onUpdateStage, onRefresh
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -41,7 +354,7 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
 
   return (
     <div className={`fixed inset-y-0 right-0 w-[600px] bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
-      
+
       {/* Header */}
       <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-start">
         <div className="flex gap-4 items-center">
@@ -77,8 +390,8 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 pb-3 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${
-                isActive 
-                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+                isActive
+                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                   : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
@@ -91,11 +404,10 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-slate-900">
-        
-        {/* OVERVIEW TAB */}
+
+        {/* ── OVERVIEW TAB ── */}
         {activeTab === 'overview' && (
           <div className="flex flex-col gap-8 animate-in fade-in duration-300">
-            {/* Pipeline Step Indicator */}
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center justify-between">
                 Admission Pipeline Status
@@ -103,25 +415,21 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
                   {Math.round(((currentStepIndex + 1) / PIPELINE_STEPS.length) * 100)}% Complete
                 </span>
               </h3>
-              
               <div className="relative">
-                {/* Connecting Line */}
-                <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"></div>
-                <div 
+                <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" />
+                <div
                   className="absolute left-[15px] top-0 w-0.5 bg-indigo-500 transition-all duration-500"
                   style={{ height: `${(currentStepIndex / (PIPELINE_STEPS.length - 1)) * 100}%` }}
-                ></div>
-
+                />
                 <div className="flex flex-col gap-6">
                   {PIPELINE_STEPS.map((step, index) => {
                     const isCompleted = index <= currentStepIndex;
                     const isCurrent = index === currentStepIndex;
-                    
                     return (
                       <div key={step.id} className="relative flex items-center gap-4">
                         <div className={`z-10 h-8 w-8 rounded-full flex items-center justify-center border-2 ${
-                          isCompleted 
-                            ? 'bg-indigo-500 border-indigo-500 text-white' 
+                          isCompleted
+                            ? 'bg-indigo-500 border-indigo-500 text-white'
                             : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-400'
                         } ${isCurrent ? 'ring-4 ring-indigo-500/20' : ''}`}>
                           {isCompleted ? <Check className="h-4 w-4" /> : <span className="text-xs font-bold">{index + 1}</span>}
@@ -130,15 +438,18 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
                           <h4 className={`font-semibold text-sm ${isCompleted ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
                             {step.label}
                           </h4>
-                          {isCurrent && (
-                            <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mt-0.5">Current Stage</p>
-                          )}
+                          {isCurrent && <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mt-0.5">Current Stage</p>}
                         </div>
-                        
-                        {/* Action buttons based on stage */}
                         {isCurrent && index < PIPELINE_STEPS.length - 1 && (
-                          <button 
-                            onClick={() => onUpdateStage(PIPELINE_STEPS[index + 1].id, PIPELINE_STEPS[index + 1].label)}
+                          <button
+                            onClick={() => {
+                              const nextStep = PIPELINE_STEPS[index + 1];
+                              if (nextStep.id === 'enrolled') {
+                                onEnroll();
+                              } else {
+                                onUpdateStage(nextStep.id, nextStep.label);
+                              }
+                            }}
                             className="text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 dark:text-indigo-400 px-3 py-1.5 rounded-lg transition-colors"
                           >
                             Mark Complete
@@ -155,31 +466,27 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
             <div>
               <h3 className="font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-slate-700 dark:text-slate-300 transition-colors text-left group">
-                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors"><FileText className="h-4 w-4" /></div>
-                  <span className="font-semibold text-sm">Request Documents</span>
-                </button>
-                <button className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 text-slate-700 dark:text-slate-300 transition-colors text-left group">
-                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/20 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors"><MessageSquare className="h-4 w-4" /></div>
-                  <span className="font-semibold text-sm">Assign Reviewer</span>
-                </button>
-                <button 
+                <button
                   onClick={() => onUpdateStage('approved', 'Approved')}
                   className="flex items-center gap-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/50 hover:border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 transition-colors text-left group"
                 >
-                  <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors"><CheckCircle2 className="h-4 w-4" /></div>
+                  <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
                   <span className="font-semibold text-sm">Approve Admission</span>
                 </button>
-                <button 
+                <button
                   onClick={() => onUpdateStage('rejected', 'Rejected')}
                   className="flex items-center gap-3 p-3 rounded-xl border border-red-200 dark:border-red-800/50 hover:border-red-500 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 transition-colors text-left group"
                 >
-                  <div className="p-2 rounded-lg bg-red-100 dark:bg-red-500/20 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors"><XCircle className="h-4 w-4" /></div>
+                  <div className="p-2 rounded-lg bg-red-100 dark:bg-red-500/20 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                    <XCircle className="h-4 w-4" />
+                  </div>
                   <span className="font-semibold text-sm">Reject Application</span>
                 </button>
               </div>
             </div>
-            
+
             {applicant.stage === 'approved' && (
               <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-6 text-white shadow-lg">
                 <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
@@ -188,7 +495,7 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
                 <p className="text-emerald-50 text-sm mb-4">
                   This application has been approved. Enrolling will automatically create student and parent portal accounts, generate an admission number, and finalize the process.
                 </p>
-                <button 
+                <button
                   onClick={onEnroll}
                   className="bg-white text-emerald-600 px-6 py-2 rounded-xl font-bold hover:bg-emerald-50 transition-colors w-full shadow-sm"
                 >
@@ -199,135 +506,72 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
           </div>
         )}
 
-        {/* DOCUMENTS TAB */}
+        {/* ── DOCUMENTS TAB ── */}
         {activeTab === 'documents' && (
-          <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white">Document Center</h3>
-              <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded">
-                0 / 4 Verified
-              </span>
-            </div>
-            
-            <div className="grid gap-3">
-              {[
-                { name: 'Birth Certificate', required: true, status: 'pending' },
-                { name: 'Aadhaar / National ID', required: true, status: 'verified' },
-                { name: 'Transfer Certificate', required: false, status: 'missing' },
-                { name: 'Passport Photo', required: true, status: 'rejected' },
-              ].map((doc, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                      doc.status === 'verified' ? 'bg-emerald-100 text-emerald-600' :
-                      doc.status === 'rejected' ? 'bg-red-100 text-red-600' :
-                      doc.status === 'pending' ? 'bg-amber-100 text-amber-600' :
-                      'bg-slate-200 text-slate-500'
-                    }`}>
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                        {doc.name}
-                        {doc.required && <span className="text-[10px] text-red-500 uppercase tracking-wider font-bold">*Required</span>}
-                      </p>
-                      <p className={`text-xs font-medium uppercase tracking-wider mt-0.5 ${
-                        doc.status === 'verified' ? 'text-emerald-600' :
-                        doc.status === 'rejected' ? 'text-red-600' :
-                        doc.status === 'pending' ? 'text-amber-600' :
-                        'text-slate-500'
-                      }`}>
-                        {doc.status}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {doc.status !== 'missing' && (
-                      <>
-                        <button className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Preview"><Eye className="h-4 w-4" /></button>
-                        <button className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Download"><Download className="h-4 w-4" /></button>
-                      </>
-                    )}
-                    <button className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Upload New"><Upload className="h-4 w-4" /></button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <DocumentCenter applicant={applicant} onRefresh={onRefresh} />
         )}
 
-        {/* ASSESSMENT TAB */}
+        {/* ── ASSESSMENT TAB ── */}
         {activeTab === 'assessment' && (
-          <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white">Assessment Results</h3>
-              <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
-                <Edit className="h-3 w-3" /> Record Results
-              </button>
-            </div>
+          <AssessmentTab applicant={applicant} onRefresh={onRefresh} />
+        )}
 
-            {/* Empty State placeholder - assuming no assessment data yet */}
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center">
-              <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center mb-4">
-                <ClipboardList className="h-8 w-8 text-slate-400" />
-              </div>
-              <h4 className="font-bold text-slate-900 dark:text-white mb-1">No Assessment Recorded</h4>
-              <p className="text-sm text-slate-500 max-w-sm mb-4">The assessment results for this applicant have not been logged into the system yet.</p>
-              <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors">
-                Schedule Assessment
-              </button>
+        {/* ── STUDENT TAB ── */}
+        {activeTab === 'student' && (
+          <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+            <h3 className="font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3">Personal Information</h3>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <InfoRow label="First Name" value={applicant.firstName} />
+              <InfoRow label="Last Name" value={applicant.lastName} />
+              <InfoRow label="Middle Name" value={applicant.middleName} />
+              <InfoRow label="Date of Birth" value={applicant.dateOfBirth ? new Date(applicant.dateOfBirth).toLocaleDateString('en-IN') : undefined} />
+              <InfoRow label="Gender" value={applicant.gender} />
+              <InfoRow label="Blood Group" value={applicant.bloodGroup} />
+              <InfoRow label="Nationality" value={applicant.nationality} />
+              <InfoRow label="Religion" value={applicant.religion} />
+              <InfoRow label="Email" value={applicant.email} />
+              <InfoRow label="Phone" value={applicant.phone} />
+            </div>
+            <h3 className="font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3 mt-2">Academic Details</h3>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <InfoRow label="Applying for Grade" value={applicant.grade} />
+              <InfoRow label="Previous School" value={applicant.previousSchool} />
+              <InfoRow label="Previous Class" value={applicant.previousClass} />
+              <InfoRow label="Transfer Status" value={applicant.transferStatus} />
             </div>
           </div>
         )}
 
-        {/* STUDENT & PARENTS TABS remain largely the same, optimized for space */}
-        {(activeTab === 'student' || activeTab === 'parents') && (
-           <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-              <h3 className="font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
-                {activeTab === 'student' ? 'Personal Information' : "Parent Details"}
-              </h3>
-              {/* Existing fields for student/parents... abbreviated for brevity as they just display raw data */}
-              <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-                  <div>
-                    <p className="text-xs text-slate-500 font-semibold mb-1">Email</p>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{activeTab === 'student' ? (applicant.email || 'N/A') : (applicant.fatherEmail || 'N/A')}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 font-semibold mb-1">Phone</p>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{activeTab === 'student' ? (applicant.phone || 'N/A') : (applicant.fatherMobile || 'N/A')}</p>
-                  </div>
-              </div>
-           </div>
-        )}
-
-        {/* ACTIVITY TIMELINE TAB */}
-        {activeTab === 'activity' && (
+        {/* ── PARENTS TAB ── */}
+        {activeTab === 'parents' && (
           <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-            <h3 className="font-bold text-lg text-slate-900 dark:text-white">Activity Timeline</h3>
-            <div className="relative border-l-2 border-slate-200 dark:border-slate-700 ml-3 pl-6 space-y-6">
-              
-              <div className="relative">
-                <div className="absolute -left-[35px] bg-white dark:bg-slate-900 p-1 rounded-full">
-                  <div className="h-3 w-3 bg-indigo-500 rounded-full"></div>
-                </div>
-                <p className="text-xs text-slate-500 mb-0.5">Today, 10:30 AM</p>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Application Updated</h4>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Stage changed from New Registration to Document Verification by System.</p>
+            <h3 className="font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3">Father's Details</h3>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <InfoRow label="Full Name" value={applicant.fatherName} />
+              <InfoRow label="Mobile" value={applicant.fatherMobile} />
+              <InfoRow label="Email" value={applicant.fatherEmail} />
+              <InfoRow label="Occupation" value={applicant.fatherOccupation} />
+            </div>
+            <h3 className="font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3 mt-2">Mother's Details</h3>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <InfoRow label="Full Name" value={applicant.motherName} />
+              <InfoRow label="Mobile" value={applicant.motherMobile} />
+              <InfoRow label="Email" value={applicant.motherEmail} />
+              <InfoRow label="Occupation" value={applicant.motherOccupation} />
+            </div>
+            <h3 className="font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3 mt-2">Address</h3>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <div className="col-span-2">
+                <InfoRow label="Street Address" value={applicant.address} />
               </div>
-
-              <div className="relative">
-                <div className="absolute -left-[35px] bg-white dark:bg-slate-900 p-1 rounded-full">
-                  <div className="h-3 w-3 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
-                </div>
-                <p className="text-xs text-slate-500 mb-0.5">{new Date(applicant.createdAt).toLocaleDateString()}</p>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Application Submitted</h4>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Online application form submitted successfully.</p>
-              </div>
-
+              <InfoRow label="City" value={applicant.city} />
+              <InfoRow label="State" value={applicant.state} />
+              <InfoRow label="Country" value={applicant.country} />
+              <InfoRow label="Postal Code" value={applicant.postalCode} />
             </div>
           </div>
         )}
+
 
       </div>
     </div>

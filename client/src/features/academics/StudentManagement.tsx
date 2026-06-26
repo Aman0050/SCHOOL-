@@ -40,12 +40,20 @@ const StudentRow = React.memo(({ student, virtualRow, onClick }: { student: any,
       }}
     >
       <td className="px-6 py-4 flex-1 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-sm font-bold text-indigo-600 dark:text-indigo-400">
-          {student.profile?.firstName?.[0]}{student.profile?.lastName?.[0]}
-        </div>
+        {student.profile?.avatarUrl ? (
+          <img 
+            src={student.profile.avatarUrl} 
+            alt={`${student.firstName} ${student.lastName}`} 
+            className="h-10 w-10 rounded-full object-cover"
+          />
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-sm font-bold text-indigo-600 dark:text-indigo-400">
+            {student.firstName?.[0]}{student.lastName?.[0]}
+          </div>
+        )}
         <div>
           <div className="font-semibold text-slate-900 dark:text-white">
-            {student.profile?.firstName} {student.profile?.lastName}
+            {student.firstName} {student.lastName}
           </div>
           <div className="text-xs text-slate-500">{student.email}</div>
         </div>
@@ -80,6 +88,7 @@ export const StudentManagement: React.FC = () => {
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   // WebSocket Live Updates
   React.useEffect(() => {
@@ -101,6 +110,8 @@ export const StudentManagement: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['studentStats'],
     queryFn: () => api.get('/analytics/students').then((res) => res.data.data),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   // 2. Fetch Directory Students
@@ -110,10 +121,35 @@ export const StudentManagement: React.FC = () => {
     staleTime: 5 * 60 * 1000, // Keep fresh for 5 minutes
   });
 
-  const students = React.useMemo(() => studentsData?.students || [], [studentsData]);
+  const students = React.useMemo(() => (Array.isArray(studentsData) ? studentsData : studentsData?.students || []), [studentsData]);
 
-  // Table Virtualizer
+  // Table Virtualization
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  
+  const handleExportCSV = () => {
+    if (!students.length) {
+      return;
+    }
+    
+    const headers = ['Name', 'Email', 'Admission No', 'Class', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...students.map(student => [
+        `"${student.firstName} ${student.lastName}"`,
+        `"${student.email}"`,
+        `"${student.admission?.admissionNumber || ''}"`,
+        `"${student.enrollments?.[0]?.class?.name || 'Unassigned'}"`,
+        `"${student.status || (student.isActive ? 'ACTIVE' : 'INACTIVE')}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `student_directory_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
   const rowVirtualizer = useVirtualizer({
     count: students.length,
     getScrollElement: () => tableContainerRef.current,
@@ -165,34 +201,24 @@ export const StudentManagement: React.FC = () => {
 
       {activeTab === 'dashboard' && (
         <div className="space-y-4">
-          <div className="flex justify-end px-2">
-            <button 
-              onClick={resetLayout}
-              className="text-sm text-slate-500 hover:text-indigo-500 transition-colors"
-            >
-              Reset Layout
-            </button>
-          </div>
           <ResponsiveGridLayout
             className="layout"
-            layouts={{ lg: layout as any }}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
             rowHeight={100}
-            onLayoutChange={(newLayout: any) => saveLayout(newLayout)}
             draggableHandle=".drag-handle"
-            isDraggable={true}
-            isResizable={true}
+            isDraggable={false}
+            isResizable={false}
             margin={[16, 16]}
             useCSSTransforms={true}
           >
             <div key="studentHero" data-grid={{ x: 0, y: 0, w: 12, h: 2, static: true }}>
               <StudentExecutiveHero stats={stats} />
             </div>
-            <div key="enrollmentAnalytics" data-grid={{ x: 0, y: 2, w: 8, h: 4 }} className="drag-handle cursor-move h-full"><EnrollmentAnalytics /></div>
-            <div key="studentRisk" data-grid={{ x: 8, y: 2, w: 4, h: 4 }} className="drag-handle cursor-move h-full"><StudentRiskMonitor /></div>
-            <div key="demographics" data-grid={{ x: 0, y: 6, w: 6, h: 4 }} className="drag-handle cursor-move h-full"><DemographicDistribution /></div>
-            <div key="liveActivity" data-grid={{ x: 6, y: 6, w: 6, h: 4 }} className="drag-handle cursor-move h-full"><LiveStudentActivity /></div>
+            <div key="enrollmentAnalytics" data-grid={{ x: 0, y: 2, w: 8, h: 4 }} className="h-full"><EnrollmentAnalytics /></div>
+            <div key="studentRisk" data-grid={{ x: 8, y: 2, w: 4, h: 4 }} className="h-full"><StudentRiskMonitor /></div>
+            <div key="demographics" data-grid={{ x: 0, y: 6, w: 6, h: 4 }} className="h-full"><DemographicDistribution stats={stats} /></div>
+            <div key="liveActivity" data-grid={{ x: 6, y: 6, w: 6, h: 4 }} className="h-full"><LiveStudentActivity /></div>
           </ResponsiveGridLayout>
         </div>
       )}
@@ -212,15 +238,44 @@ export const StudentManagement: React.FC = () => {
                   className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors">
+              <button 
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors ${showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-400' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                 <Filter className="h-4 w-4" /> Advanced Filters
               </button>
             </div>
             <div className="flex gap-2">
-               <button className="p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 hover:text-indigo-500 transition-colors"><Upload className="h-4 w-4"/></button>
-               <button className="p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 hover:text-indigo-500 transition-colors"><Download className="h-4 w-4"/></button>
+               <button onClick={handleExportCSV} className="p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 hover:text-indigo-500 transition-colors" title="Export CSV"><Download className="h-4 w-4"/></button>
             </div>
           </div>
+
+          {/* Collapsible Advanced Filters Panel */}
+          {showFilters && (
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 animate-fade-in flex gap-4 flex-wrap">
+              <div className="flex flex-col gap-1.5 w-48">
+                <label className="text-xs font-semibold text-slate-500 uppercase">Class Filter</label>
+                <select 
+                  value={classFilter}
+                  onChange={(e) => setClassFilter(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300"
+                >
+                  <option value="">All Classes</option>
+                  <option value="1">Class 1</option>
+                  <option value="2">Class 2</option>
+                  <option value="3">Class 3</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5 w-48">
+                <label className="text-xs font-semibold text-slate-500 uppercase">Status</label>
+                <select className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300">
+                  <option value="">All Statuses</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                  <option value="GRADUATED">Graduated</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Enterprise Data Table with Virtualization */}
           <div className="overflow-x-auto">

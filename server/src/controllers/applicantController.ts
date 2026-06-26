@@ -46,11 +46,26 @@ export const createApplicant = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'First name, last name, and grade are required' });
     }
 
-    // Auto-generate Application Number (e.g. APP-2026-00125)
-    const count = await prisma.applicant.count({ where: { tenantId } });
+    // Auto-generate Application Number (e.g. APP-4557BCF4-2026-00001)
+    const shortTenant = tenantId.split('-')[0].toUpperCase();
+    
+    const lastApplicant = await prisma.applicant.findFirst({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    let nextSeq = 1;
+    if (lastApplicant && lastApplicant.applicationNumber) {
+      const parts = lastApplicant.applicationNumber.split('-');
+      const lastSeq = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastSeq)) {
+        nextSeq = lastSeq + 1;
+      }
+    }
+
     const year = new Date().getFullYear();
-    const sequence = String(count + 1).padStart(5, '0');
-    const applicationNumber = `APP-${year}-${sequence}`;
+    const sequence = String(nextSeq).padStart(5, '0');
+    const applicationNumber = `APP-${shortTenant}-${year}-${sequence}`;
 
     const newApplicant = await prisma.applicant.create({
       data: {
@@ -71,9 +86,9 @@ export const createApplicant = async (req: Request, res: Response) => {
     });
 
     res.status(201).json(newApplicant);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating applicant:', error);
-    res.status(500).json({ error: 'Failed to create applicant' });
+    res.status(500).json({ error: 'Failed to create applicant', details: error.message || String(error) });
   }
 };
 
@@ -82,7 +97,7 @@ export const updateApplicantStage = async (req: Request, res: Response) => {
   try {
     const tenantId = (req as any).user?.tenantId || 'tenant-1';
     const { id } = req.params;
-    const { stage } = req.body;
+    const { stage, status } = req.body;
 
     // Check if it belongs to tenant
     const existing = await prisma.applicant.findFirst({
@@ -93,9 +108,14 @@ export const updateApplicantStage = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Applicant not found' });
     }
 
+    const dataToUpdate: any = { stage };
+    if (status) {
+      dataToUpdate.status = status;
+    }
+
     const updated = await prisma.applicant.update({
       where: { id },
-      data: { stage }
+      data: dataToUpdate
     });
 
     res.json(updated);
@@ -209,6 +229,13 @@ export const enrollApplicant = async (req: Request, res: Response) => {
         parentId: result.newParent?.id
       }
     });
+
+    // Invalidate student stats and directory cache so dashboard updates instantly
+    const io = (req as any).io;
+    if (io && tenantId) {
+      io.to(`tenant:${tenantId}`).emit('invalidate_cache', { queryKey: ['studentStats'] });
+      io.to(`tenant:${tenantId}`).emit('invalidate_cache', { queryKey: ['students-directory'] });
+    }
   } catch (error) {
     console.error('Error enrolling applicant:', error);
     res.status(500).json({ error: 'Failed to enroll student. They may already exist.' });
@@ -265,5 +292,43 @@ export const addAssessmentResult = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error adding assessment result:', error);
     res.status(500).json({ error: 'Failed to add assessment result' });
+  }
+};
+
+// Upload a document file for an applicant
+export const uploadApplicantDocument = async (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).user?.tenantId || 'tenant-1';
+    const { id } = req.params;
+    const { type, name } = req.body;
+    const file = (req as any).file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Verify applicant belongs to tenant
+    const applicant = await prisma.applicant.findFirst({ where: { id, tenantId } });
+    if (!applicant) {
+      return res.status(404).json({ error: 'Applicant not found' });
+    }
+
+    const fileUrl = `/uploads/applicant-docs/${file.filename}`;
+
+    const doc = await prisma.applicantDocument.create({
+      data: {
+        tenantId,
+        applicantId: id,
+        type: type || 'Other',
+        name: name || file.originalname,
+        fileUrl,
+        status: 'Pending'
+      }
+    });
+
+    res.status(201).json(doc);
+  } catch (error) {
+    console.error('Error uploading applicant document:', error);
+    res.status(500).json({ error: 'Failed to upload document' });
   }
 };

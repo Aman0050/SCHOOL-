@@ -4,6 +4,7 @@ import {
   Clock, UserPlus, MoreHorizontal, Calendar, AlertCircle, X, Loader2,
   ChevronLeft, ChevronRight, Eye, Edit, UserCheck, XCircle, BarChart3
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../../../lib/api';
 import { NewAdmissionModal } from './NewAdmissionModal';
 import { ApplicationProfileDrawer } from './ApplicationProfileDrawer';
@@ -28,15 +29,20 @@ export const AdmissionsPipeline: React.FC = () => {
     fetchApplicants();
   }, []);
 
-  const fetchApplicants = async () => {
+  const fetchApplicants = async (syncApplicantId?: string) => {
     try {
-      setIsLoading(true);
+      if (!syncApplicantId) setIsLoading(true);
       const response = await api.get('/applicants');
       setApplicants(response.data);
+      // If called from drawer, re-sync the open applicant with fresh data (includes new docs/assessments)
+      if (syncApplicantId) {
+        const fresh = response.data.find((a: any) => a.id === syncApplicantId);
+        if (fresh) setSelectedApplicant(fresh);
+      }
     } catch (error) {
       console.error('Failed to fetch applicants:', error);
     } finally {
-      setIsLoading(false);
+      if (!syncApplicantId) setIsLoading(false);
     }
   };
 
@@ -45,8 +51,11 @@ export const AdmissionsPipeline: React.FC = () => {
       const response = await api.post('/applicants', formData);
       setApplicants(prev => [response.data, ...prev]);
       setIsModalOpen(false);
-    } catch (error) {
+      toast.success('Application registered successfully!');
+    } catch (error: any) {
       console.error('Failed to create applicant:', error);
+      // Re-throw so the modal's catch block can show the toast error
+      throw error;
     }
   };
 
@@ -54,6 +63,7 @@ export const AdmissionsPipeline: React.FC = () => {
     try {
       await api.post(`/applicants/${appId}/enroll`);
       setApplicants(prev => prev.filter(app => app.id !== appId));
+      setSelectedApplicant(null);
     } catch (error) {
       console.error('Failed to enroll student:', error);
     }
@@ -61,10 +71,13 @@ export const AdmissionsPipeline: React.FC = () => {
 
   const handleUpdateStage = async (appId: string, newStage: string, newStatus: string) => {
     try {
-      await api.put(`/applicants/${appId}/stage`, { stage: newStage });
-      setApplicants(prev => prev.map(app => 
+      await api.put(`/applicants/${appId}/stage`, { stage: newStage, status: newStatus });
+      setApplicants(prev => prev.map(app =>
         app.id === appId ? { ...app, stage: newStage, status: newStatus } : app
       ));
+      if (selectedApplicant?.id === appId) {
+        setSelectedApplicant((prev: any) => ({ ...prev, stage: newStage, status: newStatus }));
+      }
     } catch (error) {
       console.error('Failed to update applicant stage:', error);
     }
@@ -121,16 +134,7 @@ export const AdmissionsPipeline: React.FC = () => {
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and track student applications.</p>
           </div>
           <div className="flex gap-3">
-            <button 
-              onClick={() => setShowAnalytics(!showAnalytics)}
-              className={`border px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2
-                ${showAnalytics 
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-400' 
-                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                }`}
-            >
-              <BarChart3 className="h-4 w-4" /> {showAnalytics ? 'Back to Pipeline' : 'Analytics'}
-            </button>
+
             <button 
               onClick={() => setIsModalOpen(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
@@ -186,17 +190,7 @@ export const AdmissionsPipeline: React.FC = () => {
       ) : (
         <>
           {/* Action Bar */}
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700 mx-6 mb-6">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input 
-                type="text"
-                placeholder="Search by name, ID, phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-            </div>
+          <div className="flex flex-col md:flex-row gap-4 justify-end items-center bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700 mx-6 mb-6">
             <div className="flex gap-2 w-full md:w-auto">
               <select 
                 value={statusFilter}
@@ -205,16 +199,9 @@ export const AdmissionsPipeline: React.FC = () => {
               >
                 <option value="All">All Statuses</option>
                 <option value="new-registrations">New Registration</option>
-                <option value="document-verification">Doc Verification</option>
                 <option value="assessment-interview">Assessment</option>
                 <option value="approved">Approved</option>
               </select>
-              <button className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
-                <Filter className="h-4 w-4" />
-              </button>
-              <button className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
-                <Download className="h-4 w-4" />
-              </button>
             </div>
           </div>
 
@@ -350,13 +337,14 @@ export const AdmissionsPipeline: React.FC = () => {
           isOpen={!!selectedApplicant}
           onClose={() => setSelectedApplicant(null)}
           applicant={selectedApplicant}
+          onRefresh={() => fetchApplicants(selectedApplicant?.id)}
           onEnroll={() => {
             if (selectedApplicant) handleEnroll(selectedApplicant.id);
             setSelectedApplicant(null);
           }}
           onUpdateStage={(stage, status) => {
             if (selectedApplicant) handleUpdateStage(selectedApplicant.id, stage, status);
-            setSelectedApplicant(prev => ({...prev, stage, status}));
+            setSelectedApplicant((prev: any) => ({...prev, stage, status}));
           }}
         />
       )}

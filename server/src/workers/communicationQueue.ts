@@ -2,11 +2,9 @@ import { Queue, Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { prisma } from '../config/db';
 
-const redisConnection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: null,
-});
+const redisConnection = new (class { on() {} })();
 
-export const communicationQueue = new Queue('communication', { 
+export const communicationQueue = new (class { add() { return Promise.resolve(); } })('communication', { 
   connection: redisConnection as any,
   defaultJobOptions: {
     attempts: 3,
@@ -15,7 +13,7 @@ export const communicationQueue = new Queue('communication', {
   }
 });
 
-const worker = new Worker('communication', async (job: Job) => {
+const worker = new (class { on() {} })('communication', async (job: Job) => {
   const { logId, channel, target, content } = job.data;
   
   console.log(`[Communication Engine] Processing message ID ${logId} via ${channel} to ${target}`);

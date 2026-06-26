@@ -68,9 +68,11 @@ export const SchoolDetailsSettings: React.FC = () => {
               onChange={e => setFormData({ ...formData, academicYear: e.target.value })}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none transition-shadow" 
             >
-              <option value="2022-2023">2022-2023</option>
-              <option value="2023-2024">2023-2024</option>
-              <option value="2024-2025">2024-2025</option>
+              {Array.from({ length: 15 }, (_, i) => {
+                const startYear = new Date().getFullYear() - 5 + i;
+                const yearString = `${startYear}-${startYear + 1}`;
+                return <option key={yearString} value={yearString}>{yearString}</option>;
+              })}
             </select>
           </div>
           <div className="space-y-2 md:col-span-2">

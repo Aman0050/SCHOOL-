@@ -18,7 +18,7 @@ import { RealTimeMonitoring } from './components/attendance/dashboard/RealTimeMo
 import { StudentAnalyticsCharts } from './components/attendance/dashboard/StudentAnalyticsCharts';
 import { SmartAlerts } from './components/attendance/dashboard/SmartAlerts';
 import { LiveAttendanceFeed } from './components/attendance/dashboard/LiveAttendanceFeed';
-import { HardwareSyncStatus } from './components/attendance/dashboard/HardwareSyncStatus';
+
 import { syncEngine } from '../../lib/syncEngine';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -241,35 +241,25 @@ export const AttendanceManagement: React.FC = () => {
 
       {activeTab === 'dashboard' && (
         <div className="space-y-4">
-          <div className="flex justify-end px-2">
-            <button 
-              onClick={resetLayout}
-              className="text-sm text-slate-500 hover:text-blue-500 transition-colors"
-            >
-              Reset Layout
-            </button>
-          </div>
+
           <ResponsiveGridLayout
             className="layout"
-            layouts={{ lg: layout as any }}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-            rowHeight={100}
-            onLayoutChange={(newLayout: any) => saveLayout(newLayout)}
+            rowHeight={70}
             draggableHandle=".drag-handle"
-            isDraggable={true}
-            isResizable={true}
+            isDraggable={false}
+            isResizable={false}
             margin={[16, 16]}
           >
-            <div key="attendanceHero" data-grid={{ x: 0, y: 0, w: 12, h: 2, static: true }}>
+            <div key="attendanceHero" data-grid={{ x: 0, y: 0, w: 12, h: 3, static: true }}>
               <AttendanceExecutiveHero stats={stats} />
             </div>
-            <div key="healthScore" className="drag-handle cursor-move h-full"><AttendanceHealth stats={stats} /></div>
-            <div key="realTimeMonitoring" className="drag-handle cursor-move h-full"><RealTimeMonitoring stats={stats} /></div>
-            <div key="studentAnalytics" className="drag-handle cursor-move h-full"><StudentAnalyticsCharts /></div>
-            <div key="smartAlerts" className="drag-handle cursor-move h-full"><SmartAlerts /></div>
-            <div key="liveFeed" className="drag-handle cursor-move h-full"><LiveAttendanceFeed /></div>
-            <div key="hardwareSync" className="drag-handle cursor-move h-full"><HardwareSyncStatus /></div>
+            <div key="healthScore" data-grid={{ x: 0, y: 3, w: 4, h: 3 }} className="h-full"><AttendanceHealth stats={stats} /></div>
+            <div key="realTimeMonitoring" data-grid={{ x: 4, y: 3, w: 8, h: 3 }} className="h-full"><RealTimeMonitoring stats={stats} /></div>
+            <div key="studentAnalytics" data-grid={{ x: 0, y: 6, w: 8, h: 4 }} className="h-full"><StudentAnalyticsCharts /></div>
+            <div key="smartAlerts" data-grid={{ x: 8, y: 6, w: 4, h: 4 }} className="h-full"><SmartAlerts /></div>
+            <div key="liveFeed" data-grid={{ x: 0, y: 10, w: 12, h: 5 }} className="h-full"><LiveAttendanceFeed /></div>
           </ResponsiveGridLayout>
         </div>
       )}

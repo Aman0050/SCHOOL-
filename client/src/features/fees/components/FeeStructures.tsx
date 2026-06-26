@@ -213,12 +213,24 @@ const FeeStructures: React.FC = () => {
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                   Academic Year <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 2025-2026"
+                <select
                   className={inputCls}
                   {...register('academicYear', { required: true })}
-                />
+                >
+                  <option value="2023-2024">2023-2024</option>
+                  <option value="2024-2025">2024-2025</option>
+                  <option value="2025-2026">2025-2026</option>
+                  <option value="2026-2027">2026-2027</option>
+                  <option value="2027-2028">2027-2028</option>
+                  <option value="2028-2029">2028-2029</option>
+                  <option value="2029-2030">2029-2030</option>
+                  <option value="2030-2031">2030-2031</option>
+                  <option value="2031-2032">2031-2032</option>
+                  <option value="2032-2033">2032-2033</option>
+                  <option value="2033-2034">2033-2034</option>
+                  <option value="2034-2035">2034-2035</option>
+                  <option value="2035-2036">2035-2036</option>
+                </select>
               </div>
 
               <div className="space-y-1.5">
@@ -279,7 +291,7 @@ const FeeStructures: React.FC = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="1"
                           placeholder="0.00"
                           className={`${inputCls} pl-8`}
                           {...register(`items.${index}.amount`, { required: true, min: 0 })}

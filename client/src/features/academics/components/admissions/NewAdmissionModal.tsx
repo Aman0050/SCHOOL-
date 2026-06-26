@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, User, GraduationCap, Users, MapPin, CheckCircle2, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface NewAdmissionModalProps {
   isOpen: boolean;
@@ -34,7 +35,11 @@ export const NewAdmissionModal: React.FC<NewAdmissionModalProps> = ({ isOpen, on
   if (!isOpen) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.type === 'tel') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleNext = () => {
@@ -55,7 +60,19 @@ export const NewAdmissionModal: React.FC<NewAdmissionModalProps> = ({ isOpen, on
     try {
       setIsSubmitting(true);
       await onSubmit(formData);
-      // Reset is handled by parent on close, or we can reset here
+      // Reset form on success
+      setCurrentStep(0);
+      setFormData({
+        firstName: '', middleName: '', lastName: '', dateOfBirth: '', gender: '', bloodGroup: '', nationality: '', religion: '',
+        grade: 'Grade 1', previousSchool: '', previousClass: '', transferStatus: '',
+        email: '', phone: '',
+        fatherName: '', fatherMobile: '', fatherEmail: '', fatherOccupation: '',
+        motherName: '', motherMobile: '', motherEmail: '', motherOccupation: '', guardianRelation: '',
+        address: '', city: '', state: '', country: '', postalCode: ''
+      });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Failed to submit registration. Please try again.';
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

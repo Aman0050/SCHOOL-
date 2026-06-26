@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, TrendingUp, DollarSign, CalendarCheck } from 'lucide-react';
+import { ShieldAlert, TrendingUp, IndianRupee, CalendarCheck } from 'lucide-react';
 
 export const StudentHealthCard: React.FC<any> = ({ student }) => {
   // Compute health score based on mock intelligence logic
@@ -33,8 +33,8 @@ export const StudentHealthCard: React.FC<any> = ({ student }) => {
           <span className="font-semibold text-slate-800 dark:text-white">{attendanceRate.toFixed(0)}%</span>
         </div>
         <div className="flex justify-between items-center text-sm border-b border-slate-100 dark:border-slate-700 pb-2">
-          <span className="text-slate-500 flex items-center gap-2"><DollarSign className="h-4 w-4"/> Fee Due</span>
-          <span className="font-semibold text-slate-800 dark:text-white">$0.00</span>
+          <span className="text-slate-500 flex items-center gap-2"><IndianRupee className="h-4 w-4"/> Fee Due</span>
+          <span className="font-semibold text-slate-800 dark:text-white">₹0.00</span>
         </div>
         <div className="flex justify-between items-center text-sm border-b border-slate-100 dark:border-slate-700 pb-2">
           <span className="text-slate-500 flex items-center gap-2"><TrendingUp className="h-4 w-4"/> Academics</span>

@@ -180,22 +180,27 @@ export const getStudentIntelligence = async (req: Request, res: Response) => {
         prisma.admission.count({ where: { tenantId, admissionDate: { gte: new Date(new Date().setMonth(new Date().getMonth() - 1)) } } })
       ]);
 
-      // Fallback to rich mock data if the database is currently empty for demonstration
-      if (totalStudents === 0) {
-        totalStudents = 1524;
-        activeStudents = 1480;
-        newAdmissions = 124;
-      }
-  
+      const genderGroups = await prisma.profile.groupBy({
+        by: ['gender'],
+        _count: { _all: true },
+        where: { user: { role: 'STUDENT', tenantId }, gender: { not: null } }
+      });
+
+      const genderDemographics = genderGroups.map(g => ({
+        name: g.gender,
+        value: g._count._all
+      }));
+
       res.json({
         success: true,
         data: {
           totalStudents,
           activeStudents,
           newAdmissions,
-          inactiveStudents: totalStudents === 1524 ? 44 : (totalStudents - activeStudents),
+          inactiveStudents: totalStudents - activeStudents,
           transferRequests: 2, 
-          graduatedStudents: totalStudents === 1524 ? 350 : 0
+          graduatedStudents: 0,
+          genderDemographics
         }
       });
   } catch (error) {

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { User, Lock, Building2, Bell } from 'lucide-react';
+import { User, Lock, Building2 } from 'lucide-react';
 import { ProfileSettings } from './components/ProfileSettings';
 import { SecuritySettings } from './components/SecuritySettings';
 import { SchoolDetailsSettings } from './components/SchoolDetailsSettings';
-import { NotificationSettings } from './components/NotificationSettings';
 
 const SchoolSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -11,8 +10,7 @@ const SchoolSettings: React.FC = () => {
   const tabs = [
     { name: 'Profile', icon: <User className="w-5 h-5" />, component: <ProfileSettings /> },
     { name: 'Security', icon: <Lock className="w-5 h-5" />, component: <SecuritySettings /> },
-    { name: 'School Details', icon: <Building2 className="w-5 h-5" />, component: <SchoolDetailsSettings /> },
-    { name: 'Notifications', icon: <Bell className="w-5 h-5" />, component: <NotificationSettings /> }
+    { name: 'School Details', icon: <Building2 className="w-5 h-5" />, component: <SchoolDetailsSettings /> }
   ];
 
   return (

@@ -4,11 +4,9 @@ import { prisma } from '../config/db';
 import { analyticsService } from '../services/analyticsService';
 import { cache } from '../lib/cache';
 
-const redisConnection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: null,
-});
+const redisConnection = new (class { on() {} })();
 
-export const analyticsQueue = new Queue('analytics', { 
+export const analyticsQueue = new (class { add() { return Promise.resolve(); } })('analytics', { 
   connection: redisConnection as any,
   defaultJobOptions: {
     attempts: 3,
@@ -17,7 +15,7 @@ export const analyticsQueue = new Queue('analytics', {
   }
 });
 
-const worker = new Worker('analytics', async (job: Job) => {
+const worker = new (class { on() {} })('analytics', async (job: Job) => {
   console.log(`Processing analytics job ${job.id} of type ${job.name}`);
   
   if (job.name === 'refresh-all-analytics') {

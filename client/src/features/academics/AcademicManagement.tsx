@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../lib/api';
 import { 
   LayoutDashboard, 
   Layers, 
@@ -15,6 +17,12 @@ import { CurriculumManagement } from './components/CurriculumManagement';
 
 export const AcademicManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'classes' | 'timetable' | 'curriculum' | 'reports'>('dashboard');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
+
+  const { data: classes } = useQuery({
+    queryKey: ['classes'],
+    queryFn: () => api.get('/academics/classes').then(res => res.data.data),
+  });
 
   return (
     <div className="space-y-6">
@@ -92,8 +100,22 @@ export const AcademicManagement: React.FC = () => {
         {activeTab === 'dashboard' && <AcademicExecutiveDashboard />}
         
         {activeTab === 'timetable' && (
-          // Just pass a hardcoded classId for demonstration. In a real system, you'd add a class selector here.
-          <TimetableIntelligence classId="demo-class-id" />
+          <div className="space-y-4">
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">Select Class Context:</label>
+              <select 
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+                className="w-full max-w-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300"
+              >
+                <option value="">-- Choose Class --</option>
+                {classes?.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.name} {c.section ? `(${c.section})` : ''}</option>
+                ))}
+              </select>
+            </div>
+            <TimetableIntelligence classId={selectedClassId || undefined} />
+          </div>
         )}
         
         {activeTab === 'classes' && <SubjectClassManagement />}

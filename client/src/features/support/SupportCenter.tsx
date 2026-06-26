@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, MessageCircle, Ticket, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Ticket, BookOpen } from 'lucide-react';
 import { SupportDashboard } from './components/SupportDashboard';
 import { TicketSystem } from './components/TicketSystem';
-import { LiveChat } from './components/LiveChat';
 import { KnowledgeBase } from './components/KnowledgeBase';
 
 const SupportCenter: React.FC = () => {
@@ -10,7 +9,6 @@ const SupportCenter: React.FC = () => {
 
   const tabs = [
     { name: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, component: <SupportDashboard /> },
-    { name: 'Live Chat', icon: <MessageCircle className="w-5 h-5" />, component: <LiveChat /> },
     { name: 'My Tickets', icon: <Ticket className="w-5 h-5" />, component: <TicketSystem /> },
     { name: 'Knowledge Base', icon: <BookOpen className="w-5 h-5" />, component: <KnowledgeBase /> }
   ];

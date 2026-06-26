@@ -38,35 +38,28 @@ export const AccountantDashboard = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center px-2">
         <h2 className="text-xl font-bold text-slate-800 dark:text-white">Finance Operations Center</h2>
-        <button 
-          onClick={resetLayout}
-          className="text-sm text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors"
-        >
-          Reset Layout
-        </button>
+
       </div>
 
       <ResponsiveGridLayout
         className="layout"
-        layouts={{ lg: layout as any }}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={100}
-        onLayoutChange={onLayoutChange}
         draggableHandle=".drag-handle"
-        isDraggable={true}
-        isResizable={true}
+        isDraggable={false}
+        isResizable={false}
         margin={[16, 16]}
       >
-        <div key="financeHero" data-grid={{ x: 0, y: 0, w: 12, h: 2, static: true }}>
+        <div key="financeHero" data-grid={{ x: 0, y: 0, w: 12, h: 3, static: true }}>
           <FinanceExecutiveHero stats={stats} />
         </div>
-        <div key="healthScore" className="drag-handle cursor-move h-full"><CollectionHealth stats={stats} /></div>
-        <div key="revenueIntel" className="drag-handle cursor-move h-full"><RevenueIntelligence stats={stats} /></div>
-        <div key="collectionTrends" className="drag-handle cursor-move h-full"><FeeAnalyticsCharts /></div>
-        <div key="paymentMethods" className="drag-handle cursor-move h-full"><PaymentMethodsAnalytics methods={stats?.paymentMethods} /></div>
-        <div key="recentTransactions" className="drag-handle cursor-move h-full"><RecentTransactionsFeed /></div>
-        <div key="installmentManager" className="drag-handle cursor-move h-full"><InstallmentManager /></div>
+        <div key="healthScore" data-grid={{ x: 0, y: 3, w: 4, h: 3 }} className="h-full"><CollectionHealth stats={stats} /></div>
+        <div key="revenueIntel" data-grid={{ x: 4, y: 3, w: 8, h: 3 }} className="h-full"><RevenueIntelligence stats={stats} /></div>
+        <div key="collectionTrends" data-grid={{ x: 0, y: 6, w: 8, h: 4 }} className="h-full"><FeeAnalyticsCharts /></div>
+        <div key="paymentMethods" data-grid={{ x: 8, y: 6, w: 4, h: 4 }} className="h-full"><PaymentMethodsAnalytics methods={stats?.paymentMethods} /></div>
+        <div key="recentTransactions" data-grid={{ x: 0, y: 10, w: 6, h: 5 }} className="h-full"><RecentTransactionsFeed /></div>
+        <div key="installmentManager" data-grid={{ x: 6, y: 10, w: 6, h: 5 }} className="h-full"><InstallmentManager /></div>
       </ResponsiveGridLayout>
     </div>
   );

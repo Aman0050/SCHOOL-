@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../../../lib/api';
 import { StudentHealthCard } from './StudentHealthCard';
+import { StudentAcademicsTab } from './StudentAcademicsTab';
+import { StudentFeesTab } from './StudentFeesTab';
+import { StudentDocumentsTab } from './StudentDocumentsTab';
+import { StudentGuardiansTab } from './StudentGuardiansTab';
 import { User, Mail, Phone, MapPin, Calendar, FileText, ArrowLeft, Loader2 } from 'lucide-react';
 
 export const StudentProfile: React.FC<{ studentId: string; onBack: () => void }> = ({ studentId, onBack }) => {
@@ -30,11 +34,19 @@ export const StudentProfile: React.FC<{ studentId: string; onBack: () => void }>
         {/* Left Sidebar */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
-            <div className="h-24 w-24 rounded-full bg-indigo-100 dark:bg-indigo-900/50 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-indigo-500">
-              {student.profile?.firstName?.[0]}{student.profile?.lastName?.[0]}
-            </div>
+            {student.profile?.avatarUrl ? (
+              <img 
+                src={student.profile.avatarUrl} 
+                alt={`${student.firstName} ${student.lastName}`} 
+                className="h-24 w-24 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 dark:border-slate-700"
+              />
+            ) : (
+              <div className="h-24 w-24 rounded-full bg-indigo-100 dark:bg-indigo-900/50 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-indigo-500">
+                {student.firstName?.[0]}{student.lastName?.[0]}
+              </div>
+            )}
             <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-              {student.profile?.firstName} {student.profile?.lastName}
+              {student.firstName} {student.lastName}
             </h2>
             <p className="text-sm text-slate-500 mb-4">{student.admission?.admissionNumber}</p>
             <div className="inline-flex px-3 py-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 rounded-full text-xs font-semibold">
@@ -96,12 +108,20 @@ export const StudentProfile: React.FC<{ studentId: string; onBack: () => void }>
               </div>
             )}
             
-            {/* Additional Tabs would render here */}
-            {['academics', 'fees', 'documents', 'guardians'].includes(activeTab) && (
-              <div className="flex flex-col items-center justify-center h-48 text-slate-400">
-                <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 mb-3 flex items-center justify-center"><FileText className="h-6 w-6"/></div>
-                <p>Intelligence Module Linked.</p>
-              </div>
+            {activeTab === 'academics' && (
+              <StudentAcademicsTab student={student} />
+            )}
+
+            {activeTab === 'fees' && (
+              <StudentFeesTab student={student} />
+            )}
+
+            {activeTab === 'documents' && (
+              <StudentDocumentsTab student={student} />
+            )}
+
+            {activeTab === 'guardians' && (
+              <StudentGuardiansTab student={student} />
             )}
           </div>
         </div>

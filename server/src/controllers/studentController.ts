@@ -90,50 +90,49 @@ export const getStudents = async (req: Request, res: Response, next: NextFunctio
 
     const cacheKey = `tenant:${req.user!.tenantId}:students:cursor${cursor}:l${limit}:s${search}:c${classId}:st${status}`;
 
-    const cachedResult = await cache.remember(cacheKey, 300, async () => {
-      const students = await prisma.user.findMany({
-        where,
-        take: limit + 1, // Fetch one extra to determine next cursor
-        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          isActive: true,
-          createdAt: true,
-          profile: {
-            select: {
-              firstName: true,
-              lastName: true,
-              avatarUrl: true
-            }
-          },
-          admission: {
-            select: {
-              admissionNumber: true,
-              status: true
-            }
-          },
-          enrollments: {
-            take: 1,
-            select: {
-              class: {
-                select: { name: true }
-              }
-            }
+    const students = await prisma.user.findMany({
+      where,
+      take: limit + 1, // Fetch one extra to determine next cursor
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        profile: {
+          select: {
+            avatarUrl: true
           }
         },
-        orderBy: { id: 'asc' }, // MUST order by cursor field
-      });
-
-      let nextCursor: string | undefined = undefined;
-      if (students.length > limit) {
-        const nextItem = students.pop();
-        nextCursor = nextItem!.id;
-      }
-
-      return { students, nextCursor };
+        admission: {
+          select: {
+            admissionNumber: true,
+            status: true
+          }
+        },
+        enrollments: {
+          take: 1,
+          select: {
+            class: {
+              select: { name: true }
+            }
+          }
+        }
+      },
+      orderBy: { id: 'asc' }, // MUST order by cursor field
     });
+
+    let nextCursor: string | undefined = undefined;
+    if (students.length > limit) {
+      const nextItem = students.pop();
+      nextCursor = nextItem!.id;
+    }
+
+    const cachedResult = { students, nextCursor };
+    console.log(`[getStudents] Returning ${students.length} students for tenant ${req.user!.tenantId}`);
 
     res.status(200).json({
       success: true,
@@ -290,6 +289,20 @@ export const getStudentDetail = async (req: Request, res: Response, next: NextFu
             feeStructure: true,
             collections: true
           }
+        },
+        examMarks: {
+          include: {
+            exam: true,
+            subject: true
+          },
+          orderBy: { createdAt: 'desc' }
+        },
+        examResults: {
+          include: {
+            exam: true,
+            gradeConfig: true
+          },
+          orderBy: { createdAt: 'desc' }
         }
       },
     });

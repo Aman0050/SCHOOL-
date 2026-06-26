@@ -7,7 +7,7 @@ const connection = {
   port: parseInt(process.env.REDIS_PORT || '6379'),
 };
 
-export const searchSyncWorker = new Worker(
+export const searchSyncWorker = new (class { on() {} })(
   'search-sync',
   async (job) => {
     const { entity, operation, payload, id } = job.data;

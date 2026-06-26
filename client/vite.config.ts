@@ -5,6 +5,9 @@ import viteCompression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    'process.env': {}
+  },
   plugins: [
     react(),
     viteCompression({ algorithm: 'gzip', ext: '.gz' }),

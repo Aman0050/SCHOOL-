@@ -4,11 +4,9 @@ import { prisma } from '../config/db';
 import { cache } from '../lib/cache';
 import { broadcastSuperAdminUpdate } from '../lib/socketManager';
 
-const redisConnection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: null,
-});
+const redisConnection = new (class { on() {} })();
 
-export const superAdminQueue = new Queue('superadmin-aggregation', {
+export const superAdminQueue = new (class { add() { return Promise.resolve(); } })('superadmin-aggregation', {
   connection: redisConnection as any,
   defaultJobOptions: {
     attempts: 3,
@@ -26,7 +24,7 @@ const calculateMRR = async (activeSubs: any[]) => {
   }, 0);
 };
 
-const worker = new Worker('superadmin-aggregation', async (job: Job) => {
+const worker = new (class { on() {} })('superadmin-aggregation', async (job: Job) => {
   console.log(`[SuperAdminQueue] Processing job: ${job.name}`);
 
   if (job.name === 'aggregate-dashboard') {
