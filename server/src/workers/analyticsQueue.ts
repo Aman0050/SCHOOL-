@@ -4,9 +4,12 @@ import { prisma } from '../config/db';
 import { analyticsService } from '../services/analyticsService';
 import { cache } from '../lib/cache';
 
-const redisConnection = new (class { on() {} })();
+const redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
 
-export const analyticsQueue = new (class { add() { return Promise.resolve(); } })('analytics', { 
+export const analyticsQueue = new (class {
+  constructor(...args: any[]) {}
+  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
+})('analytics', { 
   connection: redisConnection as any,
   defaultJobOptions: {
     attempts: 3,
@@ -15,7 +18,7 @@ export const analyticsQueue = new (class { add() { return Promise.resolve(); } }
   }
 });
 
-const worker = new (class { on() {} })('analytics', async (job: Job) => {
+const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })('analytics', async (job: Job) => {
   console.log(`Processing analytics job ${job.id} of type ${job.name}`);
   
   if (job.name === 'refresh-all-analytics') {
@@ -60,10 +63,10 @@ const worker = new (class { on() {} })('analytics', async (job: Job) => {
   }
 }, { connection: redisConnection as any });
 
-worker.on('completed', (job) => {
+worker.on('completed', (job: any) => {
   console.log(`Job ${job.id} (${job.name}) has completed!`);
 });
 
-worker.on('failed', (job, err) => {
+worker.on('failed', (job: any, err: any) => {
   console.log(`Job ${job?.id} (${job?.name}) has failed with ${err.message}`);
 });

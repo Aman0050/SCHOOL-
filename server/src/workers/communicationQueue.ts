@@ -2,9 +2,13 @@ import { Queue, Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { prisma } from '../config/db';
 
-const redisConnection = new (class { on() {} })();
+const redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
 
-export const communicationQueue = new (class { add() { return Promise.resolve(); } })('communication', { 
+export const communicationQueue = new (class {
+  constructor(...args: any[]) {}
+  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
+  getJob(id: string): Promise<any> { return Promise.resolve(null); }
+})('communication', { 
   connection: redisConnection as any,
   defaultJobOptions: {
     attempts: 3,
@@ -13,7 +17,7 @@ export const communicationQueue = new (class { add() { return Promise.resolve();
   }
 });
 
-const worker = new (class { on() {} })('communication', async (job: Job) => {
+const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })('communication', async (job: Job) => {
   const { logId, channel, target, content } = job.data;
   
   console.log(`[Communication Engine] Processing message ID ${logId} via ${channel} to ${target}`);
@@ -56,6 +60,6 @@ const worker = new (class { on() {} })('communication', async (job: Job) => {
   }
 }, { connection: redisConnection as any });
 
-worker.on('failed', (job, err) => {
+worker.on('failed', (job: any, err: any) => {
   console.log(`[Communication Engine] Job ${job?.id} has failed permanently after retries.`);
 });

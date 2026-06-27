@@ -7,9 +7,9 @@ const connection = {
   port: parseInt(process.env.REDIS_PORT || '6379'),
 };
 
-export const searchSyncWorker = new (class { on() {} })(
+export const searchSyncWorker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })(
   'search-sync',
-  async (job) => {
+  async (job: any) => {
     const { entity, operation, payload, id } = job.data;
 
     try {
@@ -38,6 +38,6 @@ export const searchSyncWorker = new (class { on() {} })(
   { connection }
 );
 
-searchSyncWorker.on('failed', (job, err) => {
+searchSyncWorker.on('failed', (job: any, err: any) => {
   logger.error(`[SearchSync] Job ${job?.id} failed:`, err);
 });

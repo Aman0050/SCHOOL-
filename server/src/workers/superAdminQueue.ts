@@ -4,9 +4,12 @@ import { prisma } from '../config/db';
 import { cache } from '../lib/cache';
 import { broadcastSuperAdminUpdate } from '../lib/socketManager';
 
-const redisConnection = new (class { on() {} })();
+const redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
 
-export const superAdminQueue = new (class { add() { return Promise.resolve(); } })('superadmin-aggregation', {
+export const superAdminQueue = new (class {
+  constructor(...args: any[]) {}
+  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
+})('superadmin-aggregation', {
   connection: redisConnection as any,
   defaultJobOptions: {
     attempts: 3,
@@ -24,7 +27,7 @@ const calculateMRR = async (activeSubs: any[]) => {
   }, 0);
 };
 
-const worker = new (class { on() {} })('superadmin-aggregation', async (job: Job) => {
+const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })('superadmin-aggregation', async (job: Job) => {
   console.log(`[SuperAdminQueue] Processing job: ${job.name}`);
 
   if (job.name === 'aggregate-dashboard') {
@@ -147,6 +150,6 @@ const worker = new (class { on() {} })('superadmin-aggregation', async (job: Job
   }
 }, { connection: redisConnection as any });
 
-worker.on('failed', (job, err) => {
+worker.on('failed', (job: any, err: any) => {
   console.error(`[SuperAdminQueue] Job ${job?.id} failed:`, err);
 });

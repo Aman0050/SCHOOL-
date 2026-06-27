@@ -8,9 +8,13 @@ import { generateCSV, generateExcel } from '../utils/csvEngine';
 import { notifyUserEvent } from '../lib/socketManager';
 import { uploadBufferToS3 } from '../utils/s3Uploader';
 
-const redisConnection = new (class { on() {} })();
+const redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
 
-export const exportQueue = new (class { add() { return Promise.resolve(); } })('exportQueue', { 
+export const exportQueue = new (class {
+  constructor(...args: any[]) {}
+  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
+  getJob(id: string): Promise<any> { return Promise.resolve(null); }
+})('exportQueue', { 
   connection: redisConnection as any,
   defaultJobOptions: {
     attempts: 3,
@@ -19,7 +23,7 @@ export const exportQueue = new (class { add() { return Promise.resolve(); } })('
   }
 });
 
-const worker = new (class { on() {} })('exportQueue', async (job: Job) => {
+const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })('exportQueue', async (job: Job) => {
   console.log(`[ExportWorker] Processing job ${job.id} of type ${job.name}`);
   const { tenantId, userId } = job.data;
   
@@ -109,7 +113,7 @@ const worker = new (class { on() {} })('exportQueue', async (job: Job) => {
 
 }, { connection: redisConnection as any });
 
-worker.on('completed', async (job) => {
+worker.on('completed', async (job: any) => {
   console.log(`[ExportWorker] Job ${job.id} completed. Data available at ${job.returnvalue.fileUrl}`);
   // Notify user in real-time
   if (job.data.userId) {
@@ -121,7 +125,7 @@ worker.on('completed', async (job) => {
   }
 });
 
-worker.on('failed', (job, err) => {
+worker.on('failed', (job: any, err: any) => {
   console.error(`[ExportWorker] Job ${job?.id} failed:`, err.message);
   if (job?.data.userId) {
     notifyUserEvent(job.data.userId, 'job_failed', {

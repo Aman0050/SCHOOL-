@@ -1,14 +1,21 @@
 import { Queue, Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
 
-const redisConnection = new (class { on() {} })();
+const redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
 
 // 1. Define Queues
-export const emailQueue = new (class { add() { return Promise.resolve(); } })('emailQueue', { connection: redisConnection as any });
-export const reportQueue = new (class { add() { return Promise.resolve(); } })('reportQueue', { connection: redisConnection as any });
+export const emailQueue = new (class {
+  constructor(...args: any[]) {}
+  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
+})('emailQueue', { connection: redisConnection as any });
+
+export const reportQueue = new (class {
+  constructor(...args: any[]) {}
+  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
+})('reportQueue', { connection: redisConnection as any });
 
 // 2. Define Workers
-export const emailWorker = new (class { on() {} })(
+export const emailWorker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })(
   'emailQueue',
   async (job: Job) => {
     console.log(`Processing email job ${job.id} for ${job.data.to}`);
@@ -19,7 +26,7 @@ export const emailWorker = new (class { on() {} })(
   { connection: redisConnection as any }
 );
 
-export const reportWorker = new (class { on() {} })(
+export const reportWorker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })(
   'reportQueue',
   async (job: Job) => {
     console.log(`Generating report ${job.data.reportType} for tenant ${job.data.tenantId}`);
@@ -31,11 +38,11 @@ export const reportWorker = new (class { on() {} })(
 );
 
 // 3. Error Handling
-emailWorker.on('failed', (job, err) => {
+emailWorker.on('failed', (job: any, err: any) => {
   console.error(`Email Job ${job?.id} failed:`, err);
 });
 
-reportWorker.on('failed', (job, err) => {
+reportWorker.on('failed', (job: any, err: any) => {
   console.error(`Report Job ${job?.id} failed:`, err);
 });
 
