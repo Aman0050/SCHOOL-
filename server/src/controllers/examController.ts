@@ -348,7 +348,7 @@ export const getMarksForExam = async (req: Request, res: Response, next: NextFun
       const existing = marksMap.get(enrollment.studentId);
       if (existing) {
         return {
-          ...existing,
+          ...(existing as any),
           student: enrollment.student,
         };
       } else {

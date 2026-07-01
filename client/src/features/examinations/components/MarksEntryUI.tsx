@@ -125,7 +125,7 @@ export const MarksEntryUI: React.FC = () => {
         theoryMarks: updated.theory,
         practicalMarks: updated.practical,
         isAbsent: updated.isAbsent || false,
-        entryStatus: 'DRAFT'
+        entryStatus: 'DRAFT' as any
       };
     });
     bulkSaveMutation.mutate(entriesToSave);
@@ -141,7 +141,7 @@ export const MarksEntryUI: React.FC = () => {
         theoryMarks: updated.theory,
         practicalMarks: updated.practical,
         isAbsent: updated.isAbsent || false,
-        entryStatus: 'SUBMITTED'
+        entryStatus: 'SUBMITTED' as any
       };
     });
     submitMutation.mutate(entriesToSave);
