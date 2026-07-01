@@ -39,7 +39,7 @@ export const SecuritySettings: React.FC = () => {
       {/* Change Password */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary dark:text-primary">
             <Key className="w-5 h-5" />
           </div>
           <div>
@@ -75,7 +75,7 @@ export const SecuritySettings: React.FC = () => {
           </div>
           <button 
             type="submit" disabled={changePassword.isPending}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-colors"
+            className="flex items-center gap-2 bg-primary hover:bg-primary disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-colors"
           >
             {changePassword.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             Update Password

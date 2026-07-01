@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { LayoutDashboard, Layers, IndianRupee, FileText, AlertTriangle } from 'lucide-react';
 import { AccountantDashboard } from './components/AccountantDashboard';
 import FeeStructures from './components/FeeStructures';
@@ -8,7 +9,14 @@ import FineManagement from './components/FineManagement';
 import { DefaulterDashboard } from './components/DefaulterDashboard';
 
 export const FeeManagement = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'dashboard';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
 
   return (
     <div className="space-y-6">

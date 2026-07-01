@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
+import crypto from 'crypto';
 import { prisma } from '../config/db';
 
 export const generateMfaSecret = async (req: Request, res: Response) => {
@@ -67,7 +68,7 @@ export const verifyAndEnableMfa = async (req: Request, res: Response) => {
     if (verified) {
       // Generate backup codes
       const backupCodes = Array.from({ length: 10 }, () => 
-        Math.random().toString(36).substring(2, 12).toUpperCase()
+        crypto.randomBytes(5).toString('hex').toUpperCase()
       );
 
       await prisma.user.update({

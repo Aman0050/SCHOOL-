@@ -23,7 +23,7 @@ export const MobileNav: React.FC = () => {
     <>
       {/* Global Floating Action Button (FAB) for mobile */}
       <button 
-        className="md:hidden fixed bottom-20 right-4 z-50 p-4 bg-indigo-600 text-white rounded-full shadow-xl hover:bg-indigo-700 active:scale-95 transition-all"
+        className="md:hidden fixed bottom-20 right-4 z-50 p-4 bg-primary text-white rounded-full shadow-xl hover:bg-primary active:scale-95 transition-all"
         onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
         aria-label="Quick Actions"
       >
@@ -43,7 +43,7 @@ export const MobileNav: React.FC = () => {
                 to={item.path}
                 className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
                   isActive 
-                    ? 'text-indigo-600 dark:text-indigo-400' 
+                    ? 'text-primary dark:text-primary' 
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >

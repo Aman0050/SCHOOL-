@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/db';
 import { generateDailyReportPdfBuffer } from '../utils/pdfGenerator';
 import { cache } from '../lib/cache';
@@ -139,8 +139,14 @@ export const getSchoolHealthScore = async (req: Request, res: Response) => {
 
     let data = await cache.get(cacheKey);
     if (!data) {
-      await analyticsQueue.add('refresh-tenant-analytics', { tenantId }, { removeOnComplete: true });
-      return res.status(202).json({ success: true, message: 'Data is being generated. Please refresh in a moment.' });
+      try {
+        data = await analyticsService.getSchoolHealthScore(tenantId);
+        // Fire and forget cache update, don't wait for it
+        cache.set(cacheKey, data, 300).catch(console.error);
+      } catch (err) {
+        console.error('Failed to compute health score synchronously', err);
+        return res.status(500).json({ success: false, message: 'Failed to generate data.' });
+      }
     }
 
     res.json({
@@ -259,16 +265,17 @@ export const getTeacherWorkloadAnalytics = async (req: Request, res: Response) =
 };
 
 
-export const downloadDailyReport = async (req: Request, res: Response) => {
+export const downloadDailyReport = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const { tenantId } = req.user!;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const totalStudents = await prisma.user.count({ where: { role: 'STUDENT' } });
-    const totalTeachers = await prisma.user.count({ where: { role: 'TEACHER' } });
+    const totalStudents = await prisma.user.count({ where: { tenantId, role: 'STUDENT' } });
+    const totalTeachers = await prisma.user.count({ where: { tenantId, role: 'TEACHER' } });
     
     const todayAttendance = await prisma.attendance.findMany({
-      where: { date: { gte: today } },
+      where: { tenantId, date: { gte: today } },
       include: { user: { select: { role: true } } }
     });
 
@@ -279,13 +286,15 @@ export const downloadDailyReport = async (req: Request, res: Response) => {
     const staffAttendanceRate = totalTeachers > 0 ? ((teacherPresent / totalTeachers) * 100).toFixed(1) : '0.0';
 
     const feeCollections = await prisma.feeCollection.aggregate({
-      where: { createdAt: { gte: today } },
+      where: { tenantId, createdAt: { gte: today } },
       _sum: { paidAmount: true },
       _count: { id: true }
     });
+    
+    const health = await analyticsService.getSchoolHealthScore(tenantId);
 
     const data = {
-      healthScore: 94,
+      healthScore: health.overallScore,
       attendanceRate: studentAttendanceRate,
       staffAttendanceRate: staffAttendanceRate,
       feeCollection: feeCollections._sum.paidAmount || 0,
@@ -303,14 +312,13 @@ export const downloadDailyReport = async (req: Request, res: Response) => {
     
     res.send(pdfBuffer);
   } catch (error) {
-    console.error('Error generating daily report:', error);
-    res.status(500).json({ success: false, message: 'Failed to generate report' });
+    next(error);
   }
 };
 
 import ExcelJS from 'exceljs';
 
-export const downloadExcelReport = async (req: Request, res: Response) => {
+export const downloadExcelReport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { tenantId } = req.user!;
     const workbook = new ExcelJS.Workbook();
@@ -324,11 +332,27 @@ export const downloadExcelReport = async (req: Request, res: Response) => {
       { header: 'Count', key: 'count', width: 10 }
     ];
     
-    // Mocking rows since DB aggregation can be complex here
-    attendanceSheet.addRows([
-      { date: new Date().toLocaleDateString(), role: 'STUDENT', status: 'PRESENT', count: 1200 },
-      { date: new Date().toLocaleDateString(), role: 'STUDENT', status: 'ABSENT', count: 80 },
-      { date: new Date().toLocaleDateString(), role: 'TEACHER', status: 'PRESENT', count: 45 },
+    // Real DB aggregation for Attendance
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    const attendanceStats = await prisma.attendance.groupBy({
+      by: ['date', 'status'],
+      where: { tenantId, date: { gte: thirtyDaysAgo } },
+      _count: { id: true }
+    });
+    
+    const attendanceRows = attendanceStats.map(a => ({
+      date: new Date(a.date).toLocaleDateString(),
+      role: 'USER', // simplified
+      status: a.status,
+      count: a._count.id
+    }));
+    
+    attendanceSheet.addRows(attendanceRows.length > 0 ? attendanceRows : [
+      { date: new Date().toLocaleDateString(), role: 'No Data', status: '-', count: 0 }
     ]);
 
     // 2. Fees Sheet
@@ -340,11 +364,92 @@ export const downloadExcelReport = async (req: Request, res: Response) => {
       { header: 'Days Overdue', key: 'days', width: 15 }
     ];
 
-    feeSheet.addRows([
-      { name: 'John Doe', class: '10-A', amount: 2500, days: 15 },
-      { name: 'Jane Smith', class: '9-B', amount: 1200, days: 8 },
-      { name: 'Mike Ross', class: '11-C', amount: 4500, days: 30 }
+    const defaulters = await prisma.feeInstallment.findMany({
+      where: { tenantId, isPaid: false, dueDate: { lt: new Date() } },
+      include: { 
+        assignment: { 
+          include: { 
+            student: { 
+              select: { 
+                firstName: true, 
+                lastName: true, 
+                enrollments: { include: { class: true } } 
+              } 
+            } 
+          } 
+        } 
+      },
+      take: 50,
+      orderBy: { dueDate: 'asc' }
+    });
+    
+    const feeRows = defaulters.map(d => ({
+      name: `${d.assignment.student.firstName} ${d.assignment.student.lastName}`,
+      class: d.assignment.student.enrollments?.[0]?.class?.name || 'Unassigned',
+      amount: Number(d.amount) - Number(d.paidAmount),
+      days: Math.floor((new Date().getTime() - new Date(d.dueDate).getTime()) / (1000 * 3600 * 24))
+    }));
+    
+    feeSheet.addRows(feeRows.length > 0 ? feeRows : [
+      { name: 'No Defaulters', class: '-', amount: 0, days: 0 }
     ]);
+
+    // Add premium styling to a worksheet
+    const applyPremiumStyle = (sheet: ExcelJS.Worksheet, title: string, colCount: number) => {
+      // Shift data down by 3 rows
+      sheet.spliceRows(1, 0, [], [], []);
+      
+      // Title
+      sheet.mergeCells(1, 1, 1, colCount);
+      const titleCell = sheet.getCell(1, 1);
+      titleCell.value = 'EDUXENO COMMAND CENTER';
+      titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } }; // Slate-800
+      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      sheet.getRow(1).height = 35;
+
+      // Subtitle
+      sheet.mergeCells(2, 1, 2, colCount);
+      const subCell = sheet.getCell(2, 1);
+      subCell.value = `${title} | Generated: ${new Date().toLocaleString()}`;
+      subCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF64748B' } };
+      subCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      sheet.getRow(2).height = 20;
+      
+      // Style Headers (Now at row 4)
+      const headerRow = sheet.getRow(4);
+      headerRow.height = 25;
+      for (let i = 1; i <= colCount; i++) {
+        const cell = headerRow.getCell(i);
+        cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }; // Indigo-600
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+          top: {style:'thin', color: {argb:'FFD1D5DB'}},
+          left: {style:'thin', color: {argb:'FFD1D5DB'}},
+          bottom: {style:'thin', color: {argb:'FFD1D5DB'}},
+          right: {style:'thin', color: {argb:'FFD1D5DB'}}
+        };
+      }
+
+      // Style Data Rows
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber > 4) {
+          row.height = 20;
+          for (let i = 1; i <= colCount; i++) {
+            const cell = row.getCell(i);
+            cell.font = { name: 'Arial', size: 10, color: { argb: 'FF334155' } };
+            cell.alignment = { vertical: 'middle' };
+            cell.border = {
+              bottom: {style:'thin', color: {argb:'FFF1F5F9'}},
+            };
+          }
+        }
+      });
+    };
+
+    applyPremiumStyle(attendanceSheet, 'ATTENDANCE INTELLIGENCE', 4);
+    applyPremiumStyle(feeSheet, 'FEE & DEFAULTER INTELLIGENCE', 4);
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="Analytics_Report.xlsx"');
@@ -352,8 +457,7 @@ export const downloadExcelReport = async (req: Request, res: Response) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    console.error('Error generating Excel report:', error);
-    res.status(500).json({ success: false, message: 'Failed to generate excel report' });
+    next(error);
   }
 };
 
@@ -368,9 +472,11 @@ export const getDashboardAggregate = async (req: Request, res: Response) => {
       return;
     }
 
-    // Cache Miss
-    await analyticsQueue.add('refresh-tenant-analytics', { tenantId }, { removeOnComplete: true });
-    res.status(202).json({ success: true, message: 'Data is being generated. Please refresh in a moment.' });
+    // Cache Miss: compute synchronously to ensure frontend gets data, but queue subsequent heavy updates
+    const aggregatedData = await analyticsService.getExecutiveDashboardMetrics(tenantId);
+    await cache.set(cacheKey, aggregatedData, 3600); // 1 hour TTL
+    
+    res.json({ success: true, data: aggregatedData, source: 'database' });
   } catch (error) {
     console.error('Error in getDashboardAggregate:', error);
     res.status(500).json({ success: false, message: 'Failed to aggregate dashboard data' });

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/db';
+import crypto from 'crypto';
 import { createAuditLog, AuditAction } from '../utils/auditLogger';
 import { broadcastEvent, broadcastCacheInvalidation } from '../lib/socketManager';
 import { AppError } from '../errors/AppError';
@@ -16,6 +17,14 @@ function calculateGrade(percentage: number, rules: any[]): { grade: string; grad
     }
   }
   return { grade: 'E', gradePoint: 0, isPassing: false };
+}
+
+// ==================== HELPERS ====================
+
+async function getSchoolIdForTenant(tenantId: string): Promise<string> {
+  const school = await prisma.school.findFirst({ where: { tenantId }, select: { id: true } });
+  if (!school) throw new AppError(404, 'SCHOOL_NOT_FOUND', 'No school found for this tenant. Please contact your administrator.');
+  return school.id;
 }
 
 // ==================== ACADEMIC SESSIONS ====================
@@ -35,7 +44,9 @@ export const getSessions = async (req: Request, res: Response, next: NextFunctio
 export const createSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.user!.tenantId;
-    const { schoolId, name, startDate, endDate } = req.body;
+    const { name, startDate, endDate } = req.body;
+    // Auto-resolve schoolId from tenant — frontend does not need to send it
+    const schoolId = await getSchoolIdForTenant(tenantId);
     const session = await prisma.academicSession.create({
       data: { tenantId, schoolId, name, startDate: new Date(startDate), endDate: new Date(endDate) },
     });
@@ -111,7 +122,9 @@ export const getSubjects = async (req: Request, res: Response, next: NextFunctio
 export const createSubject = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.user!.tenantId;
-    const { schoolId, code, name, subjectType, theoryMaxMarks, practicalMaxMarks, theoryPassMarks, practicalPassMarks, boardType, isElective, isOptional } = req.body;
+    // Auto-resolve schoolId from tenant
+    const schoolId = await getSchoolIdForTenant(tenantId);
+    const { code, name, subjectType, theoryMaxMarks, practicalMaxMarks, theoryPassMarks, practicalPassMarks, boardType, isElective, isOptional } = req.body;
     const totalMaxMarks = (theoryMaxMarks || 0) + (practicalMaxMarks || 0);
     const subject = await prisma.examSubject.create({
       data: { tenantId, schoolId, code, name, subjectType: subjectType || 'THEORY', theoryMaxMarks: theoryMaxMarks || 100, practicalMaxMarks: practicalMaxMarks || 0, totalMaxMarks, theoryPassMarks: theoryPassMarks || 33, practicalPassMarks: practicalPassMarks || 0, boardType: boardType || 'CBSE', isElective: isElective || false, isOptional: isOptional || false },
@@ -163,7 +176,8 @@ export const getExams = async (req: Request, res: Response, next: NextFunction) 
 export const createExam = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.user!.tenantId;
-    const { schoolId, sessionId, termId, classId, name, examType, startDate, endDate, weightage, passingCriteria, boardType, gradeSystem, remarks, subjects } = req.body;
+    const schoolId = await getSchoolIdForTenant(tenantId);
+    const { sessionId, termId, classId, name, examType, startDate, endDate, weightage, passingCriteria, boardType, gradeSystem, remarks, subjects } = req.body;
     const exam = await prisma.$transaction(async (tx) => {
       const e = await tx.exam.create({
         data: {
@@ -176,18 +190,48 @@ export const createExam = async (req: Request, res: Response, next: NextFunction
           createdBy: req.user!.id,
         },
       });
+      let schedulesToCreate: any[] = [];
+      
       if (subjects && subjects.length > 0) {
-        await tx.examSubjectSchedule.createMany({
-          data: subjects.map((s: any) => ({
-            tenantId, examId: e.id, subjectId: s.subjectId,
-            examDate: new Date(s.examDate),
-            startTime: s.startTime,
-            endTime: s.endTime,
-            maxMarks: s.maxMarks || 100,
-            passingMarks: s.passingMarks || 33,
-            practicalMaxMarks: s.practicalMaxMarks || 0,
-          })),
+        schedulesToCreate = subjects.map((s: any) => ({
+          tenantId, examId: e.id, subjectId: s.subjectId,
+          examDate: new Date(s.examDate),
+          startTime: s.startTime,
+          endTime: s.endTime,
+          maxMarks: s.maxMarks || 100,
+          passingMarks: s.passingMarks || 33,
+          practicalMaxMarks: s.practicalMaxMarks || 0,
+        }));
+      } else {
+        // Auto-fetch mapped subjects for this class
+        const classSubjects = await tx.examSubjectMapping.findMany({
+          where: { tenantId, classId },
+          include: { subject: true }
         });
+        
+        let subjectsToSchedule = classSubjects.map(cs => cs.subject);
+        
+        // Fallback: If no subjects are specifically mapped to this class,
+        // just use all subjects available in the school so the exam isn't empty.
+        if (subjectsToSchedule.length === 0) {
+          subjectsToSchedule = await tx.examSubject.findMany({
+            where: { tenantId, schoolId }
+          });
+        }
+        
+        schedulesToCreate = subjectsToSchedule.map(subject => ({
+          tenantId, examId: e.id, subjectId: subject.id,
+          examDate: new Date(startDate),
+          startTime: '09:00',
+          endTime: '12:00',
+          maxMarks: subject.theoryMaxMarks || 100,
+          passingMarks: subject.theoryPassMarks || 33,
+          practicalMaxMarks: subject.practicalMaxMarks || 0,
+        }));
+      }
+
+      if (schedulesToCreate.length > 0) {
+        await tx.examSubjectSchedule.createMany({ data: schedulesToCreate });
       }
       return tx.exam.findUnique({ where: { id: e.id }, include: { schedules: { include: { subject: true } }, session: true, class: true } });
     });
@@ -271,6 +315,23 @@ export const getMarksForExam = async (req: Request, res: Response, next: NextFun
   try {
     const { id: examId } = req.params;
     const { subjectId } = req.query;
+
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+      select: { classId: true }
+    });
+    
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Exam not found' });
+    }
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: { classId: exam.classId, status: 'ACTIVE' },
+      include: {
+        student: { select: { id: true, firstName: true, lastName: true, admission: true } }
+      }
+    });
+
     const marks = await prisma.marksEntry.findMany({
       where: { examId, ...(subjectId ? { subjectId: String(subjectId) } : {}) },
       include: {
@@ -280,7 +341,34 @@ export const getMarksForExam = async (req: Request, res: Response, next: NextFun
       },
       orderBy: [{ subject: { name: 'asc' } }, { student: { firstName: 'asc' } }],
     });
-    res.json({ success: true, data: marks });
+    
+    const marksMap = new Map(marks.map(m => [m.studentId, m]));
+    
+    const roster = enrollments.map(enrollment => {
+      const existing = marksMap.get(enrollment.studentId);
+      if (existing) {
+        return {
+          ...existing,
+          student: enrollment.student,
+        };
+      } else {
+        return {
+          id: `dummy-${enrollment.studentId}`,
+          examId,
+          subjectId: subjectId || null,
+          studentId: enrollment.studentId,
+          student: enrollment.student,
+          theoryMarks: null,
+          practicalMarks: null,
+          isAbsent: false,
+          entryStatus: 'DRAFT',
+        };
+      }
+    });
+
+    roster.sort((a, b) => (a.student.firstName || '').localeCompare(b.student.firstName || ''));
+
+    res.json({ success: true, data: roster });
   } catch (e) { next(e); }
 };
 
@@ -337,6 +425,10 @@ export const bulkSaveMarks = async (req: Request, res: Response, next: NextFunct
     const { id: examId } = req.params;
     const { entries } = req.body; 
 
+    if (!entries || !Array.isArray(entries)) {
+      return res.status(400).json({ success: false, message: 'Invalid payload: entries must be an array' });
+    }
+
     // Fetch schedules to validate max marks
     const schedules = await prisma.examSubjectSchedule.findMany({ where: { examId } });
     const scheduleMap = new Map(schedules.map(s => [s.subjectId, s]));
@@ -346,43 +438,57 @@ export const bulkSaveMarks = async (req: Request, res: Response, next: NextFunct
       const maxTheory = schedule?.maxMarks || 100;
       const maxPractical = schedule?.practicalMaxMarks || 0;
 
+      const tMarks = (e.theoryMarks === "" || e.theoryMarks === null) ? undefined : e.theoryMarks;
+      const pMarks = (e.practicalMarks === "" || e.practicalMarks === null) ? undefined : e.practicalMarks;
+
       if (!e.isAbsent) {
-        if (e.theoryMarks !== undefined && e.theoryMarks !== null && (e.theoryMarks < 0 || e.theoryMarks > maxTheory)) {
+        if (tMarks !== undefined && (tMarks < 0 || tMarks > maxTheory)) {
           throw new AppError(400, 'VALIDATION_ERROR', `Theory marks for subject ${e.subjectId} must be 0-${maxTheory}`);
         }
-        if (e.practicalMarks !== undefined && e.practicalMarks !== null && (e.practicalMarks < 0 || e.practicalMarks > maxPractical)) {
+        if (pMarks !== undefined && (pMarks < 0 || pMarks > maxPractical)) {
           throw new AppError(400, 'VALIDATION_ERROR', `Practical marks for subject ${e.subjectId} must be 0-${maxPractical}`);
         }
       }
 
-      const totalMarks = e.isAbsent ? 0 : ((e.theoryMarks || 0) + (e.practicalMarks || 0));
+      const totalMarks = e.isAbsent ? 0 : ((tMarks || 0) + (pMarks || 0));
+
       return prisma.marksEntry.upsert({
         where: { examId_subjectId_studentId: { examId, subjectId: e.subjectId, studentId: e.studentId } },
         create: {
           tenantId, examId, subjectId: e.subjectId, studentId: e.studentId,
-          theoryMarks: e.isAbsent ? null : (e.theoryMarks != null ? new Prisma.Decimal(e.theoryMarks) : null),
-          practicalMarks: e.isAbsent ? null : (e.practicalMarks != null ? new Prisma.Decimal(e.practicalMarks) : null),
+          theoryMarks: e.isAbsent ? null : (tMarks !== undefined ? new Prisma.Decimal(tMarks) : null),
+          practicalMarks: e.isAbsent ? null : (pMarks !== undefined ? new Prisma.Decimal(pMarks) : null),
           totalMarks: new Prisma.Decimal(totalMarks),
           isAbsent: e.isAbsent || false,
           remarks: e.remarks,
-          entryStatus: 'DRAFT',
+          entryStatus: e.entryStatus || 'DRAFT',
           enteredBy: req.user!.id,
         },
         update: {
-          theoryMarks: e.isAbsent ? null : (e.theoryMarks != null ? new Prisma.Decimal(e.theoryMarks) : undefined),
-          practicalMarks: e.isAbsent ? null : (e.practicalMarks != null ? new Prisma.Decimal(e.practicalMarks) : undefined),
+          theoryMarks: e.isAbsent ? null : (tMarks !== undefined ? new Prisma.Decimal(tMarks) : undefined),
+          practicalMarks: e.isAbsent ? null : (pMarks !== undefined ? new Prisma.Decimal(pMarks) : undefined),
           totalMarks: new Prisma.Decimal(totalMarks),
           isAbsent: e.isAbsent || false,
           remarks: e.remarks,
-          entryStatus: 'DRAFT',
+          entryStatus: e.entryStatus || 'DRAFT',
           enteredBy: req.user!.id,
-        },
+        }
       });
     });
 
     const results = await prisma.$transaction(operations);
     res.json({ success: true, data: { saved: results.length } });
-  } catch (e) { next(e); }
+  } catch (e: any) { 
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      fs.writeFileSync(path.join(process.cwd(), 'bulk_save_error.log'), e.stack || e.message);
+    } catch(err) {
+      console.error(err);
+    }
+    console.error("BULK SAVE ERROR:", e);
+    res.status(500).json({ success: false, message: e.message || 'Unknown error', stack: e.stack });
+  }
 };
 
 export const lockMarks = async (req: Request, res: Response, next: NextFunction) => {
@@ -471,6 +577,13 @@ export const computeResults = async (req: Request, res: Response, next: NextFunc
     const allMarks = await prisma.marksEntry.findMany({
       where: { examId, entryStatus: { in: ['SUBMITTED', 'LOCKED', 'VERIFIED'] } },
     });
+
+    if (allMarks.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No submitted marks found. Please go back to Marks Entry and click "Submit for Verification" before computing results.' 
+      });
+    }
 
     const byStudent: Record<string, typeof allMarks> = {};
     for (const m of allMarks) {
@@ -587,7 +700,7 @@ export const computeResults = async (req: Request, res: Response, next: NextFunc
           data: {
             tenantId, examId, studentId: r.studentId,
             status: 'COMPLETED',
-            accessCode: `RC-${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+            accessCode: `RC-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
           }
         });
       }

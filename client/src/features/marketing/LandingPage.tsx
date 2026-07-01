@@ -17,7 +17,7 @@ export const LandingPage: React.FC = () => {
   const [demoModalOpen, setDemoModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white selection:bg-indigo-500/30 font-sans text-slate-900 overflow-hidden">
+    <div className="min-h-screen bg-white selection:bg-primary/30 font-sans text-slate-900 overflow-hidden">
       <PublicNavbar />
 
       {/* HERO SECTION */}
@@ -36,7 +36,7 @@ export const LandingPage: React.FC = () => {
             className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight text-slate-900"
           >
             The Operating System for <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">
+            <span className="text-primary">
               Modern Schools
             </span>
           </motion.h1>
@@ -58,7 +58,7 @@ export const LandingPage: React.FC = () => {
           >
             <button 
               onClick={() => setDemoModalOpen(true)}
-              className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-full font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 group shadow-xl shadow-indigo-600/20"
+              className="w-full sm:w-auto px-8 py-4 bg-primary text-white rounded-full font-bold text-lg hover:bg-primary transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20"
             >
               Book a Demo 
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -109,7 +109,7 @@ export const LandingPage: React.FC = () => {
                   transition={{ delay: idx * 0.1 }}
                   className="bg-white border border-slate-200 shadow-sm shadow-slate-200/50 rounded-3xl p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                 >
-                  <div className="bg-indigo-50 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border border-indigo-100 text-indigo-600 shadow-sm">
+                  <div className="bg-primary/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border border-primary/30 text-primary shadow-sm">
                     <Icon className="w-7 h-7" />
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-slate-900">{feat.title}</h3>
@@ -130,15 +130,15 @@ export const LandingPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
-              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3"><span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">🏢</span> Administration</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3"><span className="p-2 bg-primary/10 text-primary rounded-lg">🏢</span> Administration</h3>
               <p className="text-slate-600 leading-relaxed">Gain a bird's-eye view of school operations. Manage admissions, handle fees and invoicing automatically, and oversee staff attendance from a powerful, unified command center.</p>
             </div>
             <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
-              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3"><span className="p-2 bg-purple-50 text-purple-600 rounded-lg">👨‍🏫</span> Teachers</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3"><span className="p-2 bg-primary/10 text-primary rounded-lg">👨‍🏫</span> Teachers</h3>
               <p className="text-slate-600 leading-relaxed">Spend less time on paperwork. Effortlessly grade assignments, take attendance in two clicks, and communicate directly with parents without leaving the platform.</p>
             </div>
             <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
-              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3"><span className="p-2 bg-blue-50 text-blue-600 rounded-lg">👪</span> Parents</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3"><span className="p-2 bg-primary/10 text-primary rounded-lg">👪</span> Parents</h3>
               <p className="text-slate-600 leading-relaxed">Stay deeply involved in your child's education. Receive instant notifications for grades and attendance, pay fees securely, and message teachers directly.</p>
             </div>
             <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
@@ -166,27 +166,27 @@ export const LandingPage: React.FC = () => {
               <ul className="space-y-4 mb-8">
                 {['Up to 500 Students', 'Basic Analytics', 'Teacher Portal', 'Email Support'].map((f, i) => (
                   <li key={i} className="flex items-center gap-3 text-slate-700 text-sm font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-indigo-500" /> {f}
+                    <CheckCircle2 className="w-5 h-5 text-primary" /> {f}
                   </li>
                 ))}
               </ul>
-              <Link to="/onboarding" className="block w-full py-3.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-center rounded-xl font-bold transition-colors">Start Trial</Link>
+              <button onClick={() => setDemoModalOpen(true)} className="block w-full py-3.5 px-4 bg-primary/10 hover:bg-primary/20 text-primary text-center rounded-xl font-bold transition-colors">Book a Demo</button>
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-indigo-600 rounded-3xl p-8 relative transform md:-translate-y-4 shadow-2xl shadow-indigo-600/30">
-              <div className="absolute top-0 right-8 transform -translate-y-1/2 bg-indigo-300 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Most Popular</div>
+            <div className="bg-primary rounded-3xl p-8 relative transform md:-translate-y-4 shadow-2xl shadow-primary/20">
+              <div className="absolute top-0 right-8 transform -translate-y-1/2 bg-white text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide shadow-md">Most Popular</div>
               <h3 className="text-xl font-bold mb-2 text-white">Professional</h3>
-              <p className="text-indigo-200 text-sm mb-6 font-medium">For growing institutions needing more power.</p>
-              <div className="text-4xl font-extrabold mb-8 text-white">$499<span className="text-lg text-indigo-300 font-medium">/mo</span></div>
+              <p className="text-white/80 text-sm mb-6 font-medium">For growing institutions needing more power.</p>
+              <div className="text-4xl font-extrabold mb-8 text-white">$499<span className="text-lg text-white/60 font-medium">/mo</span></div>
               <ul className="space-y-4 mb-8">
                 {['Up to 2,000 Students', 'Advanced Analytics', 'Parent & Student Portals', 'Priority 24/7 Support', 'Custom Domain'].map((f, i) => (
                   <li key={i} className="flex items-center gap-3 text-white text-sm font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-indigo-300" /> {f}
+                    <CheckCircle2 className="w-5 h-5 text-white/80" /> {f}
                   </li>
                 ))}
               </ul>
-              <Link to="/onboarding" className="block w-full py-3.5 px-4 bg-white text-indigo-600 hover:bg-indigo-50 text-center rounded-xl font-bold transition-colors shadow-lg">Start Trial</Link>
+              <button onClick={() => setDemoModalOpen(true)} className="block w-full py-3.5 px-4 bg-white text-primary hover:bg-slate-50 text-center rounded-xl font-bold transition-colors shadow-lg">Book a Demo</button>
             </div>
 
             {/* Enterprise Plan */}
@@ -197,11 +197,11 @@ export const LandingPage: React.FC = () => {
               <ul className="space-y-4 mb-8">
                 {['Unlimited Students', 'Multiple Campuses', 'Dedicated Success Manager', 'SSO & Advanced Security', 'Custom Integrations'].map((f, i) => (
                   <li key={i} className="flex items-center gap-3 text-slate-700 text-sm font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-indigo-500" /> {f}
+                    <CheckCircle2 className="w-5 h-5 text-primary" /> {f}
                   </li>
                 ))}
               </ul>
-              <button className="block w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-center rounded-xl font-bold transition-colors shadow-md">Contact Sales</button>
+              <button onClick={() => setDemoModalOpen(true)} className="block w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-center rounded-xl font-bold transition-colors shadow-md">Contact Sales</button>
             </div>
           </div>
         </div>

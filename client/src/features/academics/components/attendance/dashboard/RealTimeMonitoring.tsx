@@ -1,8 +1,12 @@
 import React from 'react';
 import { Target } from 'lucide-react';
 
-export const RealTimeMonitoring: React.FC<any> = () => {
-  const percentage = 85;
+export const RealTimeMonitoring: React.FC<any> = ({ submissionStatus }) => {
+  const statusArray = Array.isArray(submissionStatus) ? submissionStatus : [];
+  const submitted = statusArray.filter(s => s.submitted).length;
+  const pending = statusArray.filter(s => !s.submitted).length;
+  const total = submitted + pending;
+  const percentage = total > 0 ? Math.round((submitted / total) * 100) : 0;
 
   return (
     <div className="h-full w-full bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 flex flex-col overflow-hidden">
@@ -22,11 +26,11 @@ export const RealTimeMonitoring: React.FC<any> = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mb-1">Submitted</div>
-            <div className="text-lg font-bold text-slate-800 dark:text-white">34 Classes</div>
+            <div className="text-lg font-bold text-slate-800 dark:text-white">{submitted} Classes</div>
           </div>
           <div className="bg-amber-50 dark:bg-amber-500/10 p-3 rounded-xl border border-amber-100 dark:border-amber-500/20">
             <div className="text-xs text-amber-600 dark:text-amber-400 font-semibold mb-1">Pending</div>
-            <div className="text-lg font-bold text-slate-800 dark:text-white">6 Classes</div>
+            <div className="text-lg font-bold text-slate-800 dark:text-white">{pending} Classes</div>
           </div>
         </div>
       </div>

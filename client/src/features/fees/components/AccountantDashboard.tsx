@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -14,14 +14,14 @@ import { CollectionHealth } from './dashboard/CollectionHealth';
 import { FeeAnalyticsCharts } from './dashboard/FeeAnalyticsCharts';
 import { PaymentMethodsAnalytics } from './dashboard/PaymentMethodsAnalytics';
 import { RevenueIntelligence } from './dashboard/RevenueIntelligence';
-import { RecentTransactionsFeed } from './dashboard/RecentTransactionsFeed';
-import { InstallmentManager } from './dashboard/InstallmentManager';
+import { DataExportModal } from './dashboard/DataExportModal';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 export const AccountantDashboard = () => {
   const { user } = useAuth();
   const { layout, saveLayout, resetLayout } = useFinanceLayoutStore(user?.id || 'default');
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['feeStats'],
@@ -37,7 +37,7 @@ export const AccountantDashboard = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center px-2">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Finance Operations Center</h2>
+        <h2 className="text-h2">Finance Operations Center</h2>
 
       </div>
 
@@ -45,22 +45,25 @@ export const AccountantDashboard = () => {
         className="layout"
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-        rowHeight={100}
+        rowHeight={70}
         draggableHandle=".drag-handle"
         isDraggable={false}
         isResizable={false}
         margin={[16, 16]}
       >
-        <div key="financeHero" data-grid={{ x: 0, y: 0, w: 12, h: 3, static: true }}>
-          <FinanceExecutiveHero stats={stats} />
+        <div key="financeHero" data-grid={{ x: 0, y: 0, w: 12, h: 3, static: true }} className="h-full">
+          <FinanceExecutiveHero stats={stats} onExportClick={() => setIsExportModalOpen(true)} />
         </div>
-        <div key="healthScore" data-grid={{ x: 0, y: 3, w: 4, h: 3 }} className="h-full"><CollectionHealth stats={stats} /></div>
-        <div key="revenueIntel" data-grid={{ x: 4, y: 3, w: 8, h: 3 }} className="h-full"><RevenueIntelligence stats={stats} /></div>
-        <div key="collectionTrends" data-grid={{ x: 0, y: 6, w: 8, h: 4 }} className="h-full"><FeeAnalyticsCharts /></div>
-        <div key="paymentMethods" data-grid={{ x: 8, y: 6, w: 4, h: 4 }} className="h-full"><PaymentMethodsAnalytics methods={stats?.paymentMethods} /></div>
-        <div key="recentTransactions" data-grid={{ x: 0, y: 10, w: 6, h: 5 }} className="h-full"><RecentTransactionsFeed /></div>
-        <div key="installmentManager" data-grid={{ x: 6, y: 10, w: 6, h: 5 }} className="h-full"><InstallmentManager /></div>
+        <div key="healthScore" data-grid={{ x: 0, y: 3, w: 4, h: 4 }} className="h-full"><CollectionHealth stats={stats} /></div>
+        <div key="revenueIntel" data-grid={{ x: 4, y: 3, w: 8, h: 4 }} className="h-full"><RevenueIntelligence stats={stats} /></div>
+        <div key="collectionTrends" data-grid={{ x: 0, y: 7, w: 8, h: 5 }} className="h-full"><FeeAnalyticsCharts /></div>
+        <div key="paymentMethods" data-grid={{ x: 8, y: 7, w: 4, h: 5 }} className="h-full"><PaymentMethodsAnalytics methods={stats?.paymentMethods} /></div>
       </ResponsiveGridLayout>
+
+      <DataExportModal 
+        isOpen={isExportModalOpen} 
+        onClose={() => setIsExportModalOpen(false)} 
+      />
     </div>
   );
 };

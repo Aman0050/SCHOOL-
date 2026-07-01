@@ -159,9 +159,18 @@ export const DashboardLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 relative overflow-hidden">
+      {/* ── Global Ambient Glow Layer ── */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        {/* Top-right: blue */}
+        <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px]" />
+        {/* Bottom-left: purple */}
+        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px]" />
+        {/* Center: indigo accent */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-primary/5 blur-[100px]" />
+      </div>
       {/* 1. Desktop Sidebar */}
-      <aside className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 bg-slate-900 text-slate-400 border-r border-slate-800 z-10 transition-transform duration-300 w-72 ${desktopCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
+      <aside className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 bg-slate-900 text-slate-400 border-r border-slate-800 z-20 transition-transform duration-300 w-72 ${desktopCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
         {/* Brand logo */}
         <div className="px-6 py-8 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex-shrink-0">
@@ -274,7 +283,7 @@ export const DashboardLayout: React.FC = () => {
       </AnimatePresence>
 
       {/* 2. Main Content Header */}
-      <div className={`flex flex-col flex-1 transition-all duration-300 ${desktopCollapsed ? 'md:pl-0' : 'md:pl-72'}`}>
+      <div className={`flex flex-col flex-1 transition-all duration-300 relative z-10 ${desktopCollapsed ? 'md:pl-0' : 'md:pl-72'}`}>
         <header className="sticky top-0 z-10 flex h-[88px] bg-white dark:bg-[#0B0F19] border-b border-slate-200 dark:border-slate-800/50 px-4 md:px-8 items-center justify-between shadow-sm">
           {/* Left side: Mobile menu toggle or Desktop Tenant Context */}
           <div className="flex items-center gap-4">
@@ -386,10 +395,10 @@ export const DashboardLayout: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.12, ease: 'easeOut' }}
             >
               <React.Suspense fallback={<PageSkeleton />}>
                 <Breadcrumbs />

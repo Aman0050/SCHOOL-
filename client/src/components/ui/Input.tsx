@@ -17,14 +17,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-xs font-semibold text-slate-600 dark:text-slate-400 select-none block"
+            className="text-xs font-semibold text-foreground select-none block"
           >
             {label}
           </label>
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 flex items-center justify-center pointer-events-none">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground flex items-center justify-center pointer-events-none">
               {icon}
             </div>
           )}
@@ -34,12 +34,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             className={twMerge(
               clsx(
-                'w-full rounded-xl border bg-white dark:bg-slate-900 py-3 text-sm min-h-[44px] outline-none transition-all duration-200 focus:ring-4 focus:ring-primary/10',
+                'w-full rounded-xl border bg-background py-3 text-sm min-h-[44px] outline-none transition-all duration-200 focus:ring-4 focus:ring-ring/10',
                 icon ? 'pl-10 pr-4' : 'px-4',
                 error
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10'
-                  : 'border-slate-200 dark:border-slate-800 focus:border-primary',
-                'disabled:opacity-50 disabled:bg-slate-50 dark:disabled:bg-slate-900/50'
+                  ? 'border-destructive focus:border-destructive focus:ring-destructive/10'
+                  : 'border-input focus:border-ring',
+                'disabled:opacity-50 disabled:bg-muted'
               ),
               className
             )}
@@ -47,7 +47,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <span className="text-xs font-semibold text-red-600 dark:text-red-400 select-none block">
+          <span className="text-xs font-semibold text-destructive select-none block">
             {error}
           </span>
         )}

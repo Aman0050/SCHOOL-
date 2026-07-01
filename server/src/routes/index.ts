@@ -4,6 +4,8 @@ import schoolRoutes from './schoolRoutes';
 import academicRoutes from './academicRoutes';
 import studentRoutes from './studentRoutes';
 import attendanceRoutes from './attendanceRoutes';
+import leaveRoutes from './leaveRoutes';
+import holidayRoutes from './holidayRoutes';
 import feeRoutes from './feeRoutes';
 import examRoutes from './examRoutes';
 import parentRoutes from './parentRoutes';
@@ -24,6 +26,7 @@ import searchRoutes from './searchRoutes';
 import jobRoutes from './jobRoutes';
 import settingsRoutes from './settingsRoutes';
 import supportRoutes from './supportRoutes';
+import dashboardRoutes from './dashboardRoutes';
 
 const router = Router();
 
@@ -32,6 +35,8 @@ router.use('/schools', schoolRoutes);
 router.use('/academics', academicRoutes);
 router.use('/students', studentRoutes);
 router.use('/attendance', attendanceRoutes);
+router.use('/leaves', leaveRoutes);
+router.use('/holidays', holidayRoutes);
 router.use('/fees', feeRoutes);
 router.use('/examinations', examRoutes);
 router.use('/parent', parentRoutes);
@@ -52,5 +57,6 @@ router.use('/search', searchRoutes);
 router.use('/jobs', jobRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/support', supportRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 export default router;

@@ -210,7 +210,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     const { email } = req.body;
 
     // Resolve user globally to identify tenant context
-    const user = await dbRaw.user.findUnique({
+    const user = await dbRaw.user.findFirst({
       where: { email },
     });
 

@@ -208,6 +208,31 @@ export const updateStructure = async (req: Request, res: Response, next: NextFun
   }
 };
 
+export const deleteStructure = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    // Check if the structure is assigned to any students
+    const assignmentsCount = await prisma.studentFeeAssignment.count({
+      where: { feeStructureId: id },
+    });
+
+    if (assignmentsCount > 0) {
+      // Archive instead of delete to preserve foreign keys
+      const structure = await prisma.feeStructure.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      return res.json({ success: true, message: 'Fee structure archived because it has existing student assignments.', data: structure });
+    } else {
+      // Safe to delete entirely
+      await prisma.feeStructure.delete({ where: { id } });
+      return res.json({ success: true, message: 'Fee structure deleted successfully.' });
+    }
+  } catch (e) {
+    next(e);
+  }
+};
+
 // ==================== FEE ASSIGNMENTS ====================
 
 export const getAssignments = async (req: Request, res: Response, next: NextFunction) => {
@@ -281,69 +306,72 @@ export const createAssignment = async (req: Request, res: Response, next: NextFu
     const structure = await prisma.feeStructure.findUnique({ where: { id: feeStructureId } });
     if (!structure) throw new AppError(404, 'NOT_FOUND', 'Fee structure not found');
 
-    const assignment = await prisma.studentFeeAssignment.create({
-      data: {
-        tenantId,
-        studentId,
-        feeStructureId,
-        academicYear,
-        installmentPlanId,
-        totalAmount: structure.totalAmount,
-        dueAmount: structure.totalAmount,
-      },
-      include: {
-        student: { select: { id: true, firstName: true, lastName: true, email: true } },
-        feeStructure: true,
-      },
-    });
+    const assignment = await prisma.$transaction(async (tx) => {
+      const createdAssignment = await tx.studentFeeAssignment.create({
+        data: {
+          tenantId,
+          studentId,
+          feeStructureId,
+          academicYear,
+          installmentPlanId,
+          totalAmount: structure.totalAmount,
+          dueAmount: structure.totalAmount,
+        },
+        include: {
+          student: { select: { id: true, firstName: true, lastName: true, email: true } },
+          feeStructure: true,
+        },
+      });
 
-    // Create initial ledger debit entry
-    const lastLedger = await prisma.financialLedger.findFirst({
-      where: { tenantId, studentId },
-      orderBy: { createdAt: 'desc' },
-    });
-    const prevBalance = lastLedger ? Number(lastLedger.balance) : 0;
+      // Create initial ledger debit entry
+      const lastLedger = await tx.financialLedger.findFirst({
+        where: { tenantId, studentId },
+        orderBy: { createdAt: 'desc' },
+      });
+      const prevBalance = lastLedger ? Number(lastLedger.balance) : 0;
 
-    await prisma.financialLedger.create({
-      data: {
-        tenantId,
-        studentId,
-        referenceType: 'ASSIGNMENT',
-        referenceId: assignment.id,
-        description: `Fee assigned: ${structure.name} (${academicYear})`,
-        type: 'DEBIT',
-        amount: structure.totalAmount,
-        balance: new Prisma.Decimal(prevBalance + Number(structure.totalAmount)),
-        createdBy: userId,
-      },
-    });
+      await tx.financialLedger.create({
+        data: {
+          tenantId,
+          studentId,
+          referenceType: 'ASSIGNMENT',
+          referenceId: createdAssignment.id,
+          description: `Fee assigned: ${structure.name} (${academicYear})`,
+          type: 'DEBIT',
+          amount: structure.totalAmount,
+          balance: new Prisma.Decimal(prevBalance + Number(structure.totalAmount)),
+          createdBy: userId,
+        },
+      });
 
-    // Generate Installments if installmentPlanId is provided
-    if (installmentPlanId) {
-      const plan = await prisma.feeInstallmentPlan.findUnique({ where: { id: installmentPlanId }});
-      if (plan) {
-         const amountPerInstallment = Number(structure.totalAmount) / plan.totalInstallments;
-         const installments = [];
-         let currentDate = new Date();
-         for (let i = 0; i < plan.totalInstallments; i++) {
-           let dueDate = new Date(currentDate);
-           if (plan.intervalType === 'MONTHLY') dueDate.setMonth(dueDate.getMonth() + i);
-           else if (plan.intervalType === 'QUARTERLY') dueDate.setMonth(dueDate.getMonth() + (i * 3));
-           else if (plan.intervalType === 'HALF_YEARLY') dueDate.setMonth(dueDate.getMonth() + (i * 6));
-           else if (plan.intervalType === 'ANNUALLY') dueDate.setFullYear(dueDate.getFullYear() + i);
-           
-           installments.push({
-             tenantId,
-             assignmentId: assignment.id,
-             installmentPlanId,
-             name: `Installment ${i + 1}`,
-             amount: amountPerInstallment,
-             dueDate,
-           });
-         }
-         await prisma.feeInstallment.createMany({ data: installments });
+      // Generate Installments if installmentPlanId is provided
+      if (installmentPlanId) {
+        const plan = await tx.feeInstallmentPlan.findUnique({ where: { id: installmentPlanId }});
+        if (plan) {
+           const amountPerInstallment = Number(structure.totalAmount) / plan.totalInstallments;
+           const installments = [];
+           let currentDate = new Date();
+           for (let i = 0; i < plan.totalInstallments; i++) {
+             let dueDate = new Date(currentDate);
+             if (plan.intervalType === 'MONTHLY') dueDate.setMonth(dueDate.getMonth() + i);
+             else if (plan.intervalType === 'QUARTERLY') dueDate.setMonth(dueDate.getMonth() + (i * 3));
+             else if (plan.intervalType === 'HALF_YEARLY') dueDate.setMonth(dueDate.getMonth() + (i * 6));
+             else if (plan.intervalType === 'ANNUALLY') dueDate.setFullYear(dueDate.getFullYear() + i);
+             
+             installments.push({
+               tenantId,
+               assignmentId: createdAssignment.id,
+               installmentPlanId,
+               name: `Installment ${i + 1}`,
+               amount: amountPerInstallment,
+               dueDate,
+             });
+           }
+           await tx.feeInstallment.createMany({ data: installments });
+        }
       }
-    }
+      return createdAssignment;
+    });
 
     await logAudit(
       AuditAction.CREATE,
@@ -391,75 +419,79 @@ export const bulkCreateAssignment = async (req: Request, res: Response, next: Ne
     const results = [];
     for (const sid of targetStudentIds) {
       try {
-        const assignment = await prisma.studentFeeAssignment.create({
-          data: {
-            tenantId,
-            studentId: sid,
-            feeStructureId,
-            academicYear,
-            installmentPlanId,
-            totalAmount: structure.totalAmount,
-            dueAmount: structure.totalAmount,
+        const assignmentId = await prisma.$transaction(async (tx) => {
+          const assignment = await tx.studentFeeAssignment.create({
+            data: {
+              tenantId,
+              studentId: sid,
+              feeStructureId,
+              academicYear,
+              installmentPlanId,
+              totalAmount: structure.totalAmount,
+              dueAmount: structure.totalAmount,
+            }
+          });
+
+          // Ledger
+          const lastLedger = await tx.financialLedger.findFirst({
+            where: { tenantId, studentId: sid },
+            orderBy: { createdAt: 'desc' },
+          });
+          const prevBalance = lastLedger ? Number(lastLedger.balance) : 0;
+
+          await tx.financialLedger.create({
+            data: {
+              tenantId,
+              studentId: sid,
+              referenceType: 'ASSIGNMENT',
+              referenceId: assignment.id,
+              description: `Fee assigned: ${structure.name} (${academicYear})`,
+              type: 'DEBIT',
+              amount: structure.totalAmount,
+              balance: new Prisma.Decimal(prevBalance + Number(structure.totalAmount)),
+              createdBy: userId,
+            },
+          });
+
+          if (plan) {
+             const amountPerInstallment = Number(structure.totalAmount) / plan.totalInstallments;
+             const installments = [];
+             let currentDate = new Date();
+             for (let i = 0; i < plan.totalInstallments; i++) {
+               let dueDate = new Date(currentDate);
+               if (plan.intervalType === 'MONTHLY') dueDate.setMonth(dueDate.getMonth() + i);
+               else if (plan.intervalType === 'QUARTERLY') dueDate.setMonth(dueDate.getMonth() + (i * 3));
+               else if (plan.intervalType === 'HALF_YEARLY') dueDate.setMonth(dueDate.getMonth() + (i * 6));
+               else if (plan.intervalType === 'ANNUALLY') dueDate.setFullYear(dueDate.getFullYear() + i);
+               
+               installments.push({
+                 tenantId,
+                 assignmentId: assignment.id,
+                 installmentPlanId,
+                 name: `Installment ${i + 1}`,
+                 amount: amountPerInstallment,
+                 dueDate,
+               });
+             }
+             await tx.feeInstallment.createMany({ data: installments });
           }
-        });
-
-        // Ledger
-        const lastLedger = await prisma.financialLedger.findFirst({
-          where: { tenantId, studentId: sid },
-          orderBy: { createdAt: 'desc' },
-        });
-        const prevBalance = lastLedger ? Number(lastLedger.balance) : 0;
-
-        await prisma.financialLedger.create({
-          data: {
-            tenantId,
-            studentId: sid,
-            referenceType: 'ASSIGNMENT',
-            referenceId: assignment.id,
-            description: `Fee assigned: ${structure.name} (${academicYear})`,
-            type: 'DEBIT',
-            amount: structure.totalAmount,
-            balance: new Prisma.Decimal(prevBalance + Number(structure.totalAmount)),
-            createdBy: userId,
-          },
-        });
-
-        if (plan) {
-           const amountPerInstallment = Number(structure.totalAmount) / plan.totalInstallments;
-           const installments = [];
-           let currentDate = new Date();
-           for (let i = 0; i < plan.totalInstallments; i++) {
-             let dueDate = new Date(currentDate);
-             if (plan.intervalType === 'MONTHLY') dueDate.setMonth(dueDate.getMonth() + i);
-             else if (plan.intervalType === 'QUARTERLY') dueDate.setMonth(dueDate.getMonth() + (i * 3));
-             else if (plan.intervalType === 'HALF_YEARLY') dueDate.setMonth(dueDate.getMonth() + (i * 6));
-             else if (plan.intervalType === 'ANNUALLY') dueDate.setFullYear(dueDate.getFullYear() + i);
-             
-             installments.push({
+          
+          // Push notification log
+          await tx.feeNotification.create({
+            data: {
                tenantId,
+               userId: sid,
                assignmentId: assignment.id,
-               installmentPlanId,
-               name: `Installment ${i + 1}`,
-               amount: amountPerInstallment,
-               dueDate,
-             });
-           }
-           await prisma.feeInstallment.createMany({ data: installments });
-        }
-        
-        // Push notification log
-        await prisma.feeNotification.create({
-          data: {
-             tenantId,
-             userId: sid,
-             assignmentId: assignment.id,
-             type: 'FEE_ASSIGNED',
-             channel: 'EMAIL',
-             status: 'PENDING'
-          }
+               type: 'FEE_ASSIGNED',
+               channel: 'EMAIL',
+               status: 'PENDING'
+            }
+          });
+          
+          return assignment.id;
         });
 
-        results.push({ studentId: sid, status: 'SUCCESS', assignmentId: assignment.id });
+        results.push({ studentId: sid, status: 'SUCCESS', assignmentId });
       } catch (err: any) {
         results.push({ studentId: sid, status: 'FAILED', error: err.message });
       }
@@ -622,7 +654,7 @@ export const recordPayment = async (req: Request, res: Response, next: NextFunct
         orderBy: { createdAt: 'desc' },
       });
       const prevBalance = lastLedger ? Number(lastLedger.balance) : 0;
-      const newBalance = Math.max(0, prevBalance - Number(amount));
+      const newBalance = prevBalance - Number(amount);
 
       await tx.financialLedger.create({
         data: {
@@ -765,7 +797,7 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
 
     // Simulation mode fallback
     if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_simulation') {
-      const mockOrderId = `order_sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const mockOrderId = `order_sim_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
       return res.json({
         success: true,
         data: {

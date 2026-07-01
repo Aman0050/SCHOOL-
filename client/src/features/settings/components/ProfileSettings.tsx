@@ -60,7 +60,7 @@ export const ProfileSettings: React.FC = () => {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-          <div className="w-24 h-24 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-2xl font-bold overflow-hidden relative">
+          <div className="w-24 h-24 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary dark:text-primary text-2xl font-bold overflow-hidden relative">
             {avatarPreview ? (
               <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
@@ -84,7 +84,7 @@ export const ProfileSettings: React.FC = () => {
               type="button" 
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadAvatar.isPending}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors mb-2 disabled:opacity-50"
+              className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors mb-2 disabled:opacity-50"
             >
               Upload Avatar
             </button>
@@ -129,7 +129,7 @@ export const ProfileSettings: React.FC = () => {
           <button 
             type="submit"
             disabled={updateProfile.isPending}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/30"
+            className="flex items-center gap-2 bg-primary hover:bg-primary disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-lg shadow-primary/20"
           >
             {updateProfile.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             Save Changes

@@ -6,32 +6,32 @@ import { Shield, Server, Users, Activity, Lock, Globe, CheckCircle2, ChevronRigh
 
 const features = [
   {
-    icon: <Shield className="w-6 h-6 text-indigo-600" />,
+    icon: <Shield className="w-6 h-6 text-primary" />,
     title: 'Enterprise-Grade Security',
     description: 'SOC2 compliant infrastructure with end-to-end encryption, regular penetration testing, and automated threat detection.'
   },
   {
-    icon: <Server className="w-6 h-6 text-indigo-600" />,
+    icon: <Server className="w-6 h-6 text-primary" />,
     title: 'High Availability Infrastructure',
     description: '99.99% guaranteed uptime SLA backed by multi-region redundancy and continuous automated backups.'
   },
   {
-    icon: <Users className="w-6 h-6 text-indigo-600" />,
+    icon: <Users className="w-6 h-6 text-primary" />,
     title: 'Multi-Tenant Architecture',
     description: 'Manage thousands of schools from a single pane of glass with granular Role-Based Access Control (RBAC).'
   },
   {
-    icon: <Activity className="w-6 h-6 text-indigo-600" />,
+    icon: <Activity className="w-6 h-6 text-primary" />,
     title: 'Advanced Analytics',
     description: 'Real-time BI dashboards, custom report builders, and predictive analytics for student performance and retention.'
   },
   {
-    icon: <Lock className="w-6 h-6 text-indigo-600" />,
+    icon: <Lock className="w-6 h-6 text-primary" />,
     title: 'Single Sign-On (SSO)',
     description: 'Seamless integration with Okta, Azure AD, Google Workspace, and any SAML 2.0 identity provider.'
   },
   {
-    icon: <Globe className="w-6 h-6 text-indigo-600" />,
+    icon: <Globe className="w-6 h-6 text-primary" />,
     title: 'Custom White-Labeling',
     description: 'Fully customize the platform with your domains, branding, colors, and custom mobile applications.'
   }
@@ -56,7 +56,7 @@ export const EnterprisePage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-sm font-semibold text-indigo-700 mb-6">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-sm font-semibold text-primary mb-6">
               EduXeno Enterprise
             </span>
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-slate-900 leading-tight">
@@ -93,7 +93,7 @@ export const EnterprisePage: React.FC = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1, duration: 0.5 }}
-                  className="p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-100/50 transition-all group"
+                  className="p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-primary/30 hover:shadow-xl hover:shadow-indigo-100/50 transition-all group"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     {feature.icon}
@@ -113,7 +113,7 @@ export const EnterprisePage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="bg-indigo-600 rounded-3xl p-12 text-center text-white shadow-2xl shadow-indigo-600/30 overflow-hidden relative"
+              className="bg-primary rounded-3xl p-12 text-center text-white shadow-2xl shadow-primary/20 overflow-hidden relative"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full mix-blend-overlay"></div>
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 blur-3xl rounded-full mix-blend-overlay"></div>
@@ -123,7 +123,7 @@ export const EnterprisePage: React.FC = () => {
                 Join the visionary educational networks running on EduXeno. Get a personalized demo and architecture review from our enterprise team.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-                <a href="#contact" className="px-8 py-4 text-base font-bold text-indigo-600 bg-white rounded-xl hover:bg-indigo-50 transition-colors shadow-lg flex items-center justify-center gap-2">
+                <a href="#contact" className="px-8 py-4 text-base font-bold text-primary bg-white rounded-xl hover:bg-primary/10 transition-colors shadow-lg flex items-center justify-center gap-2">
                   Talk to an Expert <ChevronRight className="w-5 h-5" />
                 </a>
               </div>

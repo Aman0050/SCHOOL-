@@ -7,7 +7,6 @@ import { prisma } from '../config/db';
 
 // Validation Schemas
 export const timetableSaveSchema = z.object({
-  schoolId: z.string().uuid(),
   classId: z.string().uuid(),
   periods: z.array(z.object({
     id: z.string().optional(),
@@ -58,6 +57,13 @@ export const saveTimetable = async (req: Request, res: Response) => {
 
   // 1. Validate Input
   const validatedData = timetableSaveSchema.parse(data);
+
+  // Auto-resolve schoolId from the class
+  const classObj = await prisma.class.findUnique({
+    where: { id: validatedData.classId }
+  });
+  if (!classObj) throw new AppError(404, 'NOT_FOUND', 'Class not found');
+  const schoolId = classObj.schoolId;
 
   // 2. Conflict Detection Engine
   const conflicts = [];
@@ -161,17 +167,17 @@ export const saveTimetable = async (req: Request, res: Response) => {
           }
         });
       } else {
-        await tx.timetablePeriod.create({
+        return prisma.timetablePeriod.create({
           data: {
             tenantId,
-            schoolId: validatedData.schoolId,
+            schoolId,
             classId: validatedData.classId,
             dayOfWeek: period.dayOfWeek,
             startTime: period.startTime,
             endTime: period.endTime,
             subjectId: period.subjectId,
             teacherId: period.teacherId,
-            room: period.room,
+            room: period.room || '',
             isBreak: period.isBreak
           }
         });

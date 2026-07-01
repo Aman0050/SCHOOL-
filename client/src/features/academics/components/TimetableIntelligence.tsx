@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { io, Socket } from 'socket.io-client';
 import api from '../../../lib/api';
 import { AlertTriangle, Save, Loader2, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -10,7 +9,6 @@ const TIMES = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
 
 export const TimetableIntelligence: React.FC<{ classId?: string }> = ({ classId }) => {
   const queryClient = useQueryClient();
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [conflicts, setConflicts] = useState<string[]>([]);
   const [localPeriods, setLocalPeriods] = useState<any[]>([]);
 
@@ -28,7 +26,7 @@ export const TimetableIntelligence: React.FC<{ classId?: string }> = ({ classId 
 
   const { data: teachers } = useQuery({
     queryKey: ['teachers'],
-    queryFn: () => api.get('/teacher').then(res => res.data.data) // Assuming endpoint exists
+    queryFn: () => api.get('/academics/teachers').then(res => res.data.data)
   });
 
   useEffect(() => {
@@ -37,35 +35,12 @@ export const TimetableIntelligence: React.FC<{ classId?: string }> = ({ classId 
     }
   }, [timetable]);
 
-  useEffect(() => {
-    // Setup WebSocket for Real-time
-    const newSocket = io(window.location.origin, {
-      query: { tenantId: 'real-tenant-id' }, // Mocking for now
-      withCredentials: true
-    });
-    setSocket(newSocket);
-
-    if (classId) {
-      newSocket.emit('join_class', classId);
-    }
-
-    newSocket.on('timetable_updated', (payload) => {
-      toast('Timetable updated by another user', { icon: '🔄' });
-      queryClient.invalidateQueries({ queryKey: ['timetable', classId] });
-    });
-
-    return () => {
-      newSocket.disconnect();
-    };
-  }, [classId, queryClient]);
-
   const saveMutation = useMutation({
-    mutationFn: (periods: any[]) => api.post('/timetable', { classId, schoolId: 'some-school-id', periods }), // Need real schoolId
+    mutationFn: (periods: any[]) => api.post('/timetable', { classId, periods }),
     onSuccess: () => {
       toast.success('Timetable saved successfully');
       setConflicts([]);
       queryClient.invalidateQueries({ queryKey: ['timetable', classId] });
-      socket?.emit('timetable_updated', { classId });
     },
     onError: (error: any) => {
       if (error.response?.status === 409) {

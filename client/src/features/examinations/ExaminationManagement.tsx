@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,10 +11,19 @@ import {
 import { examApi } from './api/examApi';
 import { ExamSetup } from './components/ExamSetup';
 import { MarksEntryUI } from './components/MarksEntryUI';
+import { ExamsTab } from './components/ExamsTab';
+import { ResultsReportsTab } from './components/ResultsReportsTab';
 import { PageSkeleton } from '../../components/ui/skeletons/PageSkeleton';
 
 export const ExaminationManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'setup' | 'exams' | 'marks' | 'results'>('dashboard');
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as any) || 'dashboard';
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'setup' | 'exams' | 'marks' | 'results'>(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) setActiveTab(tab as any);
+  }, [searchParams]);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['examStats'],
@@ -70,10 +80,10 @@ export const ExaminationManagement: React.FC = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: 'Total Exams', value: stats?.totalExams || 0, icon: BookOpen, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                { label: 'Total Exams', value: stats?.totalExams || 0, icon: BookOpen, color: 'text-primary', bg: 'bg-primary/10' },
                 { label: 'Published Results', value: stats?.publishedExams || 0, icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
                 { label: 'Pending Marks', value: stats?.pendingMarks || 0, icon: Clock, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-                { label: 'Total Report Cards', value: stats?.totalResults || 0, icon: FileText, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                { label: 'Total Report Cards', value: stats?.totalResults || 0, icon: FileText, color: 'text-primary', bg: 'bg-primary/10' },
               ].map((stat, i) => (
                 <div key={i} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
                   <div className="flex items-center gap-4">
@@ -92,8 +102,11 @@ export const ExaminationManagement: React.FC = () => {
             </div>
 
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+              <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 flex justify-between items-center">
                 <h3 className="font-semibold text-slate-900 dark:text-white">Recent Exams</h3>
+                <button onClick={() => setActiveTab('exams')} className="text-xs text-primary hover:underline font-medium">
+                  View All →
+                </button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -109,7 +122,14 @@ export const ExaminationManagement: React.FC = () => {
                     {examsLoading ? (
                       <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /></td></tr>
                     ) : exams?.length === 0 ? (
-                      <tr><td colSpan={4} className="p-8 text-center text-slate-500">No exams found</td></tr>
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-slate-500">
+                          No exams found —{' '}
+                          <button onClick={() => setActiveTab('exams')} className="text-primary hover:underline">
+                            Create your first exam
+                          </button>
+                        </td>
+                      </tr>
                     ) : (
                       exams?.slice(0, 5).map((exam: any) => (
                         <tr key={exam.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
@@ -118,7 +138,7 @@ export const ExaminationManagement: React.FC = () => {
                           <td className="px-5 py-4">
                             <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
                               exam.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' :
-                              exam.status === 'COMPLETED' ? 'bg-blue-100 text-blue-700' :
+                              exam.status === 'COMPLETED' ? 'bg-primary/10 text-primary' :
                               'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                             }`}>
                               {exam.status}
@@ -136,35 +156,10 @@ export const ExaminationManagement: React.FC = () => {
           )
         )}
 
-        {activeTab === 'exams' && (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-8 text-center">
-            <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Exam Scheduling & Management</h3>
-            <p className="text-slate-500 mt-2 max-w-md mx-auto">Create new exams, assign subjects, set weightage, and manage exam dates.</p>
-            <button className="mt-6 inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold shadow hover:bg-primary/90">
-              <Plus className="w-4 h-4" /> Create Exam
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'marks' && (
-          <MarksEntryUI />
-        )}
-        
-        {activeTab === 'results' && (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-8 text-center">
-            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Results & Report Cards</h3>
-            <p className="text-slate-500 mt-2 max-w-md mx-auto">Compute overall grades, generate automated report cards, and view class rankings.</p>
-            <button className="mt-6 inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold shadow hover:bg-primary/90">
-               Compute Results
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'setup' && (
-          <ExamSetup />
-        )}
+        {activeTab === 'exams' && <ExamsTab />}
+        {activeTab === 'marks' && <MarksEntryUI />}
+        {activeTab === 'results' && <ResultsReportsTab />}
+        {activeTab === 'setup' && <ExamSetup />}
       </div>
     </div>
   );

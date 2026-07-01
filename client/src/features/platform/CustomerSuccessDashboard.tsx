@@ -33,11 +33,11 @@ export const CustomerSuccessDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-blue-500">
+        <Card className="border-t-4 border-primary/30">
           <CardContent className="p-6">
             <p className="text-sm font-medium text-slate-500">Open Support Tickets</p>
             <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-2 flex items-center gap-2">
-              <MessageSquare className="w-6 h-6 text-blue-500" /> 18
+              <MessageSquare className="w-6 h-6 text-primary" /> 18
             </h3>
             <p className="text-xs text-slate-400 mt-2">Avg response time: 2 hours</p>
           </CardContent>
@@ -63,7 +63,7 @@ export const CustomerSuccessDashboard: React.FC = () => {
               <tbody>
                 <tr className="border-b">
                   <td className="p-4 font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-emerald-500"/> Greenfield High</td>
-                  <td className="p-4"><span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">PRO</span></td>
+                  <td className="p-4"><span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">PRO</span></td>
                   <td className="p-4 text-emerald-600 font-medium">High (95%)</td>
                   <td className="p-4">82%</td>
                   <td className="p-4 text-emerald-600 font-bold">98</td>

@@ -45,7 +45,7 @@ export const SuperDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex h-[80vh] flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-indigo-500" />
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
         <p className="text-slate-400 font-bold animate-pulse text-sm">Aggregating live data streams...</p>
       </div>
     );
@@ -60,7 +60,7 @@ export const SuperDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-bold text-white tracking-tight">Executive Command Center</h2>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Executive Command Center</h2>
             <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
@@ -79,7 +79,7 @@ export const SuperDashboard: React.FC = () => {
           <button 
             onClick={() => handleExport('pdf')} 
             disabled={!!exporting}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-primary hover:bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
           >
             {exporting === 'pdf' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} PDF Report
           </button>
@@ -88,7 +88,7 @@ export const SuperDashboard: React.FC = () => {
 
       {/* Primary Revenue KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl p-6 relative overflow-hidden shadow-lg shadow-indigo-500/20 border border-indigo-400/30">
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl p-6 relative overflow-hidden shadow-lg shadow-primary/20 border border-indigo-400/30">
            <div className="absolute top-0 right-0 p-6 opacity-20"><TrendingUp className="w-24 h-24" /></div>
            <p className="text-indigo-100 font-bold uppercase tracking-wider text-xs mb-2">Monthly Recurring Revenue (MRR)</p>
            <h3 className="text-4xl font-black text-white">{formatCurrency(metrics?.mrr || 0)}</h3>
@@ -100,13 +100,13 @@ export const SuperDashboard: React.FC = () => {
            </div>
         </div>
         
-        <div className="bg-slate-900 rounded-3xl p-6 relative overflow-hidden border border-slate-800 shadow-xl flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 relative overflow-hidden border border-slate-200 shadow-sm flex flex-col justify-between">
            <div>
              <div className="flex justify-between items-start">
                <p className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-2">Active Students (Global)</p>
-               <Users className="w-5 h-5 text-indigo-500" />
+               <Users className="w-5 h-5 text-primary" />
              </div>
-             <h3 className="text-4xl font-black text-white">{(metrics?.totalStudents || 0).toLocaleString()}</h3>
+             <h3 className="text-4xl font-black text-slate-900">{(metrics?.totalStudents || 0).toLocaleString()}</h3>
            </div>
            <div className="flex items-center justify-between text-xs font-bold mt-4">
               <span className="text-slate-500">Across {metrics?.activeSchools} active schools</span>
@@ -114,15 +114,15 @@ export const SuperDashboard: React.FC = () => {
            </div>
         </div>
 
-        <div className="bg-slate-900 rounded-3xl p-6 relative overflow-hidden border border-slate-800 shadow-xl flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 relative overflow-hidden border border-slate-200 shadow-sm flex flex-col justify-between">
            <div>
              <div className="flex justify-between items-start">
                <p className="text-slate-400 font-bold uppercase tracking-wider text-xs mb-2">Global Health Score</p>
-               <Activity className={`w-5 h-5 ${metrics?.healthStatus === 'Excellent' ? 'text-emerald-500' : metrics?.healthStatus === 'Healthy' ? 'text-blue-500' : metrics?.healthStatus === 'At Risk' ? 'text-amber-500' : 'text-rose-500'}`} />
+               <Activity className={`w-5 h-5 ${metrics?.healthStatus === 'Excellent' ? 'text-emerald-500' : metrics?.healthStatus === 'Healthy' ? 'text-primary' : metrics?.healthStatus === 'At Risk' ? 'text-amber-500' : 'text-rose-500'}`} />
              </div>
              <div className="flex items-baseline gap-3">
-               <h3 className="text-4xl font-black text-white">{metrics?.healthScore || 100}</h3>
-               <span className={`text-sm font-bold ${metrics?.healthStatus === 'Excellent' ? 'text-emerald-500' : metrics?.healthStatus === 'Healthy' ? 'text-blue-500' : metrics?.healthStatus === 'At Risk' ? 'text-amber-500' : 'text-rose-500'}`}>
+               <h3 className="text-4xl font-black text-slate-900">{metrics?.healthScore || 100}</h3>
+               <span className={`text-sm font-bold ${metrics?.healthStatus === 'Excellent' ? 'text-emerald-500' : metrics?.healthStatus === 'Healthy' ? 'text-primary' : metrics?.healthStatus === 'At Risk' ? 'text-amber-500' : 'text-rose-500'}`}>
                  {metrics?.healthStatus}
                </span>
              </div>
@@ -136,18 +136,18 @@ export const SuperDashboard: React.FC = () => {
       {/* Secondary Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
          {[
-           { label: 'Total Organizations', value: metrics?.totalSchools, icon: Building2, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+           { label: 'Total Organizations', value: metrics?.totalSchools, icon: Building2, color: 'text-blue-400', bg: 'bg-primary/10' },
            { label: 'Paid Subscriptions', value: metrics?.activeSchools, icon: CreditCard, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
            { label: 'Active Trials', value: metrics?.trialSchools, icon: Activity, color: 'text-amber-400', bg: 'bg-amber-500/10' },
            { label: 'Churned / Expired', value: metrics?.expiredSchools, icon: AlertTriangle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
          ].map((stat, i) => (
-            <div key={i} className="bg-slate-900/50 backdrop-blur-sm rounded-2xl p-5 border border-slate-800/50 flex items-center gap-4 hover:bg-slate-800/50 transition-colors">
+            <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4 hover:border-primary/30 transition-colors">
                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
                  <stat.icon className="w-6 h-6" />
                </div>
                <div>
                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">{stat.label}</p>
-                 <h4 className="text-2xl font-black text-white leading-none">{stat.value || 0}</h4>
+                 <h4 className="text-2xl font-black text-slate-900 leading-none">{stat.value || 0}</h4>
                </div>
             </div>
          ))}
@@ -157,13 +157,13 @@ export const SuperDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Real-Time Revenue Chart */}
-        <div className="lg:col-span-2 bg-slate-900/50 backdrop-blur-sm rounded-3xl border border-slate-800/50 p-6 flex flex-col min-h-[400px]">
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col min-h-[400px]">
            <div className="flex justify-between items-center mb-6">
              <div>
-               <h3 className="font-bold text-white text-lg">Revenue Growth Trend</h3>
+               <h3 className="font-bold text-slate-900 text-lg">Revenue Growth Trend</h3>
                <p className="text-xs text-slate-400 font-medium mt-1">Aggregated from live SaaSInvoices</p>
              </div>
-             <select className="bg-slate-800 border-0 text-xs font-bold text-slate-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 cursor-pointer outline-none">
+             <select className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary cursor-pointer outline-none">
                <option>Last 6 Months</option>
              </select>
            </div>
@@ -172,17 +172,17 @@ export const SuperDashboard: React.FC = () => {
              {revenueTrend && revenueTrend.length > 0 ? (
                <ResponsiveContainer width="100%" height="100%">
                  <LineChart data={revenueTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                    <XAxis 
                      dataKey="name" 
-                     stroke="#475569" 
+                     stroke="#64748b" 
                      fontSize={12}
                      tickLine={false}
                      axisLine={false}
                      dy={10}
                    />
                    <YAxis 
-                     stroke="#475569" 
+                     stroke="#64748b" 
                      fontSize={12}
                      tickLine={false}
                      axisLine={false}
@@ -190,8 +190,8 @@ export const SuperDashboard: React.FC = () => {
                      dx={-10}
                    />
                    <Tooltip 
-                     contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
-                     itemStyle={{ color: '#818cf8', fontWeight: 'bold' }}
+                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#1e293b', fontSize: '12px' }}
+                     itemStyle={{ color: '#6366f1', fontWeight: 'bold' }}
                      formatter={(value: number) => [`$${value}`, 'Revenue']}
                    />
                    <Line 
@@ -199,15 +199,15 @@ export const SuperDashboard: React.FC = () => {
                      dataKey="revenue" 
                      stroke="#6366f1" 
                      strokeWidth={3}
-                     dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#1e293b' }}
-                     activeDot={{ r: 6, fill: '#818cf8', strokeWidth: 0 }}
+                     dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#ffffff' }}
+                     activeDot={{ r: 6, fill: '#6366f1', strokeWidth: 0 }}
                    />
                  </LineChart>
                </ResponsiveContainer>
              ) : (
-               <div className="w-full h-full flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-2xl">
-                 <Activity className="w-8 h-8 text-slate-600 mb-2" />
-                 <p className="text-slate-500 font-semibold text-sm">Waiting for revenue data...</p>
+               <div className="w-full h-full flex flex-col items-center justify-center border border-dashed border-slate-200 rounded-2xl">
+                 <Activity className="w-8 h-8 text-slate-300 mb-2" />
+                 <p className="text-slate-400 font-semibold text-sm">Waiting for revenue data...</p>
                </div>
              )}
            </div>
@@ -217,8 +217,8 @@ export const SuperDashboard: React.FC = () => {
         <div className="space-y-6">
           
           {/* Live Alert Center */}
-          <div className="bg-slate-900/50 backdrop-blur-sm rounded-3xl border border-slate-800/50 p-6 flex flex-col">
-            <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col">
+            <h3 className="font-bold text-slate-900 text-sm mb-4 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
               Live Alert Center
             </h3>
@@ -250,7 +250,7 @@ export const SuperDashboard: React.FC = () => {
                   <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
                     forecast.trend === 'up' ? 'bg-emerald-500/20 text-emerald-400' :
                     forecast.trend === 'down' ? 'bg-rose-500/20 text-rose-400' :
-                    'bg-blue-500/20 text-blue-400'
+                    'bg-primary/20 text-blue-400'
                   }`}>
                     {forecast.trend === 'up' ? <TrendingUp className="w-3.5 h-3.5" /> :
                      forecast.trend === 'down' ? <TrendingDown className="w-3.5 h-3.5" /> :

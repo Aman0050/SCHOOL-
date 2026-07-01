@@ -12,3 +12,14 @@ export const validateBody = (schema: Schema) => {
     next();
   };
 };
+
+export const validateQuery = (schema: Schema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      return next(new ValidationError('Invalid query parameters', result.error.format()));
+    }
+    req.query = result.data;
+    next();
+  };
+};

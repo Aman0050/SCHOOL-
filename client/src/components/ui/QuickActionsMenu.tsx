@@ -21,7 +21,7 @@ export const QuickActionsMenu: React.FC = () => {
   return (
     <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenu.Trigger asChild>
-        <button className="hidden md:flex items-center justify-center w-9 h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 group">
+        <button className="hidden md:flex items-center justify-center w-9 h-9 bg-primary hover:bg-primary text-white rounded-xl shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 group">
           <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
         </button>
       </DropdownMenu.Trigger>
@@ -52,7 +52,7 @@ export const QuickActionsMenu: React.FC = () => {
                       onClick={() => handleAction('/dashboard/students', 'open-new-student')}
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group outline-none cursor-pointer"
                     >
-                      <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg group-hover:scale-110 transition-transform">
+                      <div className="p-2 bg-primary/10 text-primary rounded-lg group-hover:scale-110 transition-transform">
                         <UserPlus className="w-4 h-4" />
                       </div>
                       <div className="flex-1 text-left">
@@ -97,7 +97,7 @@ export const QuickActionsMenu: React.FC = () => {
                       onClick={() => handleAction('/dashboard/examinations')}
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group outline-none cursor-pointer"
                     >
-                      <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg group-hover:scale-110 transition-transform">
+                      <div className="p-2 bg-primary/10 text-primary rounded-lg group-hover:scale-110 transition-transform">
                         <FileText className="w-4 h-4" />
                       </div>
                       <div className="flex-1 text-left">

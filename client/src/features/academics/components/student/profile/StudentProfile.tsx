@@ -18,7 +18,7 @@ export const StudentProfile: React.FC<{ studentId: string; onBack: () => void }>
   });
 
   if (isLoading) {
-    return <div className="h-64 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>;
+    return <div className="h-64 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   if (!student) return <div>Error loading profile</div>;
@@ -26,7 +26,7 @@ export const StudentProfile: React.FC<{ studentId: string; onBack: () => void }>
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-blue-500 transition-colors">
+      <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors">
         <ArrowLeft className="h-4 w-4" /> Back to Directory
       </button>
 
@@ -41,7 +41,7 @@ export const StudentProfile: React.FC<{ studentId: string; onBack: () => void }>
                 className="h-24 w-24 rounded-full object-cover mx-auto mb-4 border-2 border-slate-100 dark:border-slate-700"
               />
             ) : (
-              <div className="h-24 w-24 rounded-full bg-indigo-100 dark:bg-indigo-900/50 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-indigo-500">
+              <div className="h-24 w-24 rounded-full bg-primary/10 dark:bg-primary/20 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-primary">
                 {student.firstName?.[0]}{student.lastName?.[0]}
               </div>
             )}
@@ -65,7 +65,7 @@ export const StudentProfile: React.FC<{ studentId: string; onBack: () => void }>
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-4 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                  activeTab === tab ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  activeTab === tab ? 'border-primary/30 text-primary' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}

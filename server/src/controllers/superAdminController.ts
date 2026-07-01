@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, SystemRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import PDFDocument from 'pdfkit';
 import { stringify } from 'csv-stringify/sync';
 import { broadcastSuperAdminUpdate } from '../lib/socketManager';
@@ -46,10 +47,17 @@ export const exportDashboard = async (req: Request, res: Response, next: NextFun
   try {
     const { format } = req.query;
     const { cache } = await import('../lib/cache');
-    const cachedData = await cache.get('superadmin:dashboard:data') as any;
+    let cachedData = await cache.get('superadmin:dashboard:data') as any;
 
     if (!cachedData) {
-      return res.status(400).json({ success: false, message: 'Data not aggregated yet. Please wait a moment.' });
+      // Data not aggregated yet. Let's do it on the fly!
+      const { processSuperAdminJob } = await import('../workers/superAdminQueue');
+      await processSuperAdminJob({ name: 'aggregate-dashboard' });
+      cachedData = await cache.get('superadmin:dashboard:data') as any;
+      
+      if (!cachedData) {
+        return res.status(500).json({ success: false, message: 'Failed to aggregate data for export.' });
+      }
     }
 
     const { metrics } = cachedData;
@@ -258,7 +266,7 @@ export const resetAdminPassword = async (req: Request, res: Response, next: Next
     // Generate a random 10-character password
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
     let tempPassword = '';
-    for (let i = 0; i < 10; i++) tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 10; i++) tempPassword += chars.charAt(crypto.randomInt(0, chars.length));
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(tempPassword, salt);

@@ -24,7 +24,7 @@ export const SelectSchool: React.FC = () => {
     <div className="relative flex min-h-screen items-center justify-center bg-slate-900 px-4 py-12 text-slate-100 overflow-hidden">
       {/* Background Graphic Blobs */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
 
       <div className="relative w-full max-w-md space-y-8 dark-glass p-8 rounded-3xl shadow-2xl border border-slate-800">
         <div className="text-center space-y-3">

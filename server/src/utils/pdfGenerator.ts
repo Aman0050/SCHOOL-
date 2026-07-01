@@ -70,49 +70,63 @@ export const generateDailyReportPdfBuffer = async (data: any): Promise<Buffer> =
         resolve(pdfData);
       });
 
-      // Header
-      doc.fontSize(24).font('Helvetica-Bold').text('DAILY OPERATIONS REPORT', { align: 'center' });
-      doc.moveDown(0.5);
+      // Header Banner
+      doc.rect(0, 0, doc.page.width, 100).fill('#1e293b');
+      doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold').text('DAILY OPERATIONS REPORT', 50, 35, { align: 'left' });
+      doc.fillColor('#94a3b8').fontSize(12).font('Helvetica').text('EduXeno Command Center', 50, 65, { align: 'left' });
+      doc.fontSize(10).text(`Generated: ${new Date().toLocaleString()}`, 50, 65, { align: 'right' });
       
-      // School Info
-      doc.fontSize(14).font('Helvetica').text('EduXeno Command Center', { align: 'center' });
-      doc.fontSize(10).text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
-      doc.moveDown(2);
+      let currentY = 130;
+
+      const drawSectionHeader = (title: string) => {
+        doc.rect(50, currentY, doc.page.width - 100, 30).fill('#f8fafc');
+        doc.rect(50, currentY, 4, 30).fill('#6366f1'); // Indigo accent line
+        doc.fillColor('#0f172a').fontSize(14).font('Helvetica-Bold').text(title, 65, currentY + 8);
+        currentY += 45;
+      };
 
       // Section: Overall Health
-      doc.fontSize(16).font('Helvetica-Bold').text('1. Overall Academic Health', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12).font('Helvetica').text(`System Health Score: ${data.healthScore || 'N/A'}/100`);
-      doc.text(`Status: Optimal performance across all tracked metrics.`);
-      doc.moveDown(1.5);
+      drawSectionHeader('1. Overall Academic Health');
+      doc.fillColor('#334155').fontSize(12).font('Helvetica').text(`System Health Score:`, 65, currentY);
+      doc.fillColor('#10b981').font('Helvetica-Bold').text(`${data.healthScore || 'N/A'}/100`, 200, currentY);
+      currentY += 20;
+      doc.fillColor('#64748b').font('Helvetica').text(`Status: Optimal performance across all tracked metrics.`, 65, currentY);
+      currentY += 40;
 
       // Section: Attendance
-      doc.fontSize(16).font('Helvetica-Bold').text('2. Attendance & Staffing', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12).font('Helvetica').text(`Student Attendance Rate: ${data.attendanceRate || 'N/A'}%`);
-      doc.text(`Staff Attendance Rate: ${data.staffAttendanceRate || 'N/A'}%`);
-      doc.moveDown(1.5);
+      drawSectionHeader('2. Attendance & Staffing');
+      doc.fillColor('#334155').fontSize(12).font('Helvetica').text(`Student Attendance Rate:`, 65, currentY);
+      doc.fillColor('#0f172a').font('Helvetica-Bold').text(`${data.attendanceRate || 'N/A'}%`, 220, currentY);
+      currentY += 20;
+      doc.fillColor('#334155').font('Helvetica').text(`Staff Attendance Rate:`, 65, currentY);
+      doc.fillColor('#0f172a').font('Helvetica-Bold').text(`${data.staffAttendanceRate || 'N/A'}%`, 220, currentY);
+      currentY += 40;
 
       // Section: Financial
-      doc.fontSize(16).font('Helvetica-Bold').text('3. Fee Collections', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12).font('Helvetica').text(`Today's Collection: $${data.feeCollection || '0'}`);
-      doc.text(`Active Transactions: ${data.transactionCount || '0'}`);
-      doc.moveDown(1.5);
+      drawSectionHeader('3. Fee Collections (Today)');
+      doc.fillColor('#334155').fontSize(12).font('Helvetica').text(`Total Collection:`, 65, currentY);
+      doc.fillColor('#10b981').font('Helvetica-Bold').text(`Rs. ${data.feeCollection || '0'}`, 180, currentY);
+      currentY += 20;
+      doc.fillColor('#334155').font('Helvetica').text(`Active Transactions:`, 65, currentY);
+      doc.fillColor('#0f172a').font('Helvetica-Bold').text(`${data.transactionCount || '0'}`, 180, currentY);
+      currentY += 40;
 
       // Section: Alerts
-      doc.fontSize(16).font('Helvetica-Bold').text('4. Critical Alerts & Notifications', { underline: true });
-      doc.moveDown(0.5);
+      drawSectionHeader('4. Critical Alerts & Notifications');
       if (data.alerts && data.alerts.length > 0) {
         data.alerts.forEach((alert: any, idx: number) => {
-          doc.fontSize(12).font('Helvetica').text(`${idx + 1}. [${alert.severity.toUpperCase()}] ${alert.message}`);
+          const isWarning = alert.severity === 'warning';
+          doc.fillColor(isWarning ? '#f59e0b' : '#3b82f6').font('Helvetica-Bold').text(`[${alert.severity.toUpperCase()}]`, 65, currentY);
+          doc.fillColor('#334155').font('Helvetica').text(alert.message, 140, currentY);
+          currentY += 20;
         });
       } else {
-        doc.fontSize(12).font('Helvetica').text('No active alerts at this time. All systems green.');
+        doc.fillColor('#10b981').font('Helvetica').text('No active alerts at this time. All systems green.', 65, currentY);
       }
       
-      doc.moveDown(3);
-      doc.fontSize(10).fillColor('gray').text('This is an electronically generated report by EduXeno Enterprise.', { align: 'center' });
+      // Footer
+      doc.rect(0, doc.page.height - 50, doc.page.width, 50).fill('#f1f5f9');
+      doc.fillColor('#94a3b8').fontSize(9).font('Helvetica').text('This is an electronically generated report by EduXeno Enterprise.', 0, doc.page.height - 30, { align: 'center' });
 
       doc.end();
     } catch (err) {

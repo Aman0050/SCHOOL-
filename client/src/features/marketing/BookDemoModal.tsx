@@ -101,7 +101,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
               
               {/* Left Panel - Instant Connect */}
               <div className="w-full md:w-1/3 bg-slate-50 p-8 md:p-10 border-r border-slate-100 flex flex-col relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-100 rounded-full blur-[80px] -z-10 opacity-50" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -z-10 opacity-50" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-100 rounded-full blur-[80px] -z-10 opacity-50" />
                 
                 <h3 className="text-2xl font-extrabold text-slate-900 mb-4 tracking-tight">Instant Connect</h3>
@@ -164,7 +164,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                         onChange={handleChange}
                         required
                         placeholder="John Doe"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
                       />
                     </div>
                     <div className="space-y-2">
@@ -176,7 +176,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                         onChange={handleChange}
                         required
                         placeholder="Greenwood High"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
                       />
                     </div>
                   </div>
@@ -191,7 +191,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                         onChange={handleChange}
                         required
                         placeholder="admin@school.com"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
                       />
                     </div>
                     <div className="space-y-2">
@@ -203,7 +203,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                         onChange={handleChange}
                         required
                         placeholder="+1 (555) 000-0000"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium"
                       />
                     </div>
                   </div>
@@ -215,7 +215,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                         name="studentsCount"
                         value={formData.studentsCount}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium appearance-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium appearance-none"
                       >
                         <option>0 - 500</option>
                         <option>501 - 2000</option>
@@ -228,7 +228,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                         name="campusesCount"
                         value={formData.campusesCount}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium appearance-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium appearance-none"
                       >
                         <option>1</option>
                         <option>2 - 5</option>
@@ -241,7 +241,7 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                         name="contactVia"
                         value={formData.contactVia}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium appearance-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium appearance-none"
                       >
                         <option>Phone</option>
                         <option>Email</option>
@@ -258,14 +258,14 @@ ${formData.message ? `*Additional Message:* ${formData.message}` : ''}`;
                       onChange={handleChange}
                       rows={3}
                       placeholder="Any specific requirements or pain points?"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium resize-none"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 font-medium resize-none"
                     />
                   </div>
 
                   <button 
                     type="submit" 
                     disabled={loading}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2 group mt-4 disabled:opacity-70"
+                    className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary transition-colors shadow-xl shadow-primary/20 flex items-center justify-center gap-2 group mt-4 disabled:opacity-70"
                   >
                     {loading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />

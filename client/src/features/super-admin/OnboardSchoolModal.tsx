@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Building2, User, Mail, Lock, Loader2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { superAdminApi } from './api/superAdminApi';
+import toast from 'react-hot-toast';
 
 interface OnboardSchoolModalProps {
   onClose: () => void;
@@ -23,7 +24,11 @@ export const OnboardSchoolModal: React.FC<OnboardSchoolModalProps> = ({ onClose 
     mutationFn: (data: typeof formData) => superAdminApi.createTenant(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['superAdminTenants'] });
+      toast.success('School onboarded successfully');
       onClose();
+    },
+    onError: () => {
+      toast.error('Failed to onboard school');
     }
   });
 
@@ -144,7 +149,7 @@ export const OnboardSchoolModal: React.FC<OnboardSchoolModalProps> = ({ onClose 
             <button 
               type="submit" 
               disabled={createTenantMutation.isPending}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 bg-primary hover:bg-primary text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
             >
               {createTenantMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               Onboard School

@@ -103,10 +103,10 @@ export const AcademicExecutiveDashboard: React.FC = () => {
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: 'Syllabus Completion', val: `${chartData[1].value}%`, icon: BookOpen, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+          { title: 'Syllabus Completion', val: `${chartData[1].value}%`, icon: BookOpen, color: 'text-primary', bg: 'bg-primary/10' },
           { title: 'At-Risk Classes', val: '2', icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-500/10' },
           { title: 'Teacher Activity', val: 'High', icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
-          { title: 'Pending Tasks', val: '14', icon: Clock, color: 'text-blue-500', bg: 'bg-blue-500/10' }
+          { title: 'Pending Tasks', val: '14', icon: Clock, color: 'text-primary', bg: 'bg-primary/10' }
         ].map((stat, i) => (
           <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 flex items-start gap-4">
             <div className={`p-3 rounded-xl ${stat.bg}`}>

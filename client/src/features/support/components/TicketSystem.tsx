@@ -21,8 +21,8 @@ export const TicketSystem: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'OPEN': return 'bg-amber-100 text-amber-700';
-      case 'IN_PROGRESS': return 'bg-blue-100 text-blue-700';
-      case 'WAITING': return 'bg-purple-100 text-purple-700';
+      case 'IN_PROGRESS': return 'bg-primary/10 text-primary';
+      case 'WAITING': return 'bg-primary/10 text-primary';
       case 'RESOLVED': return 'bg-teal-100 text-teal-700';
       case 'CLOSED': return 'bg-slate-100 text-slate-700';
       default: return 'bg-slate-100 text-slate-700';
@@ -45,7 +45,7 @@ export const TicketSystem: React.FC = () => {
         <h3 className="text-xl font-bold text-slate-900 dark:text-white">Support Tickets</h3>
         <button 
           onClick={() => setShowModal(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+          className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
         >
           <Plus className="w-5 h-5" />
           New Ticket
@@ -53,7 +53,7 @@ export const TicketSystem: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>
+        <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto w-full">
@@ -152,7 +152,7 @@ export const TicketSystem: React.FC = () => {
               </div>
               <div className="pt-4 flex justify-end gap-3">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium">Cancel</button>
-                <button type="submit" disabled={createTicket.isPending} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
+                <button type="submit" disabled={createTicket.isPending} className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-primary disabled:opacity-50 flex items-center gap-2">
                   {createTicket.isPending && <Loader2 className="w-4 h-4 animate-spin" />} Submit Ticket
                 </button>
               </div>

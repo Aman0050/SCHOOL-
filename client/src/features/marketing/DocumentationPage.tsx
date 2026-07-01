@@ -45,7 +45,7 @@ export const DocumentationPage: React.FC = () => {
       <main className="flex-grow pt-24">
         {/* Header with Search */}
         <div className="bg-slate-900 text-white pt-20 pb-24 px-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 blur-[100px] rounded-full pointer-events-none" />
           
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">EduXeno Documentation</h1>
@@ -77,10 +77,10 @@ export const DocumentationPage: React.FC = () => {
             <div>
               <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">Quick Links</h3>
               <ul className="space-y-3 text-slate-600 font-medium text-sm">
-                <li><a href="#" className="hover:text-indigo-600 flex items-center gap-2"><ChevronRight className="w-4 h-4" /> Release Notes</a></li>
-                <li><a href="#" className="hover:text-indigo-600 flex items-center gap-2"><ChevronRight className="w-4 h-4" /> Video Tutorials</a></li>
-                <li><a href="#" className="hover:text-indigo-600 flex items-center gap-2"><ChevronRight className="w-4 h-4" /> Developer API</a></li>
-                <li><a href="#" className="hover:text-indigo-600 flex items-center gap-2"><ChevronRight className="w-4 h-4" /> System Status</a></li>
+                <li><a href="#" className="hover:text-primary flex items-center gap-2"><ChevronRight className="w-4 h-4" /> Release Notes</a></li>
+                <li><a href="#" className="hover:text-primary flex items-center gap-2"><ChevronRight className="w-4 h-4" /> Video Tutorials</a></li>
+                <li><a href="#" className="hover:text-primary flex items-center gap-2"><ChevronRight className="w-4 h-4" /> Developer API</a></li>
+                <li><a href="#" className="hover:text-primary flex items-center gap-2"><ChevronRight className="w-4 h-4" /> System Status</a></li>
               </ul>
             </div>
             
@@ -89,13 +89,13 @@ export const DocumentationPage: React.FC = () => {
               <ul className="space-y-4">
                 <li>
                   <a href="#" className="group block">
-                    <h4 className="text-sm font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">Setting up your first term</h4>
+                    <h4 className="text-sm font-semibold text-slate-800 group-hover:text-primary transition-colors">Setting up your first term</h4>
                     <p className="text-xs text-slate-500 mt-1">Learn how to configure academic calendars.</p>
                   </a>
                 </li>
                 <li>
                   <a href="#" className="group block">
-                    <h4 className="text-sm font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">Importing students via CSV</h4>
+                    <h4 className="text-sm font-semibold text-slate-800 group-hover:text-primary transition-colors">Importing students via CSV</h4>
                     <p className="text-xs text-slate-500 mt-1">Step-by-step guide to bulk data imports.</p>
                   </a>
                 </li>
@@ -116,7 +116,7 @@ export const DocumentationPage: React.FC = () => {
                   className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
                       {category.icon}
                     </div>
                     <h2 className="text-xl font-bold text-slate-900">{category.title}</h2>
@@ -126,25 +126,25 @@ export const DocumentationPage: React.FC = () => {
                   <ul className="space-y-3">
                     {category.articles.map((article, i) => (
                       <li key={i}>
-                        <a href="#" className="flex items-center text-sm font-medium text-slate-700 hover:text-indigo-600 transition-colors group">
-                          <FileText className="w-4 h-4 mr-2 text-slate-400 group-hover:text-indigo-600" />
+                        <a href="#" className="flex items-center text-sm font-medium text-slate-700 hover:text-primary transition-colors group">
+                          <FileText className="w-4 h-4 mr-2 text-slate-400 group-hover:text-primary" />
                           {article}
                         </a>
                       </li>
                     ))}
                   </ul>
-                  <a href="#" className="inline-block mt-6 text-sm font-bold text-indigo-600 hover:text-indigo-700">View all articles &rarr;</a>
+                  <a href="#" className="inline-block mt-6 text-sm font-bold text-primary hover:text-primary">View all articles &rarr;</a>
                 </motion.div>
               ))}
             </div>
 
             {/* Need Help Box */}
             <div className="mt-12 bg-slate-900 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
-              <div className="absolute right-0 top-0 w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full pointer-events-none" />
+              <div className="absolute right-0 top-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
               <ShieldAlert className="w-10 h-10 mx-auto text-indigo-400 mb-4" />
               <h3 className="text-2xl font-bold mb-2">Can't find what you're looking for?</h3>
               <p className="text-slate-400 mb-6 max-w-lg mx-auto">Our dedicated enterprise support team is available 24/7 to help you resolve any issues.</p>
-              <a href="/help-center" className="inline-block px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500 transition-colors">
+              <a href="/help-center" className="inline-block px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary transition-colors">
                 Contact Support
               </a>
             </div>

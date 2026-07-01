@@ -27,8 +27,8 @@ export const CommunicationDashboard: React.FC = () => {
     {
       title: "Total Sent Today",
       value: stats?.totalSentToday || 0,
-      icon: <Send className="w-5 h-5 text-blue-500" />,
-      color: "border-blue-500"
+      icon: <Send className="w-5 h-5 text-primary" />,
+      color: "border-primary/30"
     },
     {
       title: "Delivery Rate",
@@ -39,8 +39,8 @@ export const CommunicationDashboard: React.FC = () => {
     {
       title: "Read Rate",
       value: `${(stats?.readRate || 0).toFixed(1)}%`,
-      icon: <MessageSquare className="w-5 h-5 text-indigo-500" />,
-      color: "border-indigo-500"
+      icon: <MessageSquare className="w-5 h-5 text-primary" />,
+      color: "border-primary/30"
     },
     {
       title: "Failed Messages",
@@ -92,7 +92,7 @@ export const CommunicationDashboard: React.FC = () => {
             </div>
             <div className="flex justify-between items-center p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
               <div className="flex items-center gap-3">
-                <Smartphone className="w-5 h-5 text-blue-500" />
+                <Smartphone className="w-5 h-5 text-primary" />
                 <span className="font-medium">SMS</span>
               </div>
               <span className="font-bold">30%</span>
@@ -124,7 +124,7 @@ export const CommunicationDashboard: React.FC = () => {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0">
                   <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full ${i % 2 === 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-blue-100 text-blue-600 dark:bg-blue-500/20'}`}>
+                    <div className={`p-2 rounded-full ${i % 2 === 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-primary/10 text-primary dark:bg-primary/20'}`}>
                       {i % 2 === 0 ? <MessageSquare className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
                     </div>
                     <div>

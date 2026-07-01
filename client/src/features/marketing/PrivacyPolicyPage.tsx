@@ -18,7 +18,7 @@ export const PrivacyPolicyPage: React.FC = () => {
             <p className="text-slate-500 font-medium">Last updated: October 1, 2026</p>
           </div>
 
-          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline">
+          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
             <p>
               At EduXeno ("we", "our", or "us"), we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our school operating system platform.
             </p>

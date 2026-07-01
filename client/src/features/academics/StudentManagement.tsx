@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useSocket } from '../../contexts/SocketContext';
 import api from '../../lib/api';
 import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
@@ -47,7 +48,7 @@ const StudentRow = React.memo(({ student, virtualRow, onClick }: { student: any,
             className="h-10 w-10 rounded-full object-cover"
           />
         ) : (
-          <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-sm font-bold text-indigo-600 dark:text-indigo-400">
+          <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-sm font-bold text-primary dark:text-primary">
             {student.firstName?.[0]}{student.lastName?.[0]}
           </div>
         )}
@@ -70,7 +71,7 @@ const StudentRow = React.memo(({ student, virtualRow, onClick }: { student: any,
         </span>
       </td>
       <td className="px-6 py-4 text-right w-32">
-        <button className="text-indigo-500 hover:text-indigo-700 font-semibold text-sm">View Profile</button>
+        <button className="text-primary hover:text-primary font-semibold text-sm">View Profile</button>
       </td>
     </tr>
   );
@@ -81,8 +82,15 @@ export const StudentManagement: React.FC = () => {
   const { layout, saveLayout, resetLayout } = useStudentLayoutStore(user?.id || 'default');
   const queryClient = useQueryClient();
   const { socket } = useSocket();
+  const [searchParams] = useSearchParams();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'directory' | 'admissions'>('dashboard');
+  const initialTab = (searchParams.get('tab') as 'dashboard' | 'directory' | 'admissions') || 'dashboard';
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'directory' | 'admissions'>(initialTab);
+
+  React.useEffect(() => {
+    const tab = searchParams.get('tab') as 'dashboard' | 'directory' | 'admissions';
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const handleRowClick = React.useCallback((id: string) => setSelectedStudentId(id), []);
   // Search state
@@ -168,7 +176,7 @@ export const StudentManagement: React.FC = () => {
           onClick={() => setActiveTab('dashboard')}
           className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-all ${
             activeTab === 'dashboard'
-              ? 'border-indigo-500 text-indigo-500'
+              ? 'border-primary/30 text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
@@ -179,7 +187,7 @@ export const StudentManagement: React.FC = () => {
           onClick={() => setActiveTab('directory')}
           className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-all ${
             activeTab === 'directory'
-              ? 'border-indigo-500 text-indigo-500'
+              ? 'border-primary/30 text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
@@ -190,7 +198,7 @@ export const StudentManagement: React.FC = () => {
           onClick={() => setActiveTab('admissions')}
           className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-all ${
             activeTab === 'admissions'
-              ? 'border-indigo-500 text-indigo-500'
+              ? 'border-primary/30 text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
@@ -205,20 +213,20 @@ export const StudentManagement: React.FC = () => {
             className="layout"
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-            rowHeight={100}
+            rowHeight={70}
             draggableHandle=".drag-handle"
             isDraggable={false}
             isResizable={false}
             margin={[16, 16]}
             useCSSTransforms={true}
           >
-            <div key="studentHero" data-grid={{ x: 0, y: 0, w: 12, h: 2, static: true }}>
+            <div key="studentHero" data-grid={{ x: 0, y: 0, w: 12, h: 3, static: true }} className="h-full">
               <StudentExecutiveHero stats={stats} />
             </div>
-            <div key="enrollmentAnalytics" data-grid={{ x: 0, y: 2, w: 8, h: 4 }} className="h-full"><EnrollmentAnalytics /></div>
-            <div key="studentRisk" data-grid={{ x: 8, y: 2, w: 4, h: 4 }} className="h-full"><StudentRiskMonitor /></div>
-            <div key="demographics" data-grid={{ x: 0, y: 6, w: 6, h: 4 }} className="h-full"><DemographicDistribution stats={stats} /></div>
-            <div key="liveActivity" data-grid={{ x: 6, y: 6, w: 6, h: 4 }} className="h-full"><LiveStudentActivity /></div>
+            <div key="enrollmentAnalytics" data-grid={{ x: 0, y: 3, w: 8, h: 5 }} className="h-full"><EnrollmentAnalytics /></div>
+            <div key="studentRisk" data-grid={{ x: 8, y: 3, w: 4, h: 5 }} className="h-full"><StudentRiskMonitor /></div>
+            <div key="demographics" data-grid={{ x: 0, y: 8, w: 6, h: 5 }} className="h-full"><DemographicDistribution stats={stats} /></div>
+            <div key="liveActivity" data-grid={{ x: 6, y: 8, w: 6, h: 5 }} className="h-full"><LiveStudentActivity /></div>
           </ResponsiveGridLayout>
         </div>
       )}
@@ -240,12 +248,12 @@ export const StudentManagement: React.FC = () => {
               </div>
               <button 
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors ${showFilters ? 'bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-500/10 dark:border-indigo-500/30 dark:text-indigo-400' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors ${showFilters ? 'bg-primary/10 border-primary/30 text-primary dark:bg-primary/10 dark:border-primary/30/30 dark:text-primary' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                 <Filter className="h-4 w-4" /> Advanced Filters
               </button>
             </div>
             <div className="flex gap-2">
-               <button onClick={handleExportCSV} className="p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 hover:text-indigo-500 transition-colors" title="Export CSV"><Download className="h-4 w-4"/></button>
+               <button onClick={handleExportCSV} className="p-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors" title="Export CSV"><Download className="h-4 w-4"/></button>
             </div>
           </div>
 

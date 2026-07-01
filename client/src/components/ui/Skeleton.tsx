@@ -11,7 +11,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className, variant = 'rectan
     <div
       className={twMerge(
         clsx(
-          'shimmer bg-slate-200 dark:bg-slate-800',
+          'shimmer bg-muted',
           variant === 'circle' && 'rounded-full',
           variant === 'text' && 'rounded-md h-4 w-5/6',
           variant === 'rectangle' && 'rounded-2xl',

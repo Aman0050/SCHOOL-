@@ -17,7 +17,7 @@ export const SalesCrmDashboard: React.FC = () => {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Sales Pipeline (CRM)</h1>
           <p className="text-sm text-slate-500">Track prospects and close enterprise deals.</p>
         </div>
-        <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2">
+        <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary flex items-center gap-2">
           <Target className="w-4 h-4" /> Add Lead
         </button>
       </div>
@@ -36,11 +36,11 @@ export const SalesCrmDashboard: React.FC = () => {
                 <h4 className="font-semibold text-sm">Sunrise Academy High</h4>
                 <p className="text-xs text-slate-500 mt-1">Rajesh Sharma • Principal</p>
                 <div className="flex gap-2 mt-3">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600"><Phone className="w-3 h-3" /></span>
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary"><Phone className="w-3 h-3" /></span>
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-600"><Mail className="w-3 h-3" /></span>
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600"><Calendar className="w-3 h-3" /></span>
                 </div>
-                <div className="mt-3 pt-3 border-t text-xs font-bold text-indigo-600">
+                <div className="mt-3 pt-3 border-t text-xs font-bold text-primary">
                   Value: ₹45,000/yr
                 </div>
               </CardContent>

@@ -21,13 +21,13 @@ export const AlertWidget: React.FC<AlertWidgetProps> = ({ alerts }) => {
           className={`flex items-start gap-3 p-4 rounded-xl border-l-4 shadow-sm ${
             alert.severity === 'CRITICAL' ? 'bg-red-50 border-red-500' :
             alert.severity === 'WARNING' ? 'bg-amber-50 border-amber-500' :
-            'bg-blue-50 border-blue-500'
+            'bg-primary/10 border-primary/30'
           }`}
         >
           <div className="mt-0.5 shrink-0">
             {alert.severity === 'CRITICAL' && <AlertCircle className="w-5 h-5 text-red-500" />}
             {alert.severity === 'WARNING' && <AlertTriangle className="w-5 h-5 text-amber-500" />}
-            {alert.severity === 'INFO' && <Info className="w-5 h-5 text-blue-500" />}
+            {alert.severity === 'INFO' && <Info className="w-5 h-5 text-primary" />}
           </div>
           <div className="flex-1">
             <p className={`text-sm font-bold ${

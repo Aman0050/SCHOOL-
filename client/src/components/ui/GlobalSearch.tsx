@@ -176,7 +176,7 @@ export const GlobalSearch: React.FC = () => {
           >
             <div className="flex-1 flex flex-col border-r border-slate-100 dark:border-slate-800 relative">
               <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-slate-800 relative bg-white/50 dark:bg-slate-900/50">
-                <Search className="w-6 h-6 text-indigo-500 shrink-0" />
+                <Search className="w-6 h-6 text-primary shrink-0" />
                 <input
                   ref={inputRef}
                   value={query}
@@ -187,7 +187,7 @@ export const GlobalSearch: React.FC = () => {
                   aria-expanded={isOpen}
                   aria-controls="search-results"
                 />
-                {loading && <Loader2 className="w-5 h-5 text-indigo-500 animate-spin absolute right-14" />}
+                {loading && <Loader2 className="w-5 h-5 text-primary animate-spin absolute right-14" />}
                 <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors">
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
@@ -217,14 +217,14 @@ export const GlobalSearch: React.FC = () => {
                           onClick={() => handleSelect(item)}
                           whileTap={{ scale: 0.98 }}
                           className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all outline-none border border-transparent ${
-                            isSelected ? 'bg-indigo-500/10 border-indigo-500/20 shadow-sm' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700'
+                            isSelected ? 'bg-primary/10 border-primary/30/20 shadow-sm' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700'
                           }`}
                         >
                           {item.type === 'student' || item.type === 'teacher' ? (
                             item.avatarUrl ? (
                               <img src={item.avatarUrl} alt={item.title} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                             ) : (
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border ${isSelected ? 'bg-indigo-500/20 text-indigo-500 border-indigo-500/30' : 'bg-primary/20 text-primary border-primary/30'}`}>
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border ${isSelected ? 'bg-primary/20 text-primary border-primary/30/30' : 'bg-primary/20 text-primary border-primary/30'}`}>
                                 {item.title.charAt(0)}
                               </div>
                             )
@@ -234,7 +234,7 @@ export const GlobalSearch: React.FC = () => {
                                 ? isSelected ? 'bg-amber-500/20 border-amber-500/30 text-amber-500' : 'bg-amber-100 border-amber-200 text-amber-600 dark:bg-amber-500/20 dark:border-amber-500/30 dark:text-amber-400' 
                                 : item.type === 'fee'
                                 ? isSelected ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-500' : 'bg-emerald-100 border-emerald-200 text-emerald-600 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-400'
-                                : isSelected ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-500' : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
+                                : isSelected ? 'bg-primary/20 border-primary/30/30 text-primary' : 'bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
                             }`}>
                               <Icon className="w-5 h-5" />
                             </div>
@@ -242,11 +242,11 @@ export const GlobalSearch: React.FC = () => {
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <p className={`font-semibold text-sm truncate transition-colors ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>
+                              <p className={`font-semibold text-sm truncate transition-colors ${isSelected ? 'text-primary dark:text-primary' : 'text-slate-900 dark:text-white'}`}>
                                 {item.title}
                               </p>
                               <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded flex-shrink-0 transition-colors ${
-                                isSelected ? 'bg-indigo-500/20 text-indigo-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                                isSelected ? 'bg-primary/20 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                               }`}>
                                 {item.type}
                               </span>
@@ -293,8 +293,8 @@ export const GlobalSearch: React.FC = () => {
                     <StudentPreviewCard studentId={selectedItem.data} />
                   ) : selectedItem?.type === 'navigation' ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6">
-                        <Navigation className="w-8 h-8 text-blue-500" />
+                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                        <Navigation className="w-8 h-8 text-primary" />
                       </div>
                       <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">Navigation</h4>
                       <p className="text-sm text-center mt-2 font-medium px-4">Press enter to quickly jump to the {selectedItem.title.replace('Go to ', '')} module.</p>

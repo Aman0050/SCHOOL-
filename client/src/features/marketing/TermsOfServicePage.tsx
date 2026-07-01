@@ -18,7 +18,7 @@ export const TermsOfServicePage: React.FC = () => {
             <p className="text-slate-500 font-medium">Last updated: October 1, 2026</p>
           </div>
 
-          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline">
+          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
             <p>
               Welcome to EduXeno. These Terms of Service ("Terms") govern your access to and use of the EduXeno platform, website, and associated services (collectively, the "Services"). Please read these Terms carefully before using our Services.
             </p>

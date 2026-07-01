@@ -9,6 +9,7 @@ async function main() {
   // 1. Clean existing data
   await prisma.auditLog.deleteMany({});
   await prisma.enrollment.deleteMany({});
+  await prisma.exam.deleteMany({});
   await prisma.class.deleteMany({});
   await prisma.course.deleteMany({});
   await prisma.department.deleteMany({});
@@ -61,6 +62,24 @@ async function main() {
 
   // 4. Create Users for Tenant 1 (Greenwood High)
   console.log('Creating users for Tenant 1...');
+  
+  // Super Admin
+  const superAdmin = await prisma.user.create({
+    data: {
+      tenantId: tenant1.id,
+      email: 'superadmin@eduxeno.com',
+      passwordHash,
+      firstName: 'Super',
+      lastName: 'Admin',
+      role: SystemRole.SUPER_ADMIN,
+    },
+  });
+  await prisma.profile.create({
+    data: {
+      userId: superAdmin.id,
+      phoneNumber: '555-0000',
+    },
+  });
   
   // School Admin
   const admin1 = await prisma.user.create({

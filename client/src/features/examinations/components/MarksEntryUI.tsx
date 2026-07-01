@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Save, Check, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { examApi } from '../api/examApi';
 import type {  Exam, ExamSubject, MarksEntry  } from '../types/exam.types';
+import toast from 'react-hot-toast';
 
 const MarksEntryRow = React.memo(({ 
   m, data, isReadOnly, onMarksChange 
@@ -102,15 +103,15 @@ export const MarksEntryUI: React.FC = () => {
     mutationFn: (entries: Partial<MarksEntry>[]) => examApi.bulkSaveMarks(selectedExamId, entries),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marks', selectedExamId, selectedSubjectId] });
-      alert('Marks saved successfully as Draft.');
+      toast.success('Marks saved as Draft');
     }
   });
 
   const submitMutation = useMutation({
-    mutationFn: () => examApi.submitMarks(selectedExamId, selectedSubjectId),
+    mutationFn: (entries: Partial<MarksEntry>[]) => examApi.bulkSaveMarks(selectedExamId, entries),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marks', selectedExamId, selectedSubjectId] });
-      alert('Marks submitted for verification.');
+      toast.success('Marks submitted for verification');
     }
   });
 
@@ -124,9 +125,26 @@ export const MarksEntryUI: React.FC = () => {
         theoryMarks: updated.theory,
         practicalMarks: updated.practical,
         isAbsent: updated.isAbsent || false,
+        entryStatus: 'DRAFT'
       };
     });
     bulkSaveMutation.mutate(entriesToSave);
+  };
+
+  const handleSubmitVerification = () => {
+    if (!marksEntries) return;
+    const entriesToSave = marksEntries.map(m => {
+      const updated = (marksData[m.studentId] || {}) as { theory?: number; practical?: number; isAbsent?: boolean };
+      return {
+        studentId: m.studentId,
+        subjectId: m.subjectId,
+        theoryMarks: updated.theory,
+        practicalMarks: updated.practical,
+        isAbsent: updated.isAbsent || false,
+        entryStatus: 'SUBMITTED'
+      };
+    });
+    submitMutation.mutate(entriesToSave);
   };
 
   const handleMarksChange = React.useCallback((studentId: string, field: 'theory' | 'practical' | 'isAbsent', value: any) => {
@@ -187,7 +205,7 @@ export const MarksEntryUI: React.FC = () => {
                 Save Draft
               </button>
               <button
-                onClick={() => submitMutation.mutate()}
+                onClick={handleSubmitVerification}
                 disabled={isAllSubmitted || submitMutation.isPending}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
               >

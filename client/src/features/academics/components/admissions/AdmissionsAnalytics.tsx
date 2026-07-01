@@ -58,7 +58,7 @@ export const AdmissionsAnalytics: React.FC<AdmissionsAnalyticsProps> = ({ applic
       {/* High Level Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex items-center gap-4">
-          <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center">
             <Users className="h-5 w-5" />
           </div>
           <div>
@@ -76,7 +76,7 @@ export const AdmissionsAnalytics: React.FC<AdmissionsAnalyticsProps> = ({ applic
           </div>
         </div>
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex items-center gap-4">
-          <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center">
             <CheckCircle2 className="h-5 w-5" />
           </div>
           <div>

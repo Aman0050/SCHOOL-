@@ -42,7 +42,7 @@ export const SuperAdminIntelligence: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm md:col-span-2">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Monthly Recurring Revenue (MRR)</p>
           <div className="flex items-end gap-3">
-            <h2 className="text-4xl font-black text-indigo-600 flex items-center">
+            <h2 className="text-4xl font-black text-primary flex items-center">
               <IndianRupee className="w-8 h-8" /> 2.5L
             </h2>
             <span className="flex items-center text-emerald-500 text-sm font-bold mb-1">

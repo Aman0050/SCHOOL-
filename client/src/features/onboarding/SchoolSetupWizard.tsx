@@ -24,13 +24,13 @@ export const SchoolSetupWizard: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center py-12 px-4">
       <div className="w-full max-w-3xl mb-8">
-        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">Welcome to Edu<span className="text-indigo-600 font-serif italic uppercase font-normal ml-0.5">XENO</span></h1>
+        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">Welcome to Edu<span className="text-primary font-serif italic uppercase font-normal ml-0.5">XENO</span></h1>
         <p className="text-center text-slate-500">Let's get your school up and running in minutes.</p>
         
         {/* Progress Bar */}
         <div className="flex justify-between items-center mt-12 relative">
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 dark:bg-slate-800 z-0"></div>
-          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-indigo-600 z-0 transition-all duration-500" style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%`}}></div>
+          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-primary z-0 transition-all duration-500" style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%`}}></div>
           
           {steps.map(s => {
             const Icon = s.icon;
@@ -40,13 +40,13 @@ export const SchoolSetupWizard: React.FC = () => {
             return (
               <div key={s.num} className="relative z-10 flex flex-col items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                  isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900' :
+                  isActive ? 'bg-primary text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900' :
                   isCompleted ? 'bg-emerald-500 text-white' :
                   'bg-white dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700'
                 }`}>
                   {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                 </div>
-                <span className={`text-xs font-medium mt-2 absolute -bottom-6 w-32 text-center ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}`}>
+                <span className={`text-xs font-medium mt-2 absolute -bottom-6 w-32 text-center ${isActive ? 'text-primary dark:text-primary' : 'text-slate-500'}`}>
                   {s.title}
                 </span>
               </div>
@@ -119,7 +119,7 @@ export const SchoolSetupWizard: React.FC = () => {
               
               <div className="grid grid-cols-1 gap-3">
                 <div 
-                  className={`p-4 border-2 rounded-xl cursor-pointer ${formData.plan === 'STARTER' ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10' : 'border-slate-200 dark:border-slate-700'}`}
+                  className={`p-4 border-2 rounded-xl cursor-pointer ${formData.plan === 'STARTER' ? 'border-indigo-600 bg-primary/10 dark:bg-primary/10' : 'border-slate-200 dark:border-slate-700'}`}
                   onClick={() => setFormData({...formData, plan: 'STARTER'})}
                 >
                   <div className="flex justify-between items-center">
@@ -132,7 +132,7 @@ export const SchoolSetupWizard: React.FC = () => {
                 </div>
 
                 <div 
-                  className={`p-4 border-2 rounded-xl cursor-pointer ${formData.plan === 'ENTERPRISE' ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10' : 'border-slate-200 dark:border-slate-700'}`}
+                  className={`p-4 border-2 rounded-xl cursor-pointer ${formData.plan === 'ENTERPRISE' ? 'border-indigo-600 bg-primary/10 dark:bg-primary/10' : 'border-slate-200 dark:border-slate-700'}`}
                   onClick={() => setFormData({...formData, plan: 'ENTERPRISE'})}
                 >
                   <div className="flex justify-between items-center">

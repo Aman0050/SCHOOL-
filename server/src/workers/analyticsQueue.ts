@@ -4,22 +4,41 @@ import { prisma } from '../config/db';
 import { analyticsService } from '../services/analyticsService';
 import { cache } from '../lib/cache';
 
-const redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
 
-export const analyticsQueue = new (class {
-  constructor(...args: any[]) {}
-  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
-})('analytics', { 
-  connection: redisConnection as any,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 2000 },
-    removeOnComplete: true,
+
+const hasRedis = !!process.env.REDIS_URL;
+let redisConnection: any = null;
+if (hasRedis) {
+  redisConnection = new IORedis(process.env.REDIS_URL as string, { maxRetriesPerRequest: null });
+} else {
+  // Stub for missing Redis
+  redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
+}
+
+class MockQueue {
+  async add(name: string, data: any) {
+    console.log(`[Mock Queue] Added job: ${name}`);
+    // Immediately execute it for dev mode without Redis
+    if (name === 'refresh-tenant-analytics') {
+      await processAnalyticsJob({ name, data } as any);
+    }
+    return { id: 'stub' };
   }
-});
+}
 
-const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })('analytics', async (job: Job) => {
-  console.log(`Processing analytics job ${job.id} of type ${job.name}`);
+export const analyticsQueue = hasRedis 
+  ? new Queue('analytics', { 
+      connection: redisConnection,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+      }
+    })
+  : new MockQueue() as any;
+
+async function processAnalyticsJob(job: Job) {
+  console.log(`Processing analytics job ${job.id || 'stub'} of type ${job.name}`);
   
   if (job.name === 'refresh-all-analytics') {
     const tenants = await prisma.tenant.findMany({ select: { id: true } });
@@ -30,43 +49,25 @@ const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {}
 
   if (job.name === 'refresh-tenant-analytics') {
     const { tenantId } = job.data;
-    const attData = await analyticsService.getAttendanceIntelligence(tenantId);
-    const feeData = await analyticsService.getFeeIntelligence(tenantId);
-    const healthData = await analyticsService.getSchoolHealthScore(tenantId);
-    const alertData = await analyticsService.getSystemAlerts(tenantId);
-
-    const aggregatedData = {
-      attendance: attData,
-      fees: feeData,
-      health: healthData,
-      alerts: alertData
-    };
+    
+    // We will call getExecutiveDashboardMetrics which we'll build in Phase 2
+    const aggregatedData = await analyticsService.getExecutiveDashboardMetrics(tenantId);
 
     const cacheKey = `tenant:${tenantId}:dashboard:aggregate`;
     await cache.set(cacheKey, aggregatedData, 3600);
-    
-    // Also set individual keys if needed
-    await cache.set(`tenant:${tenantId}:attendance`, attData, 3600);
-    await cache.set(`tenant:${tenantId}:fees`, feeData, 3600);
-    await cache.set(`tenant:${tenantId}:health-score`, healthData, 3600);
 
     console.log(`Analytics refreshed successfully for tenant ${tenantId}`);
   }
+}
 
-  if (job.name === 'calculate-health-score') {
-    const { tenantId, schoolId } = job.data;
-    console.log(`Health score calculated for school ${schoolId} (tenant: ${tenantId})`);
-  }
-  
-  if (job.name === 'detect-risk') {
-    const { tenantId, studentId } = job.data;
-  }
-}, { connection: redisConnection as any });
+let worker: any = null;
+if (hasRedis) {
+  worker = new Worker('analytics', processAnalyticsJob, { connection: redisConnection });
+  worker.on('completed', (job: any) => {
+    console.log(`Job ${job.id} (${job.name}) has completed!`);
+  });
+  worker.on('failed', (job: any, err: any) => {
+    console.log(`Job ${job?.id} (${job?.name}) has failed with ${err.message}`);
+  });
+}
 
-worker.on('completed', (job: any) => {
-  console.log(`Job ${job.id} (${job.name}) has completed!`);
-});
-
-worker.on('failed', (job: any, err: any) => {
-  console.log(`Job ${job?.id} (${job?.name}) has failed with ${err.message}`);
-});

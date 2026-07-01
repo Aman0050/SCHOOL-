@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getApplicants, createApplicant, updateApplicantStage, enrollApplicant, updateDocumentStatus, addAssessmentResult, uploadApplicantDocument } from '../controllers/applicantController';
 import { authenticate } from '../middlewares/auth';
 import multer from 'multer';
+import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 
@@ -14,7 +15,7 @@ if (!fs.existsSync(uploadDir)) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(4).toString('hex');
     cb(null, 'doc-' + uniqueSuffix + path.extname(file.originalname));
   }
 });

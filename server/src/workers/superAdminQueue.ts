@@ -4,19 +4,34 @@ import { prisma } from '../config/db';
 import { cache } from '../lib/cache';
 import { broadcastSuperAdminUpdate } from '../lib/socketManager';
 
-const redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
+const hasRedis = !!process.env.REDIS_URL;
+let redisConnection: any = null;
+if (hasRedis) {
+  redisConnection = new IORedis(process.env.REDIS_URL as string, { maxRetriesPerRequest: null });
+} else {
+  redisConnection = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })();
+}
 
-export const superAdminQueue = new (class {
-  constructor(...args: any[]) {}
-  add(...args: any[]) { return Promise.resolve({ id: 'stub' }); }
-})('superadmin-aggregation', {
-  connection: redisConnection as any,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 2000 },
-    removeOnComplete: true,
-  },
-});
+class MockQueue {
+  async add(name: string, data: any) {
+    console.log(`[Mock Queue] Added job: ${name}`);
+    if (name === 'aggregate-dashboard') {
+      await processSuperAdminJob({ name, data } as any);
+    }
+    return { id: 'stub' };
+  }
+}
+
+export const superAdminQueue = hasRedis
+  ? new Queue('superadmin-aggregation', {
+      connection: redisConnection,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+      }
+    })
+  : new MockQueue() as any;
 
 const calculateMRR = async (activeSubs: any[]) => {
   return activeSubs.reduce((sum, t) => {
@@ -27,7 +42,7 @@ const calculateMRR = async (activeSubs: any[]) => {
   }, 0);
 };
 
-const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {} })('superadmin-aggregation', async (job: Job) => {
+export async function processSuperAdminJob(job: Job | any) {
   console.log(`[SuperAdminQueue] Processing job: ${job.name}`);
 
   if (job.name === 'aggregate-dashboard') {
@@ -148,8 +163,12 @@ const worker = new (class { constructor(...args: any[]) {} on(...args: any[]) {}
 
     return payload;
   }
-}, { connection: redisConnection as any });
+}
 
-worker.on('failed', (job: any, err: any) => {
-  console.error(`[SuperAdminQueue] Job ${job?.id} failed:`, err);
-});
+let worker: any = null;
+if (hasRedis) {
+  worker = new Worker('superadmin-aggregation', processSuperAdminJob as any, { connection: redisConnection });
+  worker.on('failed', (job: any, err: any) => {
+    console.error(`[SuperAdminQueue] Job ${job?.id} failed:`, err);
+  });
+}

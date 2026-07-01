@@ -9,7 +9,7 @@ export const HardwareSyncStatus: React.FC<any> = () => {
           <Cpu className="h-5 w-5 text-slate-500" />
           Hardware Integration
         </h3>
-        <button className="p-2 bg-slate-50 dark:bg-slate-700 rounded-lg text-slate-500 hover:text-blue-500 transition-colors">
+        <button className="p-2 bg-slate-50 dark:bg-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors">
           <RefreshCw className="h-4 w-4" />
         </button>
       </div>

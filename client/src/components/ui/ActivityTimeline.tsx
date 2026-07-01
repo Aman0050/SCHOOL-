@@ -24,7 +24,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ events }) =>
       case 'warning': return 'text-amber-500 bg-amber-100 dark:bg-amber-500/20';
       case 'error': return 'text-red-500 bg-red-100 dark:bg-red-500/20';
       case 'info':
-      default: return 'text-blue-500 bg-blue-100 dark:bg-blue-500/20';
+      default: return 'text-primary bg-primary/10 dark:bg-primary/20';
     }
   };
 

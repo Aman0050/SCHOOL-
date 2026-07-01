@@ -25,7 +25,7 @@ export const RevenueDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-indigo-500">
+        <Card className="border-t-4 border-primary/30">
           <CardContent className="p-6">
             <p className="text-sm font-medium text-slate-500">Annual Recurring Revenue (ARR)</p>
             <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-2 flex items-center gap-1">
@@ -37,11 +37,11 @@ export const RevenueDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-t-4 border-blue-500">
+        <Card className="border-t-4 border-primary/30">
           <CardContent className="p-6">
             <p className="text-sm font-medium text-slate-500">Active Subscriptions</p>
             <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-2 flex items-center gap-2">
-              <Users className="w-6 h-6 text-blue-500" /> 142
+              <Users className="w-6 h-6 text-primary" /> 142
             </h3>
             <div className="flex items-center text-sm mt-4 text-emerald-600">
               <ArrowUpRight className="w-4 h-4 mr-1" /> +8 new this month

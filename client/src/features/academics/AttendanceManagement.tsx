@@ -21,6 +21,8 @@ import { LiveAttendanceFeed } from './components/attendance/dashboard/LiveAttend
 
 import { syncEngine } from '../../lib/syncEngine';
 
+import toast from 'react-hot-toast';
+
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const AttendanceRow = React.memo(({ 
@@ -56,7 +58,7 @@ const AttendanceRow = React.memo(({
                   ? status === 'PRESENT' ? 'bg-emerald-500 text-white shadow-sm'
                   : status === 'ABSENT' ? 'bg-red-500 text-white shadow-sm'
                   : status === 'LATE' ? 'bg-amber-500 text-white shadow-sm'
-                  : 'bg-purple-500 text-white shadow-sm'
+                  : 'bg-primary text-white shadow-sm'
                   : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800'
               }`}
             >
@@ -85,6 +87,16 @@ export const AttendanceManagement: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['attendanceStats'],
     queryFn: () => api.get('/analytics/attendance').then((res) => res.data.data),
+  });
+
+  const { data: alerts } = useQuery({
+    queryKey: ['attendanceAlerts'],
+    queryFn: () => api.get('/attendance/alerts').then((res) => res.data.data || []),
+  });
+
+  const { data: submissionStatus } = useQuery({
+    queryKey: ['submissionStatus'],
+    queryFn: () => api.get('/attendance/submission-status').then((res) => res.data.data),
   });
 
   // 2. Fetch Classes
@@ -172,10 +184,11 @@ export const AttendanceManagement: React.FC = () => {
       if (context?.previousAttendance) {
         queryClient.setQueryData(['existing-attendance', rosterClassId, rosterDate], context.previousAttendance);
       }
-      alert('Failed to save attendance. Changes rolled back.');
+      toast.error('Failed to save attendance. Changes rolled back.');
     },
     onSuccess: () => {
       // We don't necessarily need to wait for invalidation if the optimistic UI handles it, but good to refresh stats
+      toast.success('Attendance saved successfully');
       queryClient.invalidateQueries({ queryKey: ['attendanceStats'] });
     },
     onSettled: () => {
@@ -208,6 +221,19 @@ export const AttendanceManagement: React.FC = () => {
     setAttendanceStates(prev => ({ ...prev, [studentId]: status }));
   }, []);
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (rosterClassId && students.length > 0) {
+          handleBulkSubmit();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [rosterClassId, students, attendanceStates]);
+
   if (statsLoading && activeTab === 'dashboard') {
     return <PageSkeleton />;
   }
@@ -219,7 +245,7 @@ export const AttendanceManagement: React.FC = () => {
           onClick={() => setActiveTab('dashboard')}
           className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-all ${
             activeTab === 'dashboard'
-              ? 'border-blue-500 text-blue-500'
+              ? 'border-primary/30 text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
@@ -230,7 +256,7 @@ export const AttendanceManagement: React.FC = () => {
           onClick={() => setActiveTab('workspace')}
           className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-all ${
             activeTab === 'workspace'
-              ? 'border-blue-500 text-blue-500'
+              ? 'border-primary/30 text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
@@ -247,19 +273,35 @@ export const AttendanceManagement: React.FC = () => {
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
             rowHeight={70}
+            layouts={{ lg: layout, md: layout, sm: layout, xs: layout, xxs: layout }}
+            onLayoutChange={(currentLayout) => saveLayout(currentLayout as any[])}
             draggableHandle=".drag-handle"
-            isDraggable={false}
-            isResizable={false}
+            isDraggable={true}
+            isResizable={true}
             margin={[16, 16]}
           >
-            <div key="attendanceHero" data-grid={{ x: 0, y: 0, w: 12, h: 3, static: true }}>
-              <AttendanceExecutiveHero stats={stats} />
-            </div>
-            <div key="healthScore" data-grid={{ x: 0, y: 3, w: 4, h: 3 }} className="h-full"><AttendanceHealth stats={stats} /></div>
-            <div key="realTimeMonitoring" data-grid={{ x: 4, y: 3, w: 8, h: 3 }} className="h-full"><RealTimeMonitoring stats={stats} /></div>
-            <div key="studentAnalytics" data-grid={{ x: 0, y: 6, w: 8, h: 4 }} className="h-full"><StudentAnalyticsCharts /></div>
-            <div key="smartAlerts" data-grid={{ x: 8, y: 6, w: 4, h: 4 }} className="h-full"><SmartAlerts /></div>
-            <div key="liveFeed" data-grid={{ x: 0, y: 10, w: 12, h: 5 }} className="h-full"><LiveAttendanceFeed /></div>
+            {layout.map((item: any) => {
+              const isStatic = item.static;
+              return (
+                <div key={item.i} className={isStatic ? '' : 'h-full group relative'}>
+                  {!isStatic && (
+                    <div className="drag-handle cursor-move absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded shadow-sm z-10 transition-opacity">
+                      <div className="flex gap-1">
+                        <div className="w-1 h-1 bg-slate-400 rounded-full pointer-events-none" />
+                        <div className="w-1 h-1 bg-slate-400 rounded-full pointer-events-none" />
+                        <div className="w-1 h-1 bg-slate-400 rounded-full pointer-events-none" />
+                      </div>
+                    </div>
+                  )}
+                  {item.i === 'attendanceHero' && <AttendanceExecutiveHero stats={stats} />}
+                  {item.i === 'healthScore' && <div className="h-full"><AttendanceHealth stats={stats} /></div>}
+                  {item.i === 'realTimeMonitoring' && <div className="h-full"><RealTimeMonitoring submissionStatus={submissionStatus} /></div>}
+                  {item.i === 'studentAnalytics' && <div className="h-full"><StudentAnalyticsCharts stats={stats} /></div>}
+                  {item.i === 'smartAlerts' && <div className="h-full"><SmartAlerts alerts={alerts} /></div>}
+                  {item.i === 'liveFeed' && <div className="h-full"><LiveAttendanceFeed /></div>}
+                </div>
+              );
+            })}
           </ResponsiveGridLayout>
         </div>
       )}
@@ -298,7 +340,7 @@ export const AttendanceManagement: React.FC = () => {
             </div>
           ) : studentsLoading ? (
             <div className="p-12 text-center flex justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
             <div>
@@ -310,7 +352,7 @@ export const AttendanceManagement: React.FC = () => {
                 <button 
                   onClick={handleBulkSubmit}
                   disabled={recordBulkMutation.isPending}
-                  className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors font-semibold"
                 >
                   {recordBulkMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   Save Attendance
@@ -338,6 +380,17 @@ export const AttendanceManagement: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              
+              {/* Status Bar */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs text-slate-500">
+                <div className="flex gap-4">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> All students marked</span>
+                  <span>Press <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-slate-700 dark:text-slate-300">Ctrl+S</kbd> to quick save</span>
+                </div>
+                <div>
+                  {recordBulkMutation.isPending ? 'Saving...' : 'Ready'}
+                </div>
               </div>
             </div>
           )}

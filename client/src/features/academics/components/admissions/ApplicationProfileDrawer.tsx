@@ -110,7 +110,7 @@ const DocumentCenter: React.FC<{ applicant: any; onRefresh: () => void }> = ({ a
           </span>
           <button
             onClick={() => setShowUploadPanel(p => !p)}
-            className="flex items-center gap-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold bg-primary hover:bg-primary text-white px-3 py-1.5 rounded-lg transition-colors"
           >
             <Plus className="h-3.5 w-3.5" /> Upload Document
           </button>
@@ -119,8 +119,8 @@ const DocumentCenter: React.FC<{ applicant: any; onRefresh: () => void }> = ({ a
 
       {/* Upload panel */}
       {showUploadPanel && (
-        <div className="p-4 border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex flex-col gap-3">
-          <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Upload a new document</p>
+        <div className="p-4 border border-primary/30 dark:border-primary/30/30 bg-primary/10 dark:bg-primary/10 rounded-xl flex flex-col gap-3">
+          <p className="text-sm font-semibold text-primary dark:text-indigo-300">Upload a new document</p>
           <div className="flex gap-3">
             <select
               value={selectedType}
@@ -129,7 +129,7 @@ const DocumentCenter: React.FC<{ applicant: any; onRefresh: () => void }> = ({ a
             >
               {DOC_TYPES.map(t => <option key={t}>{t}</option>)}
             </select>
-            <label className={`flex items-center gap-2 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
+            <label className={`flex items-center gap-2 cursor-pointer bg-primary hover:bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               {uploading ? 'Uploading…' : 'Choose File'}
               <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
@@ -167,14 +167,14 @@ const DocumentCenter: React.FC<{ applicant: any; onRefresh: () => void }> = ({ a
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button
                   onClick={() => handleView(doc.fileUrl)}
-                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded transition-colors"
                   title="Preview"
                 >
                   <Eye className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleDownload(doc.fileUrl, doc.name)}
-                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded transition-colors"
                   title="Download"
                 >
                   <Download className="h-4 w-4" />
@@ -243,15 +243,15 @@ const AssessmentTab: React.FC<{ applicant: any; onRefresh: () => void }> = ({ ap
         <h3 className="font-bold text-lg text-slate-900 dark:text-white">Assessment Results</h3>
         <button
           onClick={() => setShowForm(p => !p)}
-          className="flex items-center gap-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-xs font-bold bg-primary hover:bg-primary text-white px-3 py-1.5 rounded-lg transition-colors"
         >
           <Plus className="h-3.5 w-3.5" /> Record Results
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="p-4 border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex flex-col gap-3">
-          <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">New Assessment Entry</p>
+        <form onSubmit={handleSubmit} className="p-4 border border-primary/30 dark:border-primary/30/30 bg-primary/10 dark:bg-primary/10 rounded-xl flex flex-col gap-3">
+          <p className="text-sm font-semibold text-primary dark:text-indigo-300">New Assessment Entry</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Type</label>
@@ -290,7 +290,7 @@ const AssessmentTab: React.FC<{ applicant: any; onRefresh: () => void }> = ({ ap
               className="px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none" />
           </div>
           <button type="submit" disabled={submitting}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+            className="bg-primary hover:bg-primary disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {submitting ? 'Saving…' : 'Save Assessment'}
           </button>
@@ -316,7 +316,7 @@ const AssessmentTab: React.FC<{ applicant: any; onRefresh: () => void }> = ({ ap
                 </div>
                 <div className="flex items-center gap-2">
                   {a.score != null && (
-                    <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{Number(a.score).toFixed(0)}<span className="text-xs text-slate-400">/100</span></span>
+                    <span className="text-lg font-bold text-primary dark:text-primary">{Number(a.score).toFixed(0)}<span className="text-xs text-slate-400">/100</span></span>
                   )}
                   <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
                     a.decision === 'Selected' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
@@ -358,7 +358,7 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
       {/* Header */}
       <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-start">
         <div className="flex gap-4 items-center">
-          <div className="h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center text-xl font-bold shadow-sm border-2 border-white dark:border-slate-800">
+          <div className="h-16 w-16 rounded-full bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary flex items-center justify-center text-xl font-bold shadow-sm border-2 border-white dark:border-slate-800">
             {applicant?.firstName?.[0] || ''}{applicant?.lastName?.[0] || ''}
           </div>
           <div>
@@ -391,7 +391,7 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 pb-3 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${
                 isActive
-                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                  ? 'border-primary/30 text-primary dark:text-primary'
                   : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
@@ -411,14 +411,14 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center justify-between">
                 Admission Pipeline Status
-                <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 px-2 py-1 rounded-full">
+                <span className="text-xs font-semibold bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary px-2 py-1 rounded-full">
                   {Math.round(((currentStepIndex + 1) / PIPELINE_STEPS.length) * 100)}% Complete
                 </span>
               </h3>
               <div className="relative">
                 <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" />
                 <div
-                  className="absolute left-[15px] top-0 w-0.5 bg-indigo-500 transition-all duration-500"
+                  className="absolute left-[15px] top-0 w-0.5 bg-primary transition-all duration-500"
                   style={{ height: `${(currentStepIndex / (PIPELINE_STEPS.length - 1)) * 100}%` }}
                 />
                 <div className="flex flex-col gap-6">
@@ -429,7 +429,7 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
                       <div key={step.id} className="relative flex items-center gap-4">
                         <div className={`z-10 h-8 w-8 rounded-full flex items-center justify-center border-2 ${
                           isCompleted
-                            ? 'bg-indigo-500 border-indigo-500 text-white'
+                            ? 'bg-primary border-primary/30 text-white'
                             : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-400'
                         } ${isCurrent ? 'ring-4 ring-indigo-500/20' : ''}`}>
                           {isCompleted ? <Check className="h-4 w-4" /> : <span className="text-xs font-bold">{index + 1}</span>}
@@ -438,7 +438,7 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
                           <h4 className={`font-semibold text-sm ${isCompleted ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
                             {step.label}
                           </h4>
-                          {isCurrent && <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mt-0.5">Current Stage</p>}
+                          {isCurrent && <p className="text-xs text-primary dark:text-primary font-medium mt-0.5">Current Stage</p>}
                         </div>
                         {isCurrent && index < PIPELINE_STEPS.length - 1 && (
                           <button
@@ -450,7 +450,7 @@ export const ApplicationProfileDrawer: React.FC<ApplicationProfileDrawerProps> =
                                 onUpdateStage(nextStep.id, nextStep.label);
                               }
                             }}
-                            className="text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 dark:text-indigo-400 px-3 py-1.5 rounded-lg transition-colors"
+                            className="text-xs font-bold bg-primary/10 hover:bg-primary/10 text-primary dark:bg-primary/10 dark:hover:bg-primary/20 dark:text-primary px-3 py-1.5 rounded-lg transition-colors"
                           >
                             Mark Complete
                           </button>

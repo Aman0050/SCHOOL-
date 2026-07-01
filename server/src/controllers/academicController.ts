@@ -56,6 +56,7 @@ export const createDepartment = async (req: Request, res: Response, next: NextFu
 
     const department = await prisma.department.create({
       data: {
+        tenantId: req.user!.tenantId,
         schoolId,
         name,
       },
@@ -102,6 +103,7 @@ export const createCourse = async (req: Request, res: Response, next: NextFuncti
 
     const course = await prisma.course.create({
       data: {
+        tenantId: req.user!.tenantId,
         departmentId,
         name,
         code,
@@ -130,10 +132,33 @@ export const createCourse = async (req: Request, res: Response, next: NextFuncti
 export const getClasses = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const classes = await prisma.class.findMany({
+      where: { tenantId: req.user!.tenantId },
       include: { school: true, course: true },
       orderBy: { name: 'asc' },
     });
     res.status(200).json({ success: true, data: classes });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTeachers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teachers = await prisma.user.findMany({
+      where: { 
+        tenantId: req.user!.tenantId,
+        role: 'TEACHER',
+        isActive: true,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+      orderBy: { firstName: 'asc' },
+    });
+    res.status(200).json({ success: true, data: teachers });
   } catch (error) {
     next(error);
   }
@@ -152,6 +177,7 @@ export const createClass = async (req: Request, res: Response, next: NextFunctio
 
     const newClass = await prisma.class.create({
       data: {
+        tenantId: req.user!.tenantId,
         schoolId,
         courseId,
         name,

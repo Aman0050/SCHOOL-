@@ -8,6 +8,9 @@ export const AcademicAnalytics: React.FC = () => {
   const { data: examData, isLoading } = useQuery({
     queryKey: ['analytics', 'exams'],
     queryFn: () => api.get('/analytics/exams').then(res => res.data.data),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
@@ -23,7 +26,7 @@ export const AcademicAnalytics: React.FC = () => {
       <div className="flex-1 flex flex-col h-full">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-indigo-500" />
+            <GraduationCap className="w-5 h-5 text-primary" />
             Subject Proficiency
           </h3>
         </div>

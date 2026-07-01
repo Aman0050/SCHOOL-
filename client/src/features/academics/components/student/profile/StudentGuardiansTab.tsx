@@ -23,7 +23,7 @@ export const StudentGuardiansTab: React.FC<StudentGuardiansTabProps> = ({ studen
   return (
     <div className="p-6 animate-fade-in space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <ShieldAlert className="h-5 w-5 text-indigo-500" />
+        <ShieldAlert className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-bold text-slate-800 dark:text-white">Emergency Contacts</h3>
       </div>
 
@@ -35,8 +35,8 @@ export const StudentGuardiansTab: React.FC<StudentGuardiansTabProps> = ({ studen
           return (
             <div key={relation.id} className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row gap-6 items-start">
               <div className="flex-shrink-0">
-                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 flex items-center justify-center border border-indigo-200 dark:border-indigo-800">
-                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 flex items-center justify-center border border-primary/30 dark:border-primary/30">
+                  <span className="text-2xl font-bold text-primary dark:text-primary">
                     {parent.firstName.charAt(0)}{parent.lastName.charAt(0)}
                   </span>
                 </div>
@@ -59,7 +59,7 @@ export const StudentGuardiansTab: React.FC<StudentGuardiansTabProps> = ({ studen
                       <div className="p-1.5 bg-slate-100 dark:bg-slate-700 rounded-md">
                         <Phone className="h-4 w-4 text-slate-500" />
                       </div>
-                      <a href={`tel:${profile.phoneNumber}`} className="hover:text-indigo-500 font-medium transition-colors">
+                      <a href={`tel:${profile.phoneNumber}`} className="hover:text-primary font-medium transition-colors">
                         {profile.phoneNumber}
                       </a>
                     </div>
@@ -70,7 +70,7 @@ export const StudentGuardiansTab: React.FC<StudentGuardiansTabProps> = ({ studen
                       <div className="p-1.5 bg-slate-100 dark:bg-slate-700 rounded-md">
                         <Mail className="h-4 w-4 text-slate-500" />
                       </div>
-                      <a href={`mailto:${parent.email}`} className="hover:text-indigo-500 font-medium transition-colors truncate">
+                      <a href={`mailto:${parent.email}`} className="hover:text-primary font-medium transition-colors truncate">
                         {parent.email}
                       </a>
                     </div>

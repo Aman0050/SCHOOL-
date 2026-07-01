@@ -41,7 +41,7 @@ export const AttendanceIntelligence: React.FC = () => {
         </div>
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Best Class</p>
-          <h2 className="text-4xl font-black text-indigo-600">10-A</h2>
+          <h2 className="text-4xl font-black text-primary">10-A</h2>
           <p className="text-sm text-slate-500 mt-1">98% average</p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-red-200 shadow-sm relative overflow-hidden group">

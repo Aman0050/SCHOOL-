@@ -8,7 +8,7 @@ export const SupportDashboard: React.FC = () => {
   const { data: stats, isLoading } = useDashboardStats();
   const { user } = useAuth();
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
 
   return (
     <div className="space-y-6">
@@ -30,7 +30,7 @@ export const SupportDashboard: React.FC = () => {
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary rounded-xl flex items-center justify-center">
             <Clock className="w-6 h-6" />
           </div>
           <div>

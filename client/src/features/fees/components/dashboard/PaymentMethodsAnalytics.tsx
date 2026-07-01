@@ -1,5 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/ui/Card';
 
 export const PaymentMethodsAnalytics: React.FC<any> = ({ methods }) => {
   const data = Object.keys(methods || {}).map(key => ({
@@ -11,12 +12,16 @@ export const PaymentMethodsAnalytics: React.FC<any> = ({ methods }) => {
     data.push({ name: 'No Data', value: 1 });
   }
 
+  // Use token-equivalent hex codes or rely on CSS vars if possible
+  // For Recharts we often need hex, but these match the emerald, blue, amber, violet palette.
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#64748b'];
 
   return (
-    <div className="h-full w-full bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 flex flex-col overflow-hidden">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Payment Methods</h3>
-      <div className="flex-1 w-full min-h-[200px]">
+    <Card className="h-full w-full flex flex-col overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-h4">Payment Methods</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 w-full min-h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -40,7 +45,7 @@ export const PaymentMethodsAnalytics: React.FC<any> = ({ methods }) => {
             <Legend />
           </PieChart>
         </ResponsiveContainer>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

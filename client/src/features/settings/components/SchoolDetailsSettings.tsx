@@ -37,7 +37,7 @@ export const SchoolDetailsSettings: React.FC = () => {
     updateSchool.mutate(formData);
   };
 
-  if (isLoading) return <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>;
+  if (isLoading) return <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8">

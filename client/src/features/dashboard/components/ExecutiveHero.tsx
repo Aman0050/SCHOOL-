@@ -1,109 +1,60 @@
 import React, { useState } from 'react';
-import { ShieldCheck, ArrowRight, Loader2, DownloadCloud } from 'lucide-react';
+import { DownloadCloud, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import api from '../../../lib/api';
-import { useQuery } from '@tanstack/react-query';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-const ScoreRing = ({ score, title, color }: { score: number, title: string, color: string }) => {
-  const data = [
-    { name: 'Score', value: score },
-    { name: 'Remaining', value: 100 - score },
-  ];
+import { useQuery } from '@tanstack/react-query';
+
+const KpiCard = React.memo(({ kpi }: { kpi: any }) => {
   return (
-    <div className="flex flex-col items-center justify-center relative w-20 h-20 sm:w-24 sm:h-24">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius="75%"
-            outerRadius="100%"
-            startAngle={90}
-            endAngle={-270}
-            dataKey="value"
-            stroke="none"
-          >
-            <Cell fill={color} />
-            <Cell fill="rgba(255,255,255,0.1)" />
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-sm sm:text-lg font-bold text-white">{score}</span>
+    <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:bg-white/10 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+      <div className="flex justify-between items-start mb-2">
+        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">{kpi.label}</span>
+        <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${kpi.trendUp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+          {kpi.trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          {kpi.trend}
+        </div>
       </div>
-      <span className="absolute -bottom-6 text-[10px] sm:text-xs font-semibold text-slate-300 uppercase tracking-wider text-center w-32">{title}</span>
+      <div className="text-2xl font-bold text-white group-hover:scale-105 transition-transform origin-left">
+        {kpi.value}
+      </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return prevProps.kpi.value === nextProps.kpi.value && prevProps.kpi.trend === nextProps.kpi.trend;
+});
 
-export const ExecutiveHero: React.FC<any> = () => {
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const { data: healthData } = useQuery({
-    queryKey: ['analytics', 'health'],
-    queryFn: () => api.get('/analytics/health').then(res => res.data.data),
+export const ExecutiveHero: React.FC = () => {
+  const { data: kpisData, isLoading } = useQuery({
+    queryKey: ['dashboard', 'executiveKpis'],
+    queryFn: () => api.get('/dashboard/executive-kpis').then(res => res.data),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  const handleDownload = async () => {
-    try {
-      setIsGenerating(true);
-      const response = await api.get('/analytics/daily-report', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'Daily_Operations_Report.pdf');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Download failed:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const overall = healthData?.overallScore || 92;
-  const academic = healthData?.breakdown?.academics || 88;
-  const financial = 85; // Mock financial health
+  const kpis = kpisData?.kpis || [];
 
   return (
-    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-6 flex items-center justify-between shadow-lg border border-slate-700 overflow-visible relative">
-      <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
-      <div className="absolute right-40 -bottom-20 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
+    <div className="w-full h-full rounded-2xl bg-slate-900 p-6 flex flex-col justify-between shadow-lg overflow-hidden relative text-white">
+      <div className="absolute -right-40 -top-40 w-96 h-96 bg-primary/20 rounded-full blur-[80px] pointer-events-none animate-pulse"></div>
+      <div className="absolute left-20 -bottom-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
       
-      <div className="z-10 flex items-center gap-6 text-white max-w-xl">
-        <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/10 hidden sm:block shadow-xl">
-          <ShieldCheck className="h-10 w-10 text-emerald-400" />
-        </div>
+      <div className="flex justify-between items-center z-10 mb-6">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">Executive Dashboard</h2>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Real-time intelligence on school health. Academic performance is up 3.2% this quarter. Cash flow remains stable.
-          </p>
+          <h2 className="text-3xl font-extrabold tracking-tight text-white mb-1">Executive Command Center</h2>
         </div>
       </div>
 
-      <div className="z-10 hidden lg:flex items-center gap-10 mt-4 mr-4">
-        <div className="flex gap-8 border-r border-white/10 pr-10">
-          <ScoreRing score={overall} title="Overall Health" color="#10b981" />
-          <ScoreRing score={academic} title="Academic Health" color="#8b5cf6" />
-          <ScoreRing score={financial} title="Financial Health" color="#f59e0b" />
+      {!kpis || kpis.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center z-10 min-h-[200px]">
+          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
         </div>
-        
-        <button 
-          onClick={handleDownload}
-          disabled={isGenerating}
-          className="flex flex-col items-center justify-center gap-2 group outline-none"
-        >
-          <div className="h-14 w-14 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-indigo-500/20">
-            {isGenerating ? <Loader2 className="h-6 w-6 text-indigo-300 animate-spin" /> : <DownloadCloud className="h-6 w-6 text-indigo-300 group-hover:text-indigo-200 transition-colors" />}
-          </div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors">
-            {isGenerating ? 'Generating' : 'Daily PDF'}
-          </span>
-        </button>
-      </div>
+      ) : (
+        <div className="z-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 overflow-y-auto max-h-[400px] custom-scrollbar pr-2">
+          {kpis.map((kpi: any) => (
+            <KpiCard key={kpi.id} kpi={kpi} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

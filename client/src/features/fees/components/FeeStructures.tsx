@@ -12,7 +12,7 @@ import {
   BookOpen,
   CheckSquare,
 } from 'lucide-react';
-import { useFeeStructures, useCreateStructure, useFeeCategories } from '../api/feeApi';
+import { useFeeStructures, useCreateStructure, useFeeCategories, useDeleteStructure } from '../api/feeApi';
 import type { FeeStructure } from '../types/fee.types';
 
 const fmt = (v: string | number) => `₹${parseFloat(String(v)).toLocaleString('en-IN')}`;
@@ -31,6 +31,14 @@ interface StructureFormData {
 
 const StructureCard: React.FC<{ structure: FeeStructure }> = ({ structure }) => {
   const [expanded, setExpanded] = useState(false);
+  const deleteMutation = useDeleteStructure();
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete or archive this fee structure?')) {
+      deleteMutation.mutate(structure.id);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-sm overflow-hidden">
@@ -39,8 +47,8 @@ const StructureCard: React.FC<{ structure: FeeStructure }> = ({ structure }) => 
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-4">
-          <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-            <ListTree className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="h-10 w-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <ListTree className="h-5 w-5 text-primary dark:text-primary" />
           </div>
           <div>
             <p className="font-bold text-slate-900 dark:text-white">{structure.name}</p>
@@ -73,8 +81,17 @@ const StructureCard: React.FC<{ structure: FeeStructure }> = ({ structure }) => 
               Inactive
             </span>
           )}
+          
+          <button
+            onClick={handleDelete}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-2"
+            title="Delete Structure"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+
           {expanded ? (
-            <ChevronDown className="h-4 w-4 text-slate-400" />
+            <ChevronDown className="h-4 w-4 text-slate-400 ml-1" />
           ) : (
             <ChevronRight className="h-4 w-4 text-slate-400" />
           )}
@@ -189,7 +206,7 @@ const FeeStructures: React.FC = () => {
       {showForm && (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
-            <ListTree className="h-5 w-5 text-blue-500" />
+            <ListTree className="h-5 w-5 text-primary" />
             <h3 className="font-bold text-slate-900 dark:text-white">New Fee Structure</h3>
           </div>
 

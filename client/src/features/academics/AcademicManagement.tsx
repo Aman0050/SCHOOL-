@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { 
@@ -10,14 +11,20 @@ import {
   PieChart, 
   Activity 
 } from 'lucide-react';
-import { AcademicExecutiveDashboard } from './components/AcademicExecutiveDashboard';
 import { TimetableIntelligence } from './components/TimetableIntelligence';
 import { SubjectClassManagement } from './components/SubjectClassManagement';
 import { CurriculumManagement } from './components/CurriculumManagement';
 
 export const AcademicManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'classes' | 'timetable' | 'curriculum' | 'reports'>('dashboard');
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as any) === 'dashboard' || !searchParams.get('tab') ? 'classes' : searchParams.get('tab') as any;
+  const [activeTab, setActiveTab] = useState<'classes' | 'timetable' | 'curriculum'>(initialTab === 'reports' ? 'classes' : initialTab);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) setActiveTab(tab as any);
+  }, [searchParams]);
 
   const { data: classes } = useQuery({
     queryKey: ['classes'],
@@ -38,17 +45,6 @@ export const AcademicManagement: React.FC = () => {
 
       {/* Enterprise Navigation */}
       <div className="flex overflow-x-auto border-b border-slate-200 dark:border-slate-800 gap-2 pb-px no-scrollbar">
-        <button
-          onClick={() => setActiveTab('dashboard')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-t-xl transition-all ${
-            activeTab === 'dashboard'
-              ? 'bg-primary/10 text-primary border-b-2 border-primary'
-              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800/50'
-          }`}
-        >
-          <LayoutDashboard className="h-4 w-4" />
-          Executive Dashboard
-        </button>
         <button
           onClick={() => setActiveTab('classes')}
           className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-t-xl transition-all ${
@@ -82,23 +78,10 @@ export const AcademicManagement: React.FC = () => {
           <BookOpen className="h-4 w-4" />
           Curriculum & Lesson Plans
         </button>
-        <button
-          onClick={() => setActiveTab('reports')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold rounded-t-xl transition-all ${
-            activeTab === 'reports'
-              ? 'bg-primary/10 text-primary border-b-2 border-primary'
-              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:hover:bg-slate-800/50'
-          }`}
-        >
-          <PieChart className="h-4 w-4" />
-          Enterprise Analytics & Reports
-        </button>
       </div>
 
       {/* Content Rendering */}
       <div className="pt-2">
-        {activeTab === 'dashboard' && <AcademicExecutiveDashboard />}
-        
         {activeTab === 'timetable' && (
           <div className="space-y-4">
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
@@ -121,14 +104,6 @@ export const AcademicManagement: React.FC = () => {
         {activeTab === 'classes' && <SubjectClassManagement />}
 
         {activeTab === 'curriculum' && <CurriculumManagement />}
-
-        {activeTab === 'reports' && (
-          <div className="p-8 text-center text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-            <FileText className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-700 mb-4" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Enterprise Academic Reports</h3>
-            <p>Generate automated PDFs, subject performance matrices, and workload scores.</p>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -30,10 +30,10 @@ export const DemoRequestsView: React.FC = () => {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Demo Requests</h1>
-        <p className="text-slate-500">Manage incoming inquiries and demo bookings from the marketing site.</p>
+        <p className="text-slate-400">Manage incoming inquiries and demo bookings from the marketing site.</p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -50,15 +50,15 @@ export const DemoRequestsView: React.FC = () => {
                 <tr key={req.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-slate-900">{format(new Date(req.createdAt), 'MMM d, yyyy')}</span>
-                    <span className="block text-xs text-slate-500 mt-0.5">{format(new Date(req.createdAt), 'h:mm a')}</span>
+                    <span className="block text-xs text-slate-400 mt-0.5">{format(new Date(req.createdAt), 'h:mm a')}</span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm font-bold text-slate-900">{req.fullName}</div>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="flex items-center gap-1 text-xs text-slate-500">
+                      <span className="flex items-center gap-1 text-xs text-slate-400">
                         <Mail className="w-3 h-3" /> {req.email}
                       </span>
-                      <span className="flex items-center gap-1 text-xs text-slate-500">
+                      <span className="flex items-center gap-1 text-xs text-slate-400">
                         <Phone className="w-3 h-3" /> {req.phoneNumber}
                       </span>
                     </div>
@@ -66,16 +66,16 @@ export const DemoRequestsView: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-slate-900">{req.institutionName}</div>
                     {req.message && (
-                      <p className="text-xs text-slate-500 mt-1 max-w-[200px] truncate" title={req.message}>
+                      <p className="text-xs text-slate-400 mt-1 max-w-[200px] truncate" title={req.message}>
                         "{req.message}"
                       </p>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                       {req.studentsCount} Students
                     </span>
-                    <span className="block text-xs text-slate-500 mt-1">
+                    <span className="block text-xs text-slate-400 mt-1 font-medium">
                       {req.campusesCount} Campus(es)
                     </span>
                   </td>
@@ -83,15 +83,15 @@ export const DemoRequestsView: React.FC = () => {
                     <select
                       value={req.status}
                       onChange={(e) => updateStatusMutation.mutate({ id: req.id, status: e.target.value })}
-                      className={`text-sm font-bold rounded-full px-3 py-1 border outline-none cursor-pointer transition-colors ${
-                        req.status === 'NEW' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-                        req.status === 'CONTACTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                        'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      className={`text-[10px] font-bold uppercase tracking-widest rounded-full px-3 py-1 border outline-none cursor-pointer transition-colors ${
+                        req.status === 'NEW' ? 'bg-amber-50 text-amber-600 border-amber-200' : 
+                        req.status === 'CONTACTED' ? 'bg-primary/10 text-primary border-primary/20' :
+                        'bg-emerald-50 text-emerald-600 border-emerald-200'
                       }`}
                     >
-                      <option value="NEW">NEW</option>
-                      <option value="CONTACTED">CONTACTED</option>
-                      <option value="CLOSED">CLOSED</option>
+                      <option value="NEW" className="bg-white text-amber-600">NEW</option>
+                      <option value="CONTACTED" className="bg-white text-primary">CONTACTED</option>
+                      <option value="CLOSED" className="bg-white text-emerald-600">CLOSED</option>
                     </select>
                   </td>
                 </tr>

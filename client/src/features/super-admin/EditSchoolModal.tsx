@@ -54,7 +54,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
         
         <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-indigo-400 border border-primary/30/20">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
@@ -82,7 +82,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
             </div>
 
@@ -95,7 +95,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
                     required
                     value={formData.subdomain}
                     onChange={(e) => setFormData({ ...formData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-4 pr-[110px] py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-4 pr-[110px] py-3 text-white focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none">
                     .edusphere.com
@@ -114,7 +114,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
                     value={formData.domain}
                     onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                     placeholder="school.com"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
                 </div>
               </div>
@@ -137,7 +137,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
                     <input 
                       type="text" required
                       value={formData.adminFirstName} onChange={e => setFormData({...formData, adminFirstName: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-white focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-indigo-500 transition-colors" 
                     />
                   </div>
                 </div>
@@ -146,7 +146,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
                   <input 
                     type="text" required
                     value={formData.adminLastName} onChange={e => setFormData({...formData, adminLastName: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" 
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-indigo-500 transition-colors" 
                   />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
@@ -156,7 +156,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
                     <input 
                       type="email" required
                       value={formData.adminEmail} onChange={e => setFormData({...formData, adminEmail: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors" 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-white focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-indigo-500 transition-colors" 
                     />
                   </div>
                 </div>
@@ -168,7 +168,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
                       type="password"
                       placeholder="Leave blank to keep current"
                       value={formData.adminPassword} onChange={e => setFormData({...formData, adminPassword: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-slate-600" 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-3 text-white focus:outline-none focus:border-primary/30 focus:ring-1 focus:ring-indigo-500 transition-colors placeholder:text-slate-600" 
                     />
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export const EditSchoolModal: React.FC<EditSchoolModalProps> = ({ school, onClos
             <button
               type="submit"
               disabled={editMutation.isPending}
-              className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               {editMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Save Changes

@@ -41,6 +41,10 @@ const feeApi = {
     api.get<{ data: FeeStructure[] }>('/fees/structures').then((r) => r.data.data),
   createStructure: (payload: CreateStructurePayload) =>
     api.post<{ data: FeeStructure }>('/fees/structures', payload).then((r) => r.data.data),
+  updateStructure: (id: string, payload: Partial<CreateStructurePayload> & { isActive?: boolean }) =>
+    api.patch<{ data: FeeStructure }>(`/fees/structures/${id}`, payload).then((r) => r.data.data),
+  deleteStructure: (id: string) =>
+    api.delete(`/fees/structures/${id}`),
 
   // Assignments
   getAssignments: (params?: { status?: string; academicYear?: string }) =>
@@ -143,6 +147,23 @@ export const useCreateStructure = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: feeApi.createStructure,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fees', 'structures'] }),
+  });
+};
+
+export const useUpdateStructure = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<CreateStructurePayload> & { isActive?: boolean } }) =>
+      feeApi.updateStructure(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fees', 'structures'] }),
+  });
+};
+
+export const useDeleteStructure = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => feeApi.deleteStructure(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['fees', 'structures'] }),
   });
 };

@@ -7,7 +7,7 @@ let io: SocketServer | null = null;
 export const initSocket = (server: HttpServer) => {
   io = new SocketServer(server, {
     cors: {
-      origin: '*', // Adjust to specific frontend URL in production
+      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     },
   });
@@ -20,7 +20,10 @@ export const initSocket = (server: HttpServer) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+      if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET is missing');
+      }
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       (socket as any).user = decoded;
       next();
     } catch (err) {

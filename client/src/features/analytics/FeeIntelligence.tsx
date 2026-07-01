@@ -46,7 +46,7 @@ export const FeeIntelligence: React.FC = () => {
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Forecast (Next Month)</p>
-          <h2 className="text-4xl font-black text-indigo-600">₹4.2L</h2>
+          <h2 className="text-4xl font-black text-primary">₹4.2L</h2>
           <div className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-600">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
             <span>85% Confidence Score</span>

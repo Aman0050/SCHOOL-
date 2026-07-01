@@ -9,7 +9,6 @@ import type {  AcademicSession, ExamTerm, ExamSubject  } from '../types/exam.typ
 
 // Zod schemas
 const sessionSchema = z.object({
-  schoolId: z.string().uuid(),
   name: z.string().min(2, "Session name is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
@@ -24,7 +23,6 @@ const termSchema = z.object({
 });
 
 const subjectSchema = z.object({
-  schoolId: z.string().uuid(),
   code: z.string().min(2, "Code is required"),
   name: z.string().min(2, "Name is required"),
   subjectType: z.enum(['THEORY', 'PRACTICAL', 'BOTH', 'VIVA']),
@@ -191,7 +189,6 @@ const DynamicForm = ({ type, onClose, onSubmit, sessions, schools, isSubmitting 
   const { register, handleSubmit, formState: { errors } } = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
-      schoolId: schools?.[0]?.id || '',
       subjectType: 'THEORY',
       boardType: 'CBSE',
       theoryMaxMarks: 100,

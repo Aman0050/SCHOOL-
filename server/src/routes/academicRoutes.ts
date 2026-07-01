@@ -13,6 +13,7 @@ import {
   createEnrollment,
   enrollmentSchema,
   getAuditLogs,
+  getTeachers,
 } from '../controllers/academicController';
 import { authenticate, authorizeRoles, SystemRole } from '../middlewares/auth';
 import { validateBody } from '../middlewares/validation';
@@ -40,6 +41,8 @@ router.post(
 );
 
 // Classes
+router.get('/teachers', getTeachers);
+
 router.get('/classes', getClasses);
 router.post(
   '/classes',

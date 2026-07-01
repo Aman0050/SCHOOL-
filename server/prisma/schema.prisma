@@ -33,6 +33,37 @@ enum AuditAction {
   MARKS_ENTRY
   RESULT_PUBLISH
   REPORT_CARD_GENERATE
+  ATTENDANCE_MARKED
+  ATTENDANCE_UPDATED
+  ATTENDANCE_BULK
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+  HALF_DAY
+  MEDICAL_LEAVE
+  SCHOOL_ACTIVITY
+  HOLIDAY
+  SUSPENDED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum HolidayType {
+  NATIONAL
+  SCHOOL
+  EXAM_HOLIDAY
+  HALF_DAY
 }
 
 model Tenant {
@@ -54,6 +85,8 @@ model Tenant {
   invoices       SaaSInvoice[]
   supportTickets SupportTicket[]
   dataAnomalies  DataAnomaly[]
+  leaveRequests  LeaveRequest[]
+  holidays       Holiday[]
 
   @@index([subdomain])
 }
@@ -75,12 +108,14 @@ model School {
   timetables         TimetablePeriod[]
   healthScore        SchoolHealthScore?
   SchoolSubscription SchoolSubscription?
+  leaveRequests      LeaveRequest[]
+  holidays           Holiday[]
 }
 
 model User {
   id            String     @id @default(uuid())
   tenantId      String
-  email         String     @unique
+  email         String
   passwordHash  String
   firstName     String
   lastName      String
@@ -147,9 +182,16 @@ model User {
   ticketActivities    TicketActivity[]     @relation("TicketActivityUser")
   kbArticles          KnowledgeBaseArticle[] @relation("KnowledgeBaseAuthor")
   supportAgent        SupportAgent?
+  leaveRequests       LeaveRequest[]
+  approvedLeaves      LeaveRequest[]       @relation("LeaveApprover")
+  libraryTransactions LibraryTransaction[]
 
   @@index([firstName, lastName])
   @@index([role])
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([tenantId, role])
+  @@index([tenantId, role, isActive])
 }
 
 model Admission {
@@ -166,6 +208,7 @@ model Admission {
 
   @@index([admissionNumber])
   @@unique([tenantId, admissionNumber])
+  @@index([tenantId, status])
 }
 
 model ParentStudent {
@@ -210,8 +253,9 @@ model Session {
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
 }
 
 model PasswordResetToken {
@@ -287,6 +331,11 @@ model Class {
   timetables         TimetablePeriod[]
   lessonPlans        LessonPlan[]
   resources          ResourceLibrary[]
+  leaveRequests      LeaveRequest[]
+
+  @@index([tenantId])
+  @@index([schoolId])
+  @@index([academicYear])
 }
 
 model Enrollment {
@@ -301,6 +350,8 @@ model Enrollment {
 
   @@index([tenantId])
   @@index([studentId])
+  @@index([classId])
+  @@unique([classId, studentId])
 }
 
 model AuditLog {
@@ -318,6 +369,11 @@ model AuditLog {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
 }
 
 model Attendance {
@@ -326,7 +382,7 @@ model Attendance {
   userId       String
   classId      String?
   date         DateTime
-  status       String
+  status       AttendanceStatus
   remarks      String?
   mode         String   @default("MANUAL")
   recordedById String?
@@ -432,6 +488,7 @@ model FeeInstallment {
 
   @@index([tenantId])
   @@index([status])
+  @@index([tenantId, isPaid, dueDate])
 }
 
 model FeeCategory {
@@ -762,6 +819,8 @@ model AcademicSession {
   school School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   terms  ExamTerm[]
   exams  Exam[]
+
+  @@index([tenantId, isActive])
 }
 
 model ExamTerm {
@@ -859,6 +918,8 @@ model Exam {
   reportCards    ReportCard[]
   rankings       StudentRanking[]
   createdByUser  User                  @relation("ExamCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([tenantId, status])
 }
 
 model ExamSubjectSchedule {
@@ -1186,6 +1247,9 @@ model Notification {
   createdAt DateTime         @default(now())
 
   user User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([tenantId])
 }
 
 model DeviceToken {
@@ -1281,6 +1345,8 @@ model SupportTicket {
   messages     TicketMessage[]
   activities   TicketActivity[]
   attachments  SupportAttachment[]
+
+  @@index([tenantId, status])
 }
 
 model TicketMessage {
@@ -1426,6 +1492,51 @@ model TimetablePeriod {
 
   @@index([tenantId])
   @@index([teacherId])
+}
+
+model LeaveRequest {
+  id          String      @id @default(uuid())
+  tenantId    String
+  schoolId    String
+  userId      String
+  classId     String?
+  fromDate    DateTime
+  toDate      DateTime
+  reason      String
+  status      LeaveStatus @default(PENDING)
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tenant     Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  school     School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approver   User?   @relation("LeaveApprover", fields: [approvedBy], references: [id])
+  class      Class?  @relation(fields: [classId], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@index([fromDate, toDate])
+}
+
+model Holiday {
+  id          String      @id @default(uuid())
+  tenantId    String
+  schoolId    String
+  name        String
+  date        DateTime
+  type        HolidayType @default(SCHOOL)
+  description String?
+  createdAt   DateTime    @default(now())
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  school  School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([date])
+  @@unique([tenantId, schoolId, date])
 }
 
 // ============ ANALYTICS & INTELLIGENCE LAYER ============
@@ -1853,4 +1964,104 @@ model DataAnomaly {
   @@index([tenantId])
   @@index([module])
   @@index([status])
+}
+
+// ============ LIBRARY MANAGEMENT ============
+
+model LibraryBook {
+  id            String   @id @default(uuid())
+  tenantId      String
+  title         String
+  author        String
+  isbn          String?
+  totalCopies   Int      @default(1)
+  available     Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  transactions  LibraryTransaction[]
+}
+
+model LibraryTransaction {
+  id          String   @id @default(uuid())
+  tenantId    String
+  bookId      String
+  userId      String
+  issueDate   DateTime @default(now())
+  dueDate     DateTime
+  returnDate  DateTime?
+  status      String   @default("ISSUED") // ISSUED, RETURNED, OVERDUE, LOST
+  fineAmount  Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  book LibraryBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@index([tenantId, status])
+}
+
+// ============ TRANSPORT MANAGEMENT ============
+
+model TransportVehicle {
+  id                  String   @id @default(uuid())
+  tenantId            String
+  registrationNumber  String
+  capacity            Int
+  status              String   @default("ACTIVE") // ACTIVE, MAINTENANCE, OUT_OF_SERVICE
+  nextMaintenanceDate DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  routes TransportRoute[]
+  alerts TransportAlert[]
+}
+
+model TransportRoute {
+  id          String   @id @default(uuid())
+  tenantId    String
+  vehicleId   String
+  routeName   String
+  driverName  String?
+  driverPhone String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vehicle TransportVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model TransportAlert {
+  id          String   @id @default(uuid())
+  tenantId    String
+  vehicleId   String
+  type        String   // DELAY, BREAKDOWN, MAINTENANCE_DUE
+  message     String
+  severity    String   // LOW, MEDIUM, HIGH, CRITICAL
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vehicle TransportVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+// ============ INVENTORY MANAGEMENT ============
+
+model InventoryItem {
+  id              String   @id @default(uuid())
+  tenantId        String
+  name            String
+  category        String
+  quantity        Int      @default(0)
+  minimumQuantity Int      @default(5)
+  location        String?
+  status          String   @default("IN_STOCK") // IN_STOCK, LOW_STOCK, OUT_OF_STOCK
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tenantId, status])
 }

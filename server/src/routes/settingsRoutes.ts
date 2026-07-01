@@ -9,6 +9,7 @@ import {
 } from '../controllers/settingsController';
 import { authenticate } from '../middlewares/auth';
 import multer from 'multer';
+import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 
@@ -23,7 +24,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(4).toString('hex');
     cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
   }
 });

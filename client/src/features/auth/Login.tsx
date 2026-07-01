@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
         <div className="absolute inset-0 bg-black/40 z-10"></div>
         <div className="relative z-20 flex flex-col justify-between p-16 h-full w-full">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-600/20">
+            <div className="bg-primary p-2.5 rounded-xl shadow-lg shadow-primary/20">
               <GraduationCap className="h-8 w-8 text-white" />
             </div>
             <span className="text-2xl font-bold text-white tracking-tight drop-shadow-md">Edu<span className="text-indigo-400 font-serif italic uppercase font-normal ml-0.5">XENO</span></span>
@@ -111,17 +111,17 @@ export const Login: React.FC = () => {
           <div className="space-y-2">
             {/* Mobile logo only */}
             <div className="lg:hidden flex items-center gap-3 mb-8">
-              <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-600/20">
+              <div className="bg-primary p-2.5 rounded-xl shadow-lg shadow-primary/20">
                 <GraduationCap className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Edu<span className="text-indigo-600 font-serif italic uppercase font-normal ml-0.5">XENO</span></span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Edu<span className="text-primary font-serif italic uppercase font-normal ml-0.5">XENO</span></span>
             </div>
 
             <div className="flex items-center gap-5 pt-2">
-              <div className="bg-indigo-600 p-4 rounded-3xl shadow-xl shadow-indigo-600/20">
+              <div className="bg-primary p-4 rounded-3xl shadow-xl shadow-primary/20">
                 <GraduationCap className="h-12 w-12 text-white" />
               </div>
-              <span className="text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight">Edu<span className="text-indigo-600 font-serif italic uppercase font-normal ml-1">XENO</span></span>
+              <span className="text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight">Edu<span className="text-primary font-serif italic uppercase font-normal ml-1">XENO</span></span>
             </div>
             <p className="text-xl text-slate-500 dark:text-slate-400 font-medium pt-1">
               Empowering the next generation of education.
@@ -142,7 +142,7 @@ export const Login: React.FC = () => {
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-6 w-6 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <Mail className="h-6 w-6 text-slate-400 group-focus-within:text-primary transition-colors" />
                 </div>
                 <input
                   id="email"
@@ -151,7 +151,7 @@ export const Login: React.FC = () => {
                   placeholder="name@school.edu or admin123"
                   className={`block w-full rounded-xl border ${
                     errors.email ? 'border-red-400 focus:ring-red-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                  } bg-white dark:bg-slate-800 py-4 pl-12 pr-4 text-base text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 shadow-sm`}
+                  } bg-white dark:bg-slate-800 py-4 pl-12 pr-4 text-base text-slate-900 dark:text-white outline-none focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 shadow-sm`}
                   {...register('email')}
                 />
               </div>
@@ -175,13 +175,13 @@ export const Login: React.FC = () => {
                   placeholder="••••••••"
                   className={`block w-full rounded-xl border ${
                     errors.password ? 'border-red-400 focus:ring-red-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                  } bg-white dark:bg-slate-800 py-4 pl-4 pr-12 text-base text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 shadow-sm`}
+                  } bg-white dark:bg-slate-800 py-4 pl-4 pr-12 text-base text-slate-900 dark:text-white outline-none focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 shadow-sm`}
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -202,7 +202,7 @@ export const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-4 text-base font-bold text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/40 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-4 text-base font-bold text-white shadow-lg shadow-primary/20 hover:shadow-primary/20 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
               >
                 {isSubmitting ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>

@@ -211,7 +211,7 @@ const FeeCategories: React.FC = () => {
                         </button>
                         <button
                           onClick={() => openEdit(cat)}
-                          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-blue-600 transition-colors"
+                          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-primary transition-colors"
                           title="Edit"
                         >
                           <Pencil className="h-4 w-4" />

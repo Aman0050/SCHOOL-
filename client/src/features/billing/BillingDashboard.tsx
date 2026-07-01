@@ -14,11 +14,11 @@ export const BillingDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="col-span-1 md:col-span-2 border-indigo-200 dark:border-indigo-800 shadow-sm">
-          <CardHeader className="bg-indigo-50 dark:bg-indigo-500/10 border-b border-indigo-100 dark:border-indigo-800 pb-4">
+        <Card className="col-span-1 md:col-span-2 border-primary/30 dark:border-primary/30 shadow-sm">
+          <CardHeader className="bg-primary/10 dark:bg-primary/10 border-b border-primary/30 dark:border-primary/30 pb-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Current Plan</p>
+                <p className="text-xs font-bold text-primary uppercase tracking-wider">Current Plan</p>
                 <CardTitle className="text-2xl mt-1">Enterprise Annual</CardTitle>
               </div>
               <div className="text-right">

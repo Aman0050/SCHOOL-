@@ -34,7 +34,7 @@ export const HelpCenterPage: React.FC = () => {
       
       <main className="flex-grow pt-24">
         {/* Hero Section */}
-        <section className="bg-indigo-600 text-white pt-24 pb-32 px-6 relative overflow-hidden">
+        <section className="bg-primary text-white pt-24 pb-32 px-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">How can we help?</h1>
@@ -61,12 +61,12 @@ export const HelpCenterPage: React.FC = () => {
               viewport={{ once: true }}
               className="bg-white rounded-2xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center hover:-translate-y-1 transition-transform"
             >
-              <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6">
                 <BookOpen className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold mb-2">Knowledge Base</h3>
               <p className="text-slate-500 mb-6 flex-grow">Browse our comprehensive guides and tutorials for self-serve help.</p>
-              <a href="/documentation" className="text-indigo-600 font-bold hover:text-indigo-700">Browse Articles &rarr;</a>
+              <a href="/documentation" className="text-primary font-bold hover:text-primary">Browse Articles &rarr;</a>
             </motion.div>
 
             <motion.div 

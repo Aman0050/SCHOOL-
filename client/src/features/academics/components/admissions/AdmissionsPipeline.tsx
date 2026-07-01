@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Search, Filter, Download, Upload, Plus, FileText, CheckCircle2, 
   Clock, UserPlus, MoreHorizontal, Calendar, AlertCircle, X, Loader2,
@@ -11,8 +12,9 @@ import { ApplicationProfileDrawer } from './ApplicationProfileDrawer';
 import { AdmissionsAnalytics } from './AdmissionsAnalytics';
 
 export const AdmissionsPipeline: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [applicants, setApplicants] = useState<any[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('action') === 'new');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -116,7 +118,7 @@ export const AdmissionsPipeline: React.FC = () => {
   if (isLoading) {
     return (
       <div className="h-full min-h-[600px] w-full bg-slate-50 dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -137,7 +139,7 @@ export const AdmissionsPipeline: React.FC = () => {
 
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
+              className="bg-primary hover:bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
             >
               <UserPlus className="h-4 w-4" /> New Admission
             </button>
@@ -147,7 +149,7 @@ export const AdmissionsPipeline: React.FC = () => {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex items-center gap-4">
-            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center">
               <FileText className="h-5 w-5" />
             </div>
             <div>
@@ -165,7 +167,7 @@ export const AdmissionsPipeline: React.FC = () => {
             </div>
           </div>
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex items-center gap-4">
-            <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center">
               <AlertCircle className="h-5 w-5" />
             </div>
             <div>
@@ -231,7 +233,7 @@ export const AdmissionsPipeline: React.FC = () => {
                       paginatedApplicants.map(app => (
                         <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer" onClick={() => setSelectedApplicant(app)}>
                           <td className="px-6 py-4">
-                            <span className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded">
+                            <span className="font-mono text-xs font-semibold text-primary dark:text-primary bg-primary/10 dark:bg-primary/10 px-2 py-1 rounded">
                               {app.applicationNumber || app.id.slice(0, 8).toUpperCase()}
                             </span>
                           </td>
@@ -254,15 +256,15 @@ export const AdmissionsPipeline: React.FC = () => {
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
-                              ${app.stage === 'new-registrations' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400' : ''}
+                              ${app.stage === 'new-registrations' ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary' : ''}
                               ${app.stage === 'document-verification' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : ''}
-                              ${app.stage === 'assessment-interview' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400' : ''}
+                              ${app.stage === 'assessment-interview' ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary' : ''}
                               ${app.stage === 'approved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : ''}
                             `}>
                               <div className={`h-1.5 w-1.5 rounded-full 
-                                ${app.stage === 'new-registrations' ? 'bg-blue-500' : ''}
+                                ${app.stage === 'new-registrations' ? 'bg-primary' : ''}
                                 ${app.stage === 'document-verification' ? 'bg-amber-500' : ''}
-                                ${app.stage === 'assessment-interview' ? 'bg-purple-500' : ''}
+                                ${app.stage === 'assessment-interview' ? 'bg-primary' : ''}
                                 ${app.stage === 'approved' ? 'bg-emerald-500' : ''}
                               `} />
                               {app.status || 'Pending'}
@@ -280,7 +282,7 @@ export const AdmissionsPipeline: React.FC = () => {
                               )}
                               <button 
                                 onClick={(e) => { e.stopPropagation(); setSelectedApplicant(app); }}
-                                className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded transition-colors"
+                                className="p-1.5 text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/10 rounded transition-colors"
                                 title="View Details"
                               >
                                 <ChevronRight className="h-4 w-4" />

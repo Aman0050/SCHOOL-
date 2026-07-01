@@ -13,7 +13,8 @@ export const lessonPlanSchema = z.object({
   description: z.string(),
   date: z.string().datetime(),
   status: z.enum(['DRAFT', 'IN_PROGRESS', 'COMPLETED']).default('DRAFT'),
-  resources: z.array(z.string().url()).optional().default([])
+  resources: z.array(z.string().url()).optional().default([]),
+  teacherId: z.string().uuid().optional()
 });
 
 export const getLessonPlans = async (req: Request, res: Response) => {
@@ -45,29 +46,38 @@ export const getLessonPlans = async (req: Request, res: Response) => {
 };
 
 export const createLessonPlan = async (req: Request, res: Response) => {
-  const { tenantId, id: teacherId } = req.user!;
+  const { tenantId, id: userId, role } = req.user!;
   
   const validatedData = lessonPlanSchema.parse(req.body);
 
-  // Validate that the teacher is actually assigned to this class/subject
-  const assignment = await prisma.teacherSubjectAssignment.findUnique({
-    where: {
-      teacherId_classId_subjectId: {
-        teacherId,
-        classId: validatedData.classId,
-        subjectId: validatedData.subjectId
-      }
+  let targetTeacherId = userId;
+  
+  if (role === 'SCHOOL_ADMIN') {
+    if (!validatedData.teacherId) {
+      throw new AppError(400, 'BAD_REQUEST', 'teacherId is required when created by an admin');
     }
-  });
+    targetTeacherId = validatedData.teacherId;
+  } else {
+    // Validate that the teacher is actually assigned to this class/subject
+    const assignment = await prisma.teacherSubjectAssignment.findUnique({
+      where: {
+        teacherId_classId_subjectId: {
+          teacherId: targetTeacherId,
+          classId: validatedData.classId,
+          subjectId: validatedData.subjectId
+        }
+      }
+    });
 
-  if (!assignment) {
-    throw new AppError(403, 'FORBIDDEN', 'You are not assigned to this subject and class');
+    if (!assignment) {
+      throw new AppError(403, 'FORBIDDEN', 'You are not assigned to this subject and class');
+    }
   }
 
   const lessonPlan = await prisma.lessonPlan.create({
     data: {
       tenantId,
-      teacherId,
+      teacherId: targetTeacherId,
       classId: validatedData.classId,
       subjectId: validatedData.subjectId,
       title: validatedData.title,

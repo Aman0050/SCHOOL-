@@ -57,7 +57,7 @@ export const CampaignManager: React.FC = () => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white truncate">{camp.name}</h3>
-                  <span className="text-xs font-mono px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded">
+                  <span className="text-xs font-mono px-2 py-0.5 bg-primary/10 dark:bg-primary/10 text-primary dark:text-primary rounded">
                     {camp.type}
                   </span>
                 </div>

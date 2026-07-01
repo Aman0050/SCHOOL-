@@ -85,7 +85,7 @@ export const NewAdmissionModal: React.FC<NewAdmissionModalProps> = ({ isOpen, on
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
           <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-3">
-            <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg dark:bg-indigo-500/20 dark:text-indigo-400">
+            <div className="bg-primary/10 text-primary p-2 rounded-lg dark:bg-primary/20 dark:text-primary">
               <User className="h-5 w-5" />
             </div>
             New Admission Registration
@@ -99,7 +99,7 @@ export const NewAdmissionModal: React.FC<NewAdmissionModalProps> = ({ isOpen, on
         <div className="px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-between relative">
           <div className="absolute top-1/2 left-10 right-10 h-0.5 bg-slate-200 dark:bg-slate-800 -z-10 -translate-y-1/2 rounded-full" />
           <div 
-            className="absolute top-1/2 left-10 h-0.5 bg-indigo-500 dark:bg-indigo-500 -z-10 -translate-y-1/2 transition-all duration-300 ease-in-out" 
+            className="absolute top-1/2 left-10 h-0.5 bg-primary dark:bg-primary -z-10 -translate-y-1/2 transition-all duration-300 ease-in-out" 
             style={{ width: `calc(${currentStep * (100 / (STEPS.length - 1))}% - 2.5rem)` }}
           />
           
@@ -110,13 +110,13 @@ export const NewAdmissionModal: React.FC<NewAdmissionModalProps> = ({ isOpen, on
             return (
               <div key={step.id} className="flex flex-col items-center gap-2 bg-white dark:bg-slate-900 px-2">
                 <div className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                  isCompleted ? 'bg-indigo-500 border-indigo-500 text-white' : 
-                  isCurrent ? 'bg-white dark:bg-slate-900 border-indigo-500 text-indigo-500 dark:text-indigo-400' : 
+                  isCompleted ? 'bg-primary border-primary/30 text-white' : 
+                  isCurrent ? 'bg-white dark:bg-slate-900 border-primary/30 text-primary dark:text-primary' : 
                   'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-400'
                 }`}>
                   {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-4 w-4" />}
                 </div>
-                <span className={`text-xs font-bold ${isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                <span className={`text-xs font-bold ${isCurrent ? 'text-primary dark:text-primary' : 'text-slate-500 dark:text-slate-400'}`}>
                   {step.title}
                 </span>
               </div>
@@ -247,7 +247,7 @@ export const NewAdmissionModal: React.FC<NewAdmissionModalProps> = ({ isOpen, on
             <button 
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-500/20 flex items-center gap-2"
+              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary transition-colors shadow-md shadow-primary/20 flex items-center gap-2"
             >
               {isSubmitting ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>

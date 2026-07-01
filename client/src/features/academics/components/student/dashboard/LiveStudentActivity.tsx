@@ -28,7 +28,7 @@ export const LiveStudentActivity: React.FC<any> = () => {
         <h3 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center gap-2">
           <div className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </div>
           Live Student Activity
         </h3>
@@ -41,8 +41,8 @@ export const LiveStudentActivity: React.FC<any> = () => {
         ) : (
           feed.map((item, idx) => (
             <div key={idx} className="flex gap-3 items-start border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0">
-              <div className="mt-0.5 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-full border border-indigo-100 dark:border-indigo-800">
-                <Activity className="h-4 w-4 text-indigo-500" />
+              <div className="mt-0.5 bg-primary/10 dark:bg-primary/20 p-2 rounded-full border border-primary/30 dark:border-primary/30">
+                <Activity className="h-4 w-4 text-primary" />
               </div>
               <div>
                 <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{item.text}</p>

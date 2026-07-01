@@ -39,10 +39,10 @@ export const StudentDocumentsTab: React.FC<StudentDocumentsTabProps> = ({ studen
           return (
             <div key={doc.id} className="group bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all">
               <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl ${isPdf ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10' : 'bg-blue-50 text-blue-500 dark:bg-blue-500/10'}`}>
+                <div className={`p-3 rounded-xl ${isPdf ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10' : 'bg-primary/10 text-primary dark:bg-primary/10'}`}>
                   {isPdf ? <FileText className="h-6 w-6" /> : <ImageIcon className="h-6 w-6" />}
                 </div>
-                <button className="text-slate-400 hover:text-indigo-500 transition-colors p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                <button className="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
                   <Download className="h-5 w-5" />
                 </button>
               </div>

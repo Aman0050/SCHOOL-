@@ -118,11 +118,11 @@ export const LiveChat: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>;
+  if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-[600px]">
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-indigo-600 text-white flex items-center justify-between">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-primary text-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Bot className="w-6 h-6" />
@@ -141,7 +141,7 @@ export const LiveChat: React.FC = () => {
           const isMe = msg.senderId === user?.id;
           return (
             <div key={msg.id || idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-              <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${isMe ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none shadow-sm border border-slate-100 dark:border-slate-700'}`}>
+              <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${isMe ? 'bg-primary text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none shadow-sm border border-slate-100 dark:border-slate-700'}`}>
                 {msg.content}
               </div>
               <span className="text-[10px] text-slate-400 mt-1 mx-1">
@@ -163,7 +163,7 @@ export const LiveChat: React.FC = () => {
       </div>
 
       <form onSubmit={handleSend} className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2">
-        <button type="button" className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+        <button type="button" className="p-2 text-slate-400 hover:text-primary transition-colors">
           <Paperclip className="w-5 h-5" />
         </button>
         <input 
@@ -171,12 +171,12 @@ export const LiveChat: React.FC = () => {
           value={input} 
           onChange={handleTyping}
           placeholder="Type your message..." 
-          className="flex-1 bg-slate-100 dark:bg-slate-800 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 rounded-xl px-4 py-2.5 outline-none transition-all" 
+          className="flex-1 bg-slate-100 dark:bg-slate-800 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-slate-950 rounded-xl px-4 py-2.5 outline-none transition-all" 
         />
         <button 
           type="submit" 
           disabled={!input.trim()}
-          className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white p-2.5 rounded-xl transition-colors shadow-sm"
+          className="bg-primary hover:bg-primary disabled:opacity-50 text-white p-2.5 rounded-xl transition-colors shadow-sm"
         >
           <Send className="w-5 h-5" />
         </button>

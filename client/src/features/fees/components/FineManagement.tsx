@@ -17,9 +17,9 @@ const fmt = (v: string | number) => `₹${parseFloat(String(v)).toLocaleString('
 
 const fineTypeColors: Record<FineType, string> = {
   LATE_PAYMENT: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  LIBRARY: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  LIBRARY: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary',
   DAMAGE: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  DISCIPLINE: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  DISCIPLINE: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary',
   OTHER: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
 };
 
@@ -208,7 +208,7 @@ const FineManagement: React.FC = () => {
                           Paid
                         </span>
                       ) : fine.waivedBy ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2.5 py-1 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary px-2.5 py-1 text-xs font-semibold">
                           Waived
                         </span>
                       ) : (
@@ -233,7 +233,7 @@ const FineManagement: React.FC = () => {
                             <button
                               onClick={() => waiveFine(fine.id)}
                               disabled={updateMutation.isPending}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary dark:text-primary bg-primary/10 dark:bg-primary/20 hover:bg-primary/10 dark:hover:bg-purple-900/40 px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
                             >
                               Waive
                             </button>

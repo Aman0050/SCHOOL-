@@ -19,7 +19,7 @@ export const AuditLogsView: React.FC = () => {
     const base = 'px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ';
     switch (action) {
       case 'LOGIN':
-        return base + 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+        return base + 'bg-primary/10 text-primary border-primary/30/20';
       case 'CREATE':
         return base + 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
       case 'UPDATE':

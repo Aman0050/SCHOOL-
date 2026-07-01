@@ -88,19 +88,19 @@ export const NotificationSettings: React.FC = () => {
           <h4 className="font-bold text-slate-900 dark:text-white mb-4">Alert Types</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
-              <Switch.Root checked={prefs.attendanceAlerts} onCheckedChange={() => handleToggle('attendanceAlerts')} className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-500 outline-none cursor-default transition-colors">
+              <Switch.Root checked={prefs.attendanceAlerts} onCheckedChange={() => handleToggle('attendanceAlerts')} className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-primary outline-none cursor-default transition-colors">
                 <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform duration-100 translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
               </Switch.Root>
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Attendance Alerts</span>
             </div>
             <div className="flex items-center gap-3">
-              <Switch.Root checked={prefs.feeAlerts} onCheckedChange={() => handleToggle('feeAlerts')} className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-500 outline-none cursor-default transition-colors">
+              <Switch.Root checked={prefs.feeAlerts} onCheckedChange={() => handleToggle('feeAlerts')} className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-primary outline-none cursor-default transition-colors">
                 <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform duration-100 translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
               </Switch.Root>
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Fee Payment Reminders</span>
             </div>
             <div className="flex items-center gap-3">
-              <Switch.Root checked={prefs.resultAlerts} onCheckedChange={() => handleToggle('resultAlerts')} className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-indigo-500 outline-none cursor-default transition-colors">
+              <Switch.Root checked={prefs.resultAlerts} onCheckedChange={() => handleToggle('resultAlerts')} className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative data-[state=checked]:bg-primary outline-none cursor-default transition-colors">
                 <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform duration-100 translate-x-0.5 data-[state=checked]:translate-x-[18px]" />
               </Switch.Root>
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Exam Results Published</span>

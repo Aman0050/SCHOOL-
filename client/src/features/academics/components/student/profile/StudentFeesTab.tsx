@@ -34,7 +34,7 @@ export const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ student }) => {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-          <div className="p-4 bg-blue-50 text-blue-600 dark:bg-blue-500/10 rounded-xl">
+          <div className="p-4 bg-primary/10 text-primary dark:bg-primary/10 rounded-xl">
             <FileText className="h-8 w-8" />
           </div>
           <div>

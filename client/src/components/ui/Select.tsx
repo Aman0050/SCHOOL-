@@ -17,7 +17,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="text-xs font-semibold text-slate-600 dark:text-slate-400 select-none block"
+            className="text-xs font-semibold text-foreground select-none block"
           >
             {label}
           </label>
@@ -27,10 +27,10 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           className={twMerge(
             clsx(
-              'w-full rounded-xl border bg-white dark:bg-slate-900 py-3 px-4 text-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-primary/10 appearance-none cursor-pointer',
+              'w-full rounded-xl border bg-background py-3 px-4 text-sm outline-none transition-all duration-200 focus:ring-4 focus:ring-ring/10 appearance-none cursor-pointer',
               error
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10'
-                : 'border-slate-200 dark:border-slate-800 focus:border-primary',
+                ? 'border-destructive focus:border-destructive focus:ring-destructive/10'
+                : 'border-input focus:border-ring',
               'disabled:opacity-50'
             ),
             className
@@ -48,7 +48,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           )}
         </select>
         {error && (
-          <span className="text-xs font-semibold text-red-600 dark:text-red-400 select-none block">
+          <span className="text-xs font-semibold text-destructive select-none block">
             {error}
           </span>
         )}

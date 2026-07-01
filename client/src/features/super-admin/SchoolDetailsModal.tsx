@@ -43,7 +43,7 @@ export const SchoolDetailsModal: React.FC<SchoolDetailsModalProps> = ({ school, 
         {/* Header */}
         <div className="px-8 py-7 border-b border-white/5 flex justify-between items-start bg-gradient-to-b from-white/[0.04] to-transparent shrink-0">
           <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 flex items-center justify-center text-indigo-400 border border-primary/30/30 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
               <Building2 className="w-7 h-7" />
             </div>
             <div>
@@ -67,7 +67,7 @@ export const SchoolDetailsModal: React.FC<SchoolDetailsModalProps> = ({ school, 
           <div className="flex items-center gap-2">
             {!showDeleteConfirm ? (
               <>
-                <button onClick={() => setIsEditing(true)} className="text-slate-400 hover:text-indigo-400 transition-all bg-white/5 hover:bg-indigo-500/10 p-2.5 rounded-xl border border-white/5 hover:border-indigo-500/20" title="Edit School">
+                <button onClick={() => setIsEditing(true)} className="text-slate-400 hover:text-indigo-400 transition-all bg-white/5 hover:bg-primary/10 p-2.5 rounded-xl border border-white/5 hover:border-primary/30/20" title="Edit School">
                   <Edit2 className="w-4 h-4" />
                 </button>
                 <button onClick={() => setShowDeleteConfirm(true)} className="text-slate-400 hover:text-rose-400 transition-all bg-white/5 hover:bg-rose-500/10 p-2.5 rounded-xl border border-white/5 hover:border-rose-500/20" title="Delete School">
@@ -96,7 +96,7 @@ export const SchoolDetailsModal: React.FC<SchoolDetailsModalProps> = ({ school, 
           
           {/* Top Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-slate-800/30 border border-white/5 p-5 rounded-2xl relative overflow-hidden group hover:border-indigo-500/30 transition-colors">
+            <div className="bg-slate-800/30 border border-white/5 p-5 rounded-2xl relative overflow-hidden group hover:border-primary/30/30 transition-colors">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Users className="w-12 h-12 text-indigo-400" />
               </div>
@@ -126,7 +126,7 @@ export const SchoolDetailsModal: React.FC<SchoolDetailsModalProps> = ({ school, 
           {/* Network Details */}
           <div className="bg-slate-800/20 border border-white/5 rounded-3xl p-6 space-y-5">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/30/20">
                 <LinkIcon className="w-4 h-4 text-indigo-400" />
               </div>
               Network & Routing
@@ -153,7 +153,7 @@ export const SchoolDetailsModal: React.FC<SchoolDetailsModalProps> = ({ school, 
           {school.users && school.users.length > 0 && (
             <div className="bg-slate-800/20 border border-white/5 rounded-3xl p-6 space-y-5">
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/30/20">
                   <Shield className="w-4 h-4 text-purple-400" />
                 </div>
                 School Admin Access
@@ -172,7 +172,7 @@ export const SchoolDetailsModal: React.FC<SchoolDetailsModalProps> = ({ school, 
                           <p className="text-xs text-slate-400 font-medium">{user.id.split('-')[0]}</p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest bg-indigo-500/10 text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-500/20">
+                      <span className="text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-indigo-300 px-3 py-1.5 rounded-lg border border-primary/30/20">
                         Primary Admin
                       </span>
                     </div>

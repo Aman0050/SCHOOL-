@@ -2,8 +2,13 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import { BookOpen, Loader2, Plus, Filter, FileText } from 'lucide-react';
+import { useAuth } from '../../auth/authContext';
+import { CreateLessonPlanModal } from './CreateLessonPlanModal';
 
 export const CurriculumManagement: React.FC = () => {
+  const { user } = useAuth();
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
   const { data: lessonPlans, isLoading } = useQuery({
     queryKey: ['lesson-plans'],
     queryFn: () => api.get('/curriculum/lesson-plans').then(res => res.data.data),
@@ -27,7 +32,10 @@ export const CurriculumManagement: React.FC = () => {
           <button className="px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-sm font-medium">
             <Filter className="w-4 h-4" /> Filter
           </button>
-          <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 flex items-center gap-2 text-sm font-semibold">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 flex items-center gap-2 text-sm font-semibold"
+          >
             <Plus className="w-4 h-4" /> New Plan
           </button>
         </div>
@@ -40,7 +48,7 @@ export const CurriculumManagement: React.FC = () => {
               <div className="flex justify-between items-start mb-3">
                 <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   plan.status === 'COMPLETED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                  plan.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                  plan.status === 'IN_PROGRESS' ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary' :
                   'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
                 }`}>
                   {plan.status.replace('_', ' ')}
@@ -66,12 +74,21 @@ export const CurriculumManagement: React.FC = () => {
             <BookOpen className="w-12 h-12 mx-auto mb-3 text-slate-300 dark:text-slate-700" />
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">No Lesson Plans Yet</h3>
             <p>Create your first lesson plan to start tracking syllabus progress.</p>
-            <button className="mt-4 px-4 py-2 bg-primary/10 text-primary rounded-lg font-semibold hover:bg-primary/20 transition-colors">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="mt-4 px-4 py-2 bg-primary/10 text-primary rounded-lg font-semibold hover:bg-primary/20 transition-colors"
+            >
               Create Plan
             </button>
           </div>
         )}
       </div>
+      
+      <CreateLessonPlanModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        isAdmin={user?.role === 'SCHOOL_ADMIN'} 
+      />
     </div>
   );
 };

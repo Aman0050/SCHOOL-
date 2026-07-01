@@ -18,7 +18,7 @@ export const CookiePolicyPage: React.FC = () => {
             <p className="text-slate-500 font-medium">Last updated: October 1, 2026</p>
           </div>
 
-          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline">
+          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
             <p>
               This Cookie Policy explains how EduXeno ("we", "us", or "our") uses cookies and similar technologies to recognize you when you visit our website and use our platform. It explains what these technologies are and why we use them, as well as your rights to control our use of them.
             </p>

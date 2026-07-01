@@ -43,7 +43,7 @@ export const ApiReferencePage: React.FC = () => {
               </p>
             </div>
             <div className="flex gap-4">
-              <button className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20">
+              <button className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary transition-colors shadow-lg shadow-primary/20">
                 Generate API Key
               </button>
               <button className="px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-colors border border-slate-700">
@@ -61,7 +61,7 @@ export const ApiReferencePage: React.FC = () => {
             
             <section>
               <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <Key className="w-8 h-8 text-indigo-600" /> Authentication
+                <Key className="w-8 h-8 text-primary" /> Authentication
               </h2>
               <p className="text-slate-600 mb-6 leading-relaxed text-lg">
                 The EduXeno API uses API keys to authenticate requests. You can view and manage your API keys in the Developer Settings of your dashboard.
@@ -74,7 +74,7 @@ export const ApiReferencePage: React.FC = () => {
 
             <section>
               <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <Code2 className="w-8 h-8 text-indigo-600" /> Core Endpoints
+                <Code2 className="w-8 h-8 text-primary" /> Core Endpoints
               </h2>
               <p className="text-slate-600 mb-8 leading-relaxed text-lg">
                 All API endpoints are authenticated using Bearer tokens. Base URL for all v1 requests is <code>https://api.eduxeno.com</code>.
@@ -82,10 +82,10 @@ export const ApiReferencePage: React.FC = () => {
 
               <div className="space-y-6">
                 {endpoints.map((ep, idx) => (
-                  <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-indigo-200 transition-colors">
+                  <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-primary/30 transition-colors">
                     <div className="flex items-center gap-4 mb-4">
                       <span className={`px-3 py-1 text-xs font-bold rounded-md ${
-                        ep.method === 'GET' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
+                        ep.method === 'GET' ? 'bg-primary/10 text-primary' : 'bg-emerald-100 text-emerald-700'
                       }`}>
                         {ep.method}
                       </span>

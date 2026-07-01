@@ -44,9 +44,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     newSocket.on('invalidate_cache', (data: { queryKey: string[] }) => {
       queryClient.invalidateQueries({ queryKey: data.queryKey });
     });
+    
+    // Direct optimistic UI update without network waterfall
+    newSocket.on('update_cache_data', (data: { queryKey: string[], payload: any, action: 'append' | 'replace' | 'update' }) => {
+      queryClient.setQueryData(data.queryKey, (oldData: any) => {
+        if (!oldData) return data.payload;
+        if (data.action === 'append' && Array.isArray(oldData)) return [data.payload, ...oldData];
+        if (data.action === 'replace') return data.payload;
+        if (data.action === 'update' && typeof oldData === 'object') return { ...oldData, ...data.payload };
+        return data.payload;
+      });
+    });
 
     return () => {
       newSocket.off('invalidate_cache');
+      newSocket.off('update_cache_data');
       newSocket.close();
     };
   }, [tenantSubdomain, queryClient]);

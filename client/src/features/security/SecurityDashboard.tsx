@@ -17,7 +17,7 @@ export const SecurityDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-t-4 border-indigo-500 shadow-sm">
+        <Card className="border-t-4 border-primary/30 shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
@@ -25,8 +25,8 @@ export const SecurityDashboard: React.FC = () => {
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">84%</h3>
                 <p className="text-xs text-slate-400 mt-1">Required for Admins</p>
               </div>
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-500/20 rounded-full">
-                <Key className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-full">
+                <Key className="w-5 h-5 text-primary dark:text-primary" />
               </div>
             </div>
           </CardContent>
@@ -126,7 +126,7 @@ export const SecurityDashboard: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-indigo-500" />
+                <Clock className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">Data Retention Policy</p>
                   <p className="text-xs text-slate-500">Active (7 Years Storage)</p>
@@ -136,7 +136,7 @@ export const SecurityDashboard: React.FC = () => {
             </div>
             <div className="flex justify-between items-center p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-indigo-500" />
+                <Shield className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium">FERPA/GDPR Consent</p>
                   <p className="text-xs text-slate-500">Required on first login</p>

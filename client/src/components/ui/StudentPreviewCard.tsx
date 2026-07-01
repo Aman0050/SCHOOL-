@@ -100,7 +100,7 @@ export const StudentPreviewCard: React.FC<StudentPreviewCardProps> = ({ studentI
               <TrendingUp className="w-4 h-4 mr-2" />
               <span>{data.latestResult.examName}</span>
             </div>
-            <span className="font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded text-xs">
+            <span className="font-medium text-primary dark:text-primary bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded text-xs">
               {data.latestResult.grade} ({data.latestResult.percentage}%)
             </span>
           </div>

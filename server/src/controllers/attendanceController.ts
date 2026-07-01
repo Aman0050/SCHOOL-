@@ -4,19 +4,37 @@ import { prisma } from '../config/db';
 import { AppError } from '../errors/AppError';
 import { createAuditLog, AuditAction } from '../utils/auditLogger';
 import { broadcastCacheInvalidation } from '../lib/socketManager';
+import { communicationQueue } from '../workers/communicationQueue';
 
 // Validation Schemas
 export const bulkAttendanceSchema = z.object({
   date: z.string(), // ISO String or YYYY-MM-DD
-  classId: z.string().uuid().optional(),
+  classId: z.string().uuid().optional().nullable(),
   records: z.array(
     z.object({
       userId: z.string().uuid(),
-      status: z.enum(['PRESENT', 'ABSENT', 'LATE', 'EXCUSED']),
-      remarks: z.string().optional(),
+      status: z.enum(['PRESENT', 'ABSENT', 'LATE', 'EXCUSED', 'HALF_DAY', 'MEDICAL_LEAVE', 'SCHOOL_ACTIVITY', 'HOLIDAY', 'SUSPENDED']),
+      remarks: z.string().optional().nullable(),
       mode: z.enum(['MANUAL', 'QR', 'RFID', 'FACE']).default('MANUAL'),
     })
   ),
+});
+
+export const getAttendanceQuerySchema = z.object({
+  date: z.string().optional(),
+  classId: z.string().uuid().optional(),
+  role: z.string().optional(),
+});
+
+export const getAnalyticsQuerySchema = z.object({
+  classId: z.string().uuid().optional(),
+  days: z.string().regex(/^\d+$/).optional(),
+});
+
+export const getReportQuerySchema = z.object({
+  month: z.string().regex(/^\d+$/).optional(),
+  year: z.string().regex(/^\d+$/).optional(),
+  classId: z.string().uuid().optional(),
 });
 
 // Controllers
@@ -31,6 +49,7 @@ export const getAttendance = async (req: Request, res: Response, next: NextFunct
     targetDate.setUTCHours(0, 0, 0, 0);
 
     const where: any = {
+      tenantId: req.user!.tenantId,
       date: targetDate,
       user: { role: roleFilter },
     };
@@ -85,7 +104,7 @@ export const recordBulkAttendance = async (req: Request, res: Response, next: Ne
             userId_date_classId: {
               userId: rec.userId,
               date: targetDate,
-              classId: classId || '',
+              classId: classId || null,
             },
           },
           update: {
@@ -111,7 +130,7 @@ export const recordBulkAttendance = async (req: Request, res: Response, next: Ne
     await createAuditLog({
       tenantId: req.user!.tenantId,
       userId: req.user!.id,
-      action: AuditAction.CREATE,
+      action: AuditAction.ATTENDANCE_BULK,
       entity: 'Attendance',
       entityId: `bulk-${savedRecords.length}`,
       newValues: { count: savedRecords.length, date: targetDate },
@@ -119,12 +138,18 @@ export const recordBulkAttendance = async (req: Request, res: Response, next: Ne
       userAgent: req.headers['user-agent'],
     });
 
+    const absentStudentIds = records.filter((r: any) => r.status === 'ABSENT').map((r: any) => r.userId);
+    if (absentStudentIds.length > 0) {
+      await communicationQueue.add('send-absence-notification', {
+        tenantId: req.user!.tenantId,
+        studentIds: absentStudentIds,
+        date: targetDate,
+        markedBy: req.user!.id
+      });
+    }
+
     // Emit live activity feed for Attendance Dashboard
-    const user = await prisma.user.findUnique({
-      where: { id: req.user!.id },
-      include: { profile: true }
-    });
-    const userName = user?.profile?.firstName ? `${user.profile.firstName} ${user.profile.lastName}` : 'Teacher';
+    const userName = 'Teacher';
     
     (req as any).io?.to(req.user!.tenantId).emit('activity_feed', {
       type: 'ATTENDANCE',
@@ -158,7 +183,7 @@ export const getAttendanceAnalytics = async (req: Request, res: Response, next: 
     startDate.setDate(startDate.getDate() - daysLimit);
     startDate.setUTCHours(0, 0, 0, 0);
 
-    const whereClause: any = { date: { gte: startDate } };
+    const whereClause: any = { tenantId: req.user!.tenantId, date: { gte: startDate } };
     if (classId) whereClause.classId = classId;
 
     const groupedAttendance = await prisma.attendance.groupBy({
@@ -197,7 +222,7 @@ export const getAttendanceAnalytics = async (req: Request, res: Response, next: 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
-    const todayWhere: any = { date: today };
+    const todayWhere: any = { tenantId: req.user!.tenantId, date: today };
     if (classId) todayWhere.classId = classId;
 
     const [todayPresent, todayAbsent, todayLate, todayExcused] = await Promise.all([
@@ -257,6 +282,7 @@ export const getMonthlyReport = async (req: Request, res: Response, next: NextFu
     // Fetch class students
     const students = await prisma.user.findMany({
       where: {
+        tenantId: req.user!.tenantId,
         role: 'STUDENT',
         enrollments: {
           some: { classId },
@@ -277,6 +303,7 @@ export const getMonthlyReport = async (req: Request, res: Response, next: NextFu
 
     const logs = await prisma.attendance.findMany({
       where: {
+        tenantId: req.user!.tenantId,
         classId,
         date: {
           gte: startDate,
@@ -310,7 +337,7 @@ export const getMonthlyReport = async (req: Request, res: Response, next: NextFu
         stats: {
           present: presentCount,
           absent: absentCount,
-          percentage: studentLogs.length > 0 ? Math.round((presentCount / studentLogs.length) * 100) : 100,
+          percentage: studentLogs.length > 0 ? Math.round((presentCount / studentLogs.length) * 100) : null,
         },
       };
     });
@@ -324,6 +351,81 @@ export const getMonthlyReport = async (req: Request, res: Response, next: NextFu
         year,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSubmissionStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const classes = await prisma.class.findMany({
+      where: { tenantId: req.user!.tenantId },
+      include: {
+        attendance: {
+          where: { date: today },
+          take: 1
+        },
+        _count: {
+          select: { enrollments: true }
+        }
+      }
+    });
+
+    const statusList = classes.map(c => ({
+      classId: c.id,
+      className: c.name,
+      studentCount: c._count.enrollments,
+      submitted: c.attendance.length > 0,
+      submittedAt: c.attendance.length > 0 ? c.attendance[0].createdAt : null,
+    }));
+
+    res.status(200).json({ success: true, data: statusList });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAttendanceAlerts = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user!.tenantId;
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const classes = await prisma.class.findMany({
+      where: { tenantId },
+      include: {
+        attendance: {
+          where: { date: today },
+          take: 1
+        }
+      }
+    });
+    
+    const pendingClassList = classes.filter(c => c.attendance.length === 0);
+    const pendingClasses = pendingClassList.length;
+
+    const alerts = [];
+    if (pendingClasses > 0) {
+      let classNamesText = '';
+      if (pendingClasses === 1) {
+        classNamesText = pendingClassList[0].name;
+      } else if (pendingClasses === 2) {
+        classNamesText = `${pendingClassList[0].name} and ${pendingClassList[1].name}`;
+      } else {
+        classNamesText = `${pendingClassList[0].name} and ${pendingClasses - 1} others`;
+      }
+
+      alerts.push({
+        id: 'pending-attendance',
+        type: 'WARNING',
+        message: `${classNamesText} ${pendingClasses === 1 ? 'has' : 'have'} pending attendance for today.`
+      });
+    }
+
+    res.status(200).json({ success: true, data: alerts });
   } catch (error) {
     next(error);
   }

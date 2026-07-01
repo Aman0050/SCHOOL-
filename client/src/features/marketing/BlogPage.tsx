@@ -65,7 +65,7 @@ export const BlogPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search articles..."
-                className="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                className="block w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary/30 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
               />
             </div>
           </div>
@@ -73,7 +73,7 @@ export const BlogPage: React.FC = () => {
           {/* Categories */}
           <div className="flex flex-wrap gap-3 mb-16">
             {['All', 'Product Updates', 'Education Trends', 'Case Study', 'Security', 'Engineering'].map((cat, i) => (
-              <button key={i} className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${i === 0 ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'}`}>
+              <button key={i} className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${i === 0 ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-primary/30 hover:text-primary'}`}>
                 {cat}
               </button>
             ))}
@@ -90,7 +90,7 @@ export const BlogPage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
               
               <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full md:w-2/3">
-                <span className="inline-block px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold uppercase tracking-wider mb-4">
+                <span className="inline-block px-3 py-1 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-wider mb-4">
                   {featuredPost.category}
                 </span>
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight group-hover:underline decoration-indigo-400 decoration-4 underline-offset-4">
@@ -125,7 +125,7 @@ export const BlogPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                  <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-primary transition-colors line-clamp-2">
                     {post.title}
                   </h3>
                   <p className="text-slate-500 mb-6 flex-grow line-clamp-3">
@@ -133,7 +133,7 @@ export const BlogPage: React.FC = () => {
                   </p>
                   <div className="flex items-center justify-between text-sm font-medium text-slate-400 pt-4 border-t border-slate-100 mt-auto">
                     <span>{post.date}</span>
-                    <span className="text-indigo-600 flex items-center gap-1 group-hover:gap-2 transition-all">Read <ArrowRight className="w-4 h-4" /></span>
+                    <span className="text-primary flex items-center gap-1 group-hover:gap-2 transition-all">Read <ArrowRight className="w-4 h-4" /></span>
                   </div>
                 </div>
               </motion.article>

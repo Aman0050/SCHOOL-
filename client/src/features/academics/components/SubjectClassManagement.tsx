@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../lib/api';
 import { Layers, Loader2, Save } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
+import { Button } from '../../../components/ui/Button';
 import toast from 'react-hot-toast';
 
 export const SubjectClassManagement: React.FC = () => {
@@ -26,7 +27,7 @@ export const SubjectClassManagement: React.FC = () => {
 
   const { data: schools } = useQuery({
     queryKey: ['schools'],
-    queryFn: () => api.get('/schools').then(res => res.data.data),
+    queryFn: () => api.get('/schools').then(res => res.data.data.schools || res.data.data),
   });
 
   const { data: courses } = useQuery({
@@ -68,17 +69,7 @@ export const SubjectClassManagement: React.FC = () => {
     return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>;
   }
 
-  // Generate large mock data to demonstrate EnterpriseTable capabilities
-  const mockData = Array.from({ length: 1500 }).map((_, i) => ({
-    id: `mock-${i}`,
-    name: `Class ${Math.floor(i / 10) + 1}`,
-    section: String.fromCharCode(65 + (i % 5)),
-    academicYear: '2026-2027',
-    course: { name: 'High School Diploma' },
-    school: { name: 'Main Campus' }
-  }));
-
-  const displayData = classes && classes.length > 0 ? classes : mockData;
+  const displayData = classes || [];
 
   return (
     <div className="space-y-6">
@@ -88,16 +79,16 @@ export const SubjectClassManagement: React.FC = () => {
             <Layers className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Subject & Class Configurations</h2>
-            <p className="text-sm text-slate-500">Manage thousands of sections with Enterprise Data Tables.</p>
+            <h2 className="text-h3">Subject & Class Configurations</h2>
+            <p className="text-muted">Manage thousands of sections with Enterprise Data Tables.</p>
           </div>
         </div>
-        <button 
+        <Button 
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 text-sm font-semibold transition-colors"
+          size="md"
         >
           Create New Configuration
-        </button>
+        </Button>
       </div>
 
       <div className="h-[600px]">

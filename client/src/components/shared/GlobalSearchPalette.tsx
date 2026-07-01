@@ -84,7 +84,7 @@ export const GlobalSearchPalette: React.FC = () => {
             className="w-full max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden relative z-10"
           >
             <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50">
-              <Search className="w-6 h-6 text-indigo-500 mr-3 shrink-0" />
+              <Search className="w-6 h-6 text-primary mr-3 shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
@@ -93,7 +93,7 @@ export const GlobalSearchPalette: React.FC = () => {
                 value={query}
                 onChange={handleSearch}
               />
-              {isLoading && <Loader2 className="w-5 h-5 text-indigo-500 animate-spin shrink-0" />}
+              {isLoading && <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />}
               <div className="ml-3 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-xs font-mono font-bold text-slate-500 border border-slate-200 dark:border-slate-700">ESC</div>
             </div>
 
@@ -118,7 +118,7 @@ export const GlobalSearchPalette: React.FC = () => {
                       onClick={() => handleSelect('/dashboard/students')}
                       className="w-full text-left px-3 py-3 rounded-xl hover:bg-white dark:hover:bg-slate-800 flex items-center gap-4 transition-all shadow-sm hover:shadow-md border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                     >
-                      <div className="p-2.5 bg-indigo-500/10 text-indigo-500 rounded-xl">
+                      <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
                         <Users className="w-5 h-5" />
                       </div>
                       <div>

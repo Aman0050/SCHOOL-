@@ -11,7 +11,7 @@ export const KnowledgeBase: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-indigo-600 rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-lg shadow-indigo-500/20">
+      <div className="bg-primary rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-lg shadow-primary/20">
         <div className="relative z-10 max-w-2xl mx-auto text-center space-y-6">
           <h2 className="text-3xl font-bold">How can we help you today?</h2>
         </div>
@@ -25,10 +25,10 @@ export const KnowledgeBase: React.FC = () => {
             <div 
               key={category} 
               onClick={() => setSearchQuery(category)}
-              className="flex justify-between items-center p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 cursor-pointer transition-colors group shadow-sm"
+              className="flex justify-between items-center p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/30 cursor-pointer transition-colors group shadow-sm"
             >
-              <span className="font-medium text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">{category}</span>
-              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+              <span className="font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">{category}</span>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-primary transition-colors" />
             </div>
           ))}
         </div>
@@ -39,7 +39,7 @@ export const KnowledgeBase: React.FC = () => {
           </h3>
           
           {isLoading ? (
-            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>
+            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
           ) : articles && articles.length > 0 ? (
             <div className="space-y-4">
               {articles.map((article: any) => (
@@ -50,10 +50,10 @@ export const KnowledgeBase: React.FC = () => {
                 >
                   <div className="flex gap-4">
                     <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-xl h-fit">
-                      <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                      <FileText className="w-6 h-6 text-primary dark:text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">{article.title}</h4>
+                      <h4 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-primary transition-colors">{article.title}</h4>
                       <p className="text-sm text-slate-500 mt-1 line-clamp-2">{article.content}</p>
                       <div className="flex items-center gap-4 mt-4 text-xs font-medium text-slate-400">
                         <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md text-slate-600 dark:text-slate-300">{article.category}</span>
@@ -81,7 +81,7 @@ export const KnowledgeBase: React.FC = () => {
       >
         <div className="space-y-6">
           <div className="flex items-center gap-4 text-sm font-medium text-slate-500">
-            <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full">
+            <span className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary px-3 py-1 rounded-full">
               {selectedArticle?.category}
             </span>
           </div>

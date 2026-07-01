@@ -15,7 +15,7 @@ export const NotificationCenter: React.FC = () => {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Simulate real-time incoming notification
+  // Simulate real-time incoming notification and listen for custom open events
   useEffect(() => {
     const timer = setTimeout(() => {
       setNotifications(prev => [{
@@ -27,7 +27,14 @@ export const NotificationCenter: React.FC = () => {
         read: false
       }, ...prev]);
     }, 15000);
-    return () => clearTimeout(timer);
+
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-notifications', handleOpen);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('open-notifications', handleOpen);
+    };
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -87,7 +94,7 @@ export const NotificationCenter: React.FC = () => {
                 <div className="flex items-center justify-between px-6 py-8 border-b border-slate-200 dark:border-slate-800/50 bg-white dark:bg-[#0B0F19]">
                   <div>
                     <h2 className="flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white tracking-widest uppercase">
-                      <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="currentColor" />
+                      <Bell className="w-5 h-5 text-primary dark:text-primary" fill="currentColor" />
                       NOTIFICATION CENTER
                     </h2>
                     <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-widest mt-1 uppercase">
@@ -118,15 +125,15 @@ export const NotificationCenter: React.FC = () => {
                           exit={{ opacity: 0, scale: 0.95 }}
                           onClick={() => markAsRead(notification.id)}
                           className={`group relative flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-300 border shadow-sm
-                            ${!notification.read ? 'bg-white dark:bg-slate-800 border-indigo-100 dark:border-indigo-500/30 shadow-md' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800'}
+                            ${!notification.read ? 'bg-white dark:bg-slate-800 border-primary/30 dark:border-primary/30/30 shadow-md' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800'}
                           `}
                         >
                           <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1.5 rounded-r-full transition-all duration-300
-                            ${!notification.read ? 'h-12 bg-indigo-600' : 'h-0 group-hover:h-8 bg-slate-300 dark:bg-slate-600'}
+                            ${!notification.read ? 'h-12 bg-primary' : 'h-0 group-hover:h-8 bg-slate-300 dark:bg-slate-600'}
                           `} />
                           
                           <div className={`flex-shrink-0 p-2.5 rounded-xl transition-colors
-                            ${!notification.read ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}
+                            ${!notification.read ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}
                           `}>
                             <Bell className="w-4 h-4" />
                           </div>
@@ -155,7 +162,7 @@ export const NotificationCenter: React.FC = () => {
                   <div className="p-4 border-t border-slate-200 dark:border-slate-800/50 flex gap-2 bg-white dark:bg-[#0B0F19]">
                     <button 
                       onClick={markAllAsRead}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black tracking-widest text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors uppercase"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black tracking-widest text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10 transition-colors uppercase"
                     >
                       <Check className="w-3 h-3" strokeWidth={3} /> Mark Read
                     </button>

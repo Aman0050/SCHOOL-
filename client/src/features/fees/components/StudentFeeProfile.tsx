@@ -26,7 +26,7 @@ const statusBadge = (status: string) => {
     PARTIAL: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
     PENDING: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400',
     OVERDUE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    WAIVED: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    WAIVED: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary',
   };
   return `inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${map[status] ?? map.PENDING}`;
 };
@@ -56,7 +56,7 @@ const DiscountModal: React.FC<{
       <div className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700">
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BadgePercent className="h-5 w-5 text-purple-500" />
+            <BadgePercent className="h-5 w-5 text-primary" />
             <h3 className="font-bold text-slate-900 dark:text-white">Apply Discount</h3>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">✕</button>
@@ -261,7 +261,7 @@ const StudentFeeProfile: React.FC = () => {
               <span className={statusBadge(assignment.status)}>{assignment.status}</span>
               <button
                 onClick={() => setShowDiscountModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 hover:bg-purple-200 dark:hover:bg-purple-900/50 px-4 py-2.5 text-sm font-semibold transition-all"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary hover:bg-purple-200 dark:hover:bg-purple-900/50 px-4 py-2.5 text-sm font-semibold transition-all"
               >
                 <BadgePercent className="h-4 w-4" />
                 Apply Discount
@@ -272,9 +272,9 @@ const StudentFeeProfile: React.FC = () => {
           {/* Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             {[
-              { label: 'Total Assigned', value: assignment.totalAmount, icon: <Wallet className="h-5 w-5" />, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+              { label: 'Total Assigned', value: assignment.totalAmount, icon: <Wallet className="h-5 w-5" />, color: 'text-primary dark:text-primary', bg: 'bg-primary/10 dark:bg-primary/20' },
               { label: 'Amount Paid', value: assignment.paidAmount, icon: <CheckCircle2 className="h-5 w-5" />, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-              { label: 'Discount', value: assignment.discountAmount, icon: <BadgePercent className="h-5 w-5" />, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+              { label: 'Discount', value: assignment.discountAmount, icon: <BadgePercent className="h-5 w-5" />, color: 'text-primary dark:text-primary', bg: 'bg-primary/10 dark:bg-primary/20' },
               { label: 'Amount Due', value: assignment.dueAmount, icon: <IndianRupee className="h-5 w-5" />, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
               { label: 'Fines', value: assignment.fineAmount, icon: <Receipt className="h-5 w-5" />, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
             ].map((s) => (
@@ -293,18 +293,18 @@ const StudentFeeProfile: React.FC = () => {
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-sm">
               <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700">
                 <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
-                  <BadgePercent className="h-4 w-4 text-purple-500" />
+                  <BadgePercent className="h-4 w-4 text-primary" />
                   Applied Discounts
                 </h3>
               </div>
               <div className="p-5 space-y-2">
                 {assignment.discounts.map((sd) => (
-                  <div key={sd.id} className="flex items-center justify-between p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800">
+                  <div key={sd.id} className="flex items-center justify-between p-3 rounded-xl bg-primary/10 dark:bg-primary/20 border border-primary/30 dark:border-primary/30">
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{sd.discount.name}</p>
                       {sd.remarks && <p className="text-xs text-slate-500">{sd.remarks}</p>}
                     </div>
-                    <span className="text-sm font-bold text-purple-700 dark:text-purple-400">-{fmt(sd.appliedAmount)}</span>
+                    <span className="text-sm font-bold text-primary dark:text-primary">-{fmt(sd.appliedAmount)}</span>
                   </div>
                 ))}
               </div>

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/db';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
 // Get all applicants for the Operations Center
@@ -148,7 +149,7 @@ export const enrollApplicant = async (req: Request, res: Response) => {
     const emailToUse = applicant.email || `student_${Date.now()}@school.edu`;
     const defaultPassword = 'Welcome123!';
     const passwordHash = await bcrypt.hash(defaultPassword, 10);
-    const admissionNumber = `ADM-${Math.floor(10000 + Math.random() * 90000)}`;
+    const admissionNumber = `ADM-${crypto.randomInt(10000, 99999)}`;
 
     // 3. Execute Transaction
     const result = await prisma.$transaction(async (tx) => {

@@ -28,7 +28,7 @@ const SchoolSettings: React.FC = () => {
               onClick={() => setActiveTab(i)}
               className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors ${
                 activeTab === i
-                  ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                  ? 'bg-primary/10 dark:bg-primary/10 text-primary dark:text-primary'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >

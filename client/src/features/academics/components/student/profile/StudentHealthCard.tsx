@@ -4,7 +4,7 @@ import { ShieldAlert, TrendingUp, IndianRupee, CalendarCheck } from 'lucide-reac
 export const StudentHealthCard: React.FC<any> = ({ student }) => {
   // Compute health score based on mock intelligence logic
   let score = 'Good';
-  let color = 'bg-blue-500 text-white';
+  let color = 'bg-primary text-white';
   
   const attendanceRate = student?.attendanceRecords?.length ? 
     (student.attendanceRecords.filter((a: any) => a.status === 'PRESENT').length / student.attendanceRecords.length) * 100 
