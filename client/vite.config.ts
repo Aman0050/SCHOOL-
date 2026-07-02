@@ -8,6 +8,11 @@ export default defineConfig({
   define: {
     'process.env': {}
   },
+  resolve: {
+    alias: {
+      'exceljs': 'exceljs/dist/exceljs.min.js'
+    }
+  },
   plugins: [
     react(),
     viteCompression({ algorithm: 'gzip', ext: '.gz' }),
