@@ -318,7 +318,6 @@ export const downloadDailyReport = async (req: Request, res: Response, next: Nex
   }
 };
 
-import ExcelJS from 'exceljs';
 
 export const downloadExcelReport = async (req: Request, res: Response, next: NextFunction) => {
   try {
