@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/db';
+import ExcelJS from 'exceljs';
+import { applyPremiumStyling } from '../utils/csvEngine';
 import { generateDailyReportPdfBuffer } from '../utils/pdfGenerator';
 import { cache } from '../lib/cache';
 import { analyticsQueue } from '../workers/analyticsQueue';
@@ -321,26 +323,41 @@ import ExcelJS from 'exceljs';
 export const downloadExcelReport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { tenantId } = req.user!;
+    const { startDate, endDate, format } = req.query;
+    
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    const reportTitle = tenant?.name ? `${tenant.name.toUpperCase()} COMMAND CENTER` : 'EDUXENO COMMAND CENTER';
+    
     const workbook = new ExcelJS.Workbook();
     
     // 1. Attendance Sheet
     const attendanceSheet = workbook.addWorksheet('Attendance Intel');
-    attendanceSheet.columns = [
-      { header: 'Date', key: 'date', width: 15 },
-      { header: 'Role', key: 'role', width: 15 },
-      { header: 'Status', key: 'status', width: 15 },
-      { header: 'Count', key: 'count', width: 10 }
+    const attendanceColumns = [
+      { header: 'Date', key: 'date', width: 25 },
+      { header: 'Role', key: 'role', width: 25 },
+      { header: 'Status', key: 'status', width: 25 },
+      { header: 'Count', key: 'count', width: 20 }
     ];
     
-    // Real DB aggregation for Attendance
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 30);
+    // Date Filtering Logic
+    let queryStartDate = new Date();
+    queryStartDate.setDate(queryStartDate.getDate() - 30); // Default to last 30 days
+    let queryEndDate = new Date();
+    
+    if (startDate) {
+      queryStartDate = new Date(startDate as string);
+    }
+    if (endDate) {
+      queryEndDate = new Date(endDate as string);
+      queryEndDate.setUTCHours(23, 59, 59, 999);
+    }
     
     const attendanceStats = await prisma.attendance.groupBy({
       by: ['date', 'status'],
-      where: { tenantId, date: { gte: thirtyDaysAgo } },
+      where: { 
+        tenantId, 
+        date: { gte: queryStartDate, lte: queryEndDate } 
+      },
       _count: { id: true }
     });
     
@@ -350,14 +367,18 @@ export const downloadExcelReport = async (req: Request, res: Response, next: Nex
       status: a.status,
       count: a._count.id
     }));
-    
-    attendanceSheet.addRows(attendanceRows.length > 0 ? attendanceRows : [
-      { date: new Date().toLocaleDateString(), role: 'No Data', status: '-', count: 0 }
-    ]);
+
+    applyPremiumStyling(
+      attendanceSheet,
+      reportTitle,
+      'ATTENDANCE INTELLIGENCE | Generated: ' + new Date().toLocaleString(),
+      attendanceColumns,
+      attendanceRows.length > 0 ? attendanceRows : [{ date: 'N/A', role: 'No records found in selected range', status: '-', count: 0 }]
+    );
 
     // 2. Fees Sheet
     const feeSheet = workbook.addWorksheet('Fee Intel');
-    feeSheet.columns = [
+    const feeColumns = [
       { header: 'Student Name', key: 'name', width: 25 },
       { header: 'Class', key: 'class', width: 15 },
       { header: 'Outstanding Amount', key: 'amount', width: 20 },
@@ -389,73 +410,28 @@ export const downloadExcelReport = async (req: Request, res: Response, next: Nex
       amount: Number(d.amount) - Number(d.paidAmount),
       days: Math.floor((new Date().getTime() - new Date(d.dueDate).getTime()) / (1000 * 3600 * 24))
     }));
-    
-    feeSheet.addRows(feeRows.length > 0 ? feeRows : [
-      { name: 'No Defaulters', class: '-', amount: 0, days: 0 }
-    ]);
 
-    // Add premium styling to a worksheet
-    const applyPremiumStyle = (sheet: ExcelJS.Worksheet, title: string, colCount: number) => {
-      // Shift data down by 3 rows
-      sheet.spliceRows(1, 0, [], [], []);
+    applyPremiumStyling(
+      feeSheet,
+      reportTitle,
+      'FEE & DEFAULTER INTELLIGENCE | Generated: ' + new Date().toLocaleString(),
+      feeColumns,
+      feeRows.length > 0 ? feeRows : [{ name: 'No Defaulters', class: '-', amount: 0, days: 0 }]
+    );
+
+    if (format === 'csv') {
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="Daily_Operations_Report.csv"');
       
-      // Title
-      sheet.mergeCells(1, 1, 1, colCount);
-      const titleCell = sheet.getCell(1, 1);
-      titleCell.value = 'EDUXENO COMMAND CENTER';
-      titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } }; // Slate-800
-      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      sheet.getRow(1).height = 35;
-
-      // Subtitle
-      sheet.mergeCells(2, 1, 2, colCount);
-      const subCell = sheet.getCell(2, 1);
-      subCell.value = `${title} | Generated: ${new Date().toLocaleString()}`;
-      subCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF64748B' } };
-      subCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      sheet.getRow(2).height = 20;
+      const buffer = await workbook.csv.writeBuffer();
+      res.send(buffer);
+    } else {
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename="Daily_Operations_Report.xlsx"');
       
-      // Style Headers (Now at row 4)
-      const headerRow = sheet.getRow(4);
-      headerRow.height = 25;
-      for (let i = 1; i <= colCount; i++) {
-        const cell = headerRow.getCell(i);
-        cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }; // Indigo-600
-        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        cell.border = {
-          top: {style:'thin', color: {argb:'FFD1D5DB'}},
-          left: {style:'thin', color: {argb:'FFD1D5DB'}},
-          bottom: {style:'thin', color: {argb:'FFD1D5DB'}},
-          right: {style:'thin', color: {argb:'FFD1D5DB'}}
-        };
-      }
-
-      // Style Data Rows
-      sheet.eachRow((row, rowNumber) => {
-        if (rowNumber > 4) {
-          row.height = 20;
-          for (let i = 1; i <= colCount; i++) {
-            const cell = row.getCell(i);
-            cell.font = { name: 'Arial', size: 10, color: { argb: 'FF334155' } };
-            cell.alignment = { vertical: 'middle' };
-            cell.border = {
-              bottom: {style:'thin', color: {argb:'FFF1F5F9'}},
-            };
-          }
-        }
-      });
-    };
-
-    applyPremiumStyle(attendanceSheet, 'ATTENDANCE INTELLIGENCE', 4);
-    applyPremiumStyle(feeSheet, 'FEE & DEFAULTER INTELLIGENCE', 4);
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="Analytics_Report.xlsx"');
-    
-    await workbook.xlsx.write(res);
-    res.end();
+      const buffer = await workbook.xlsx.writeBuffer();
+      res.send(buffer);
+    }
   } catch (error) {
     next(error);
   }

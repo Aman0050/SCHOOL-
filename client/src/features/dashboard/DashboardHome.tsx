@@ -27,6 +27,7 @@ const QuickActions = React.lazy(() => import('./components/QuickActions').then(m
 const RecentActivity = React.lazy(() => import('./components/RecentActivity').then(m => ({ default: m.RecentActivity })));
 const UpcomingEvents = React.lazy(() => import('./components/UpcomingEvents').then(m => ({ default: m.UpcomingEvents })));
 const ReportsPanel = React.lazy(() => import('./components/ReportsPanel').then(m => ({ default: m.ReportsPanel })));
+import { DashboardExportModal } from './components/DashboardExportModal';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -42,31 +43,13 @@ const WIDGET_TITLES: Record<string, string> = {
 };
 
 export const DashboardHome: React.FC = () => {
-  const { user } = useAuth();
+  const { user, tenantSubdomain } = useAuth();
   const { layout, saveLayout, resetLayout, visibleWidgets, toggleWidget } = useDashboardLayout(user?.id || 'default');
   const [isWidgetMenuOpen, setIsWidgetMenuOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   const queryClient = useQueryClient();
   const { socket } = useSocket();
-
-  const handleDownload = async () => {
-    try {
-      setIsGenerating(true);
-      const response = await api.get('/analytics/download-excel', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'Daily_Operations_Report.xlsx');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Download failed:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   React.useEffect(() => {
     if (!socket) return;
@@ -116,12 +99,11 @@ export const DashboardHome: React.FC = () => {
         
         <div className="flex items-center gap-2">
           <button 
-            onClick={handleDownload}
-            disabled={isGenerating}
+            onClick={() => setIsExportModalOpen(true)}
             className="flex items-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
-            <span className="hidden sm:inline">{isGenerating ? 'Generating...' : 'Export Report'}</span>
+            <DownloadCloud className="w-4 h-4" />
+            <span className="hidden sm:inline">Export Report</span>
           </button>
 
           <DropdownMenu.Root open={isWidgetMenuOpen} onOpenChange={setIsWidgetMenuOpen}>
@@ -211,7 +193,17 @@ export const DashboardHome: React.FC = () => {
             </div>
           );
         })}
+        {visibleWidgets.includes('reportsPanel') && (
+          <div key="reportsPanel" className="overflow-hidden">
+            {renderWidget('reportsPanel')}
+          </div>
+        )}
       </ResponsiveGridLayout>
+      
+      <DashboardExportModal 
+        isOpen={isExportModalOpen} 
+        onClose={() => setIsExportModalOpen(false)} 
+      />
     </div>
   );
 };

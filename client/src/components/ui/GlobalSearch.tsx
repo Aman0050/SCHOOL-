@@ -24,7 +24,7 @@ const STATIC_RESULTS: SearchResult[] = [
   { id: 'nav-exams', type: 'navigation', title: 'Go to Examinations', subtitle: 'Exam schedules and marks', icon: FileText, data: '/dashboard/examinations' },
   { id: 'nav-academics', type: 'navigation', title: 'Go to Academics', subtitle: 'Timetables and curriculum', icon: BookOpen, data: '/dashboard/academics' },
   // Actions
-  { id: 'act-new-student', type: 'action', title: 'Add New Student', subtitle: 'Register a new admission', icon: Zap, data: 'open-new-student' },
+  { id: 'act-new-student', type: 'navigation', title: 'Add New Student', subtitle: 'Register a new admission', icon: Zap, data: '/dashboard/students?tab=admissions&action=new' },
 ];
 
 export const GlobalSearch: React.FC = () => {

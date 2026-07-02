@@ -47,7 +47,6 @@ const SchoolSetupWizard = React.lazy(() => import('./features/onboarding/SchoolS
 // Super Admin Imports
 const SuperAdminLayout = React.lazy(() => import('./features/super-admin/SuperAdminLayout'));
 const SuperDashboard = React.lazy(() => import('./features/super-admin/SuperDashboard').then(m => ({ default: m.SuperDashboard })));
-const DataHealthDashboard = React.lazy(() => import('./features/super-admin/DataHealthDashboard').then(m => ({ default: m.DataHealthDashboard })));
 const SchoolsManager = React.lazy(() => import('./features/super-admin/SchoolsManager').then(m => ({ default: m.SchoolsManager })));
 const SubscriptionBilling = React.lazy(() => import('./features/super-admin/SubscriptionBilling').then(m => ({ default: m.SubscriptionBilling })));
 const SupportPortal = React.lazy(() => import('./features/super-admin/SupportPortal').then(m => ({ default: m.SupportPortal })));
@@ -148,7 +147,6 @@ export const App: React.FC = () => {
                         <Route path="support" element={<Suspense fallback={<TopBarLoader />}><SupportPortal /></Suspense>} />
                         <Route path="audit" element={<Suspense fallback={<TopBarLoader />}><AuditLogs /></Suspense>} />
                         <Route path="demo-requests" element={<Suspense fallback={<TopBarLoader />}><DemoRequestsView /></Suspense>} />
-                        <Route path="data-health" element={<Suspense fallback={<TopBarLoader />}><DataHealthDashboard /></Suspense>} />
                       </Route>
                     </Route>
                   </Route>

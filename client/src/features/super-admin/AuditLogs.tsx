@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { superAdminApi } from './api/superAdminApi';
 import { ShieldAlert, Search, Filter, Loader2, Download } from 'lucide-react';
+import { exportToExcel } from '../../utils/excelExport';
 
 export const AuditLogs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,29 +19,35 @@ export const AuditLogs: React.FC = () => {
      log.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!filteredLogs || filteredLogs.length === 0) return;
     
-    const headers = ['Timestamp', 'User Email', 'User Name', 'Tenant', 'Action', 'Resource', 'IP Address'];
-    const csvData = filteredLogs.map((log: any) => [
-      `"${new Date(log.createdAt).toLocaleString()}"`,
-      `"${log.user?.email || 'System'}"`,
-      `"${log.user?.firstName || ''} ${log.user?.lastName || ''}"`.trim(),
-      `"${log.tenant?.name || 'Global'}"`,
-      log.action,
-      `"${log.entity} (${log.entityId || ''})"`,
-      log.ipAddress || '::1'
-    ]);
+    const formattedData = filteredLogs.map((log: any) => ({
+      timestamp: new Date(log.createdAt).toLocaleString(),
+      email: log.user?.email || 'System',
+      name: `${log.user?.firstName || ''} ${log.user?.lastName || ''}`.trim(),
+      tenant: log.tenant?.name || 'Global',
+      action: log.action,
+      resource: `${log.entity} (${log.entityId || ''})`,
+      ip: log.ipAddress || '::1'
+    }));
     
-    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'eduxeno-audit-logs.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await exportToExcel({
+      filename: 'eduxeno-audit-logs.xlsx',
+      sheetName: 'Audit Logs',
+      title: 'EduXeno Security & Audit Logs',
+      subtitle: `Generated on ${new Date().toLocaleString()} | Filter: ${filterAction}`,
+      data: formattedData,
+      columns: [
+        { header: 'Timestamp', key: 'timestamp', width: 25 },
+        { header: 'User Email', key: 'email', width: 30 },
+        { header: 'User Name', key: 'name', width: 25 },
+        { header: 'Tenant', key: 'tenant', width: 25 },
+        { header: 'Action', key: 'action', width: 20 },
+        { header: 'Resource', key: 'resource', width: 35 },
+        { header: 'IP Address', key: 'ip', width: 18 }
+      ]
+    });
   };
 
   return (
@@ -54,7 +61,7 @@ export const AuditLogs: React.FC = () => {
           onClick={handleExport}
           className="bg-white hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-colors border border-slate-200 flex items-center gap-2 shadow-sm"
         >
-          <Download className="w-4 h-4" /> Export CSV
+          <Download className="w-4 h-4" /> Export Report
         </button>
       </div>
 

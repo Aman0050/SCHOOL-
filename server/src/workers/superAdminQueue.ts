@@ -73,37 +73,78 @@ export async function processSuperAdminJob(job: Job | any) {
     const mrrLost = tenants.filter(t => t.subscription?.status === 'CANCELLED' || t.subscription?.status === 'EXPIRED')
                            .reduce((sum, t) => sum + Number(t.subscription?.plan?.priceMonthly || 0), 0);
 
-    // Revenue Growth Trend (Group invoices by month for the last 6 months)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // Revenue Growth Trend for multiple timeframes
+    const now = new Date();
+    const lastYearStart = new Date(now.getFullYear() - 1, 0, 1);
     
     const invoices = await prisma.saaSInvoice.findMany({
-      where: { status: 'PAID', paidAt: { gte: sixMonthsAgo } },
+      where: { status: 'PAID', paidAt: { gte: lastYearStart } },
       select: { amount: true, paidAt: true }
     });
 
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const revenueTrendMap: Record<string, number> = {};
     
-    invoices.forEach(inv => {
-      if (inv.paidAt) {
-        const monthKey = `${months[inv.paidAt.getMonth()]} ${inv.paidAt.getFullYear()}`;
-        if (!revenueTrendMap[monthKey]) revenueTrendMap[monthKey] = 0;
-        revenueTrendMap[monthKey] += Number(inv.amount);
-      }
-    });
+    const trendThisWeek = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      
+      const rev = invoices.filter(inv => inv.paidAt! >= start && inv.paidAt! < end)
+                          .reduce((s, inv) => s + Number(inv.amount), 0);
+      trendThisWeek.push({ name: days[d.getDay()], revenue: rev });
+    }
 
-    // Fill in missing months
-    const revenueTrend = [];
+    const trendThisMonth = [];
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    for (let i = 1; i <= daysInMonth; i++) {
+      const start = new Date(now.getFullYear(), now.getMonth(), i);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      const rev = invoices.filter(inv => inv.paidAt! >= start && inv.paidAt! < end)
+                          .reduce((s, inv) => s + Number(inv.amount), 0);
+      trendThisMonth.push({ name: `${i} ${months[now.getMonth()]}`, revenue: rev });
+    }
+
+    const trendThisYear = [];
+    for (let i = 0; i <= now.getMonth(); i++) {
+      const start = new Date(now.getFullYear(), i, 1);
+      const end = new Date(now.getFullYear(), i + 1, 1);
+      const rev = invoices.filter(inv => inv.paidAt! >= start && inv.paidAt! < end)
+                          .reduce((s, inv) => s + Number(inv.amount), 0);
+      trendThisYear.push({ name: months[i], revenue: rev });
+    }
+
+    const trendLast6Months = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
-      const monthKey = `${months[d.getMonth()]} ${d.getFullYear()}`;
-      revenueTrend.push({
-        name: monthKey,
-        revenue: revenueTrendMap[monthKey] || 0
-      });
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const rev = invoices.filter(inv => inv.paidAt! >= start && inv.paidAt! < end)
+                          .reduce((s, inv) => s + Number(inv.amount), 0);
+      trendLast6Months.push({ name: `${months[d.getMonth()]} ${d.getFullYear()}`, revenue: rev });
     }
+
+    const trendLastYear = [];
+    for (let i = 0; i < 12; i++) {
+      const start = new Date(now.getFullYear() - 1, i, 1);
+      const end = new Date(now.getFullYear() - 1, i + 1, 1);
+      const rev = invoices.filter(inv => inv.paidAt! >= start && inv.paidAt! < end)
+                          .reduce((s, inv) => s + Number(inv.amount), 0);
+      trendLastYear.push({ name: months[i], revenue: rev });
+    }
+
+    const revenueTrend = {
+      'This Week': trendThisWeek,
+      'This Month': trendThisMonth,
+      'This Year': trendThisYear,
+      'Last 6 Months': trendLast6Months,
+      'Last Year': trendLastYear
+    };
 
     // Live Alerts
     const expiringSoonDate = new Date();

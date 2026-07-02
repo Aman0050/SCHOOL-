@@ -1,85 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, FileSpreadsheet, FileText, Database, Calendar, Filter, Check, ShieldCheck, Download, Loader2 } from 'lucide-react';
-import { exportToExcel } from '../../../../utils/excelExport';
-import { useAuth } from '../../../auth/authContext';
+import api from '../../../lib/api';
+import { useAuth } from '../../auth/authContext';
+import toast from 'react-hot-toast';
 
-interface DataExportModalProps {
+interface DashboardExportModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClose }) => {
+export const DashboardExportModal: React.FC<DashboardExportModalProps> = ({ isOpen, onClose }) => {
   const { tenantSubdomain } = useAuth();
   const [format, setFormat] = useState<'excel' | 'csv'>('excel');
-  const [status, setStatus] = useState('All Statuses');
-  const [category, setCategory] = useState('All Categories');
+  const [moduleFilter, setModuleFilter] = useState('All Modules');
+  const [dateFilter, setDateFilter] = useState('Custom Date Range');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [isExporting, setIsExporting] = useState(false);
 
-  // Dynamic calculations based on filters
-  let activeFiltersCount = 0;
-  if (status !== 'All Statuses') activeFiltersCount++;
-  if (category !== 'All Categories') activeFiltersCount++;
+  // Link preset dates to actual dates
+  useEffect(() => {
+    if (dateFilter === 'Custom Date Range') return;
+    
+    const today = new Date();
+    const start = new Date();
+    
+    if (dateFilter === 'Last 7 Days') {
+      start.setDate(today.getDate() - 7);
+    } else if (dateFilter === 'Last 30 Days') {
+      start.setDate(today.getDate() - 30);
+    } else if (dateFilter === 'This Academic Year') {
+      start.setMonth(3); // April
+      start.setDate(1);
+      if (today.getMonth() < 3) {
+        start.setFullYear(today.getFullYear() - 1);
+      }
+    }
+    
+    setStartDate(start.toISOString().split('T')[0]);
+    setEndDate(today.toISOString().split('T')[0]);
+  }, [dateFilter]);
 
-  const baseRecords = 4281;
-  const estimatedRecords = Math.max(12, Math.floor(baseRecords / (activeFiltersCount + 1) - (activeFiltersCount * 450)));
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.target.value);
+    setDateFilter('Custom Date Range');
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEndDate(e.target.value);
+    setDateFilter('Custom Date Range');
+  };
+
+  // Dynamic calculations based on mock filters
+  let activeFiltersCount = 0;
+  if (moduleFilter !== 'All Modules') activeFiltersCount++;
+  if (startDate || endDate) activeFiltersCount++;
+
+  const baseRecords = 842;
+  const estimatedRecords = Math.max(12, Math.floor(baseRecords / (activeFiltersCount + 1) - (activeFiltersCount * 50)));
   const estimatedFileSizeKB = Math.max(2, Math.floor(estimatedRecords * 0.08));
 
   const handleExport = async () => {
-    setIsExporting(true);
-    
-    // Simulate network delay for premium feel
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      setIsExporting(true);
+      
+      // Simulate network delay for premium feel
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Generate dummy data based on filters
-    const dummyData = [];
-    const count = estimatedRecords;
-    
-    for (let i = 1; i <= count; i++) {
-      dummyData.push({
-        transactionId: `TRX-${Math.floor(100000 + Math.random() * 900000)}`,
-        studentName: `Student ${i}`,
-        className: `Class ${Math.floor(1 + Math.random() * 12)}`,
-        feeCategory: category === 'All Categories' ? (Math.random() > 0.5 ? 'Tuition Fee' : 'Transport Fee') : category,
-        amount: Math.floor(1000 + Math.random() * 5000),
-        status: status === 'All Statuses' ? (Math.random() > 0.8 ? 'Pending' : 'Paid') : status,
-        date: new Date(Date.now() - Math.random() * 10000000000).toISOString().split('T')[0]
+      // Hit the real backend endpoint for the Daily Operations Report
+      const response = await api.get('/analytics/download-excel', { 
+        params: { format, startDate, endDate },
+        responseType: 'blob' 
       });
-    }
-
-    if (format === 'excel') {
-      const schoolName = tenantSubdomain ? tenantSubdomain.charAt(0).toUpperCase() + tenantSubdomain.slice(1) : 'EduXeno';
-      await exportToExcel({
-        filename: `${schoolName}_Fee_Report_${new Date().toISOString().split('T')[0]}.xlsx`,
-        sheetName: 'Fee Data',
-        title: `${schoolName} Enterprise Reporting - Fee Collections`,
-        subtitle: `Generated on: ${new Date().toLocaleString()} | Filters: Status=${status}, Category=${category}`,
-        data: dummyData,
-        columns: [
-          { header: 'Transaction ID', key: 'transactionId', width: 20 },
-          { header: 'Student Name', key: 'studentName', width: 25 },
-          { header: 'Class', key: 'className', width: 15 },
-          { header: 'Fee Category', key: 'feeCategory', width: 25 },
-          { header: 'Amount (₹)', key: 'amount', width: 15 },
-          { header: 'Status', key: 'status', width: 15 },
-          { header: 'Date', key: 'date', width: 20 },
-        ]
-      });
-    } else {
-      // Create simple CSV blob for non-excel requests
-      const headers = ['Transaction ID', 'Student Name', 'Class', 'Fee Category', 'Amount', 'Status', 'Date'];
-      const csvContent = [
-        headers,
-        ...dummyData.map(d => [d.transactionId, d.studentName, d.className, d.feeCategory, d.amount, d.status, d.date])
-      ].map(e => e.join(",")).join("\n");
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `EduXeno_Fee_Report_${new Date().toISOString().split('T')[0]}.csv`;
+      link.href = url;
+      const schoolName = tenantSubdomain ? tenantSubdomain.charAt(0).toUpperCase() + tenantSubdomain.slice(1) : 'EduXeno';
+      const extension = format === 'csv' ? 'csv' : 'xlsx';
+      link.setAttribute('download', `${schoolName}_Daily_Operations_Report_${new Date().toISOString().split('T')[0]}.${extension}`);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Report generated successfully!');
+      onClose();
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to generate report.');
+    } finally {
+      setIsExporting(false);
     }
-
-    setIsExporting(false);
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -95,7 +106,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
               <Database className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Data Export Center</h2>
+              <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Daily Operations Export</h2>
               <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-1">Enterprise Reporting & Data Portability</p>
             </div>
           </div>
@@ -142,7 +153,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-full border border-orange-500/20">Recommended</span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                    Premium styled report — color-coded, auto-fitted, with metadata header. Best for financial reporting & board presentations.
+                    Premium styled report — color-coded, auto-fitted, with metadata header. Includes Attendance and Fee Intelligence tabs.
                   </p>
                 </div>
 
@@ -178,44 +189,52 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                       Status
+                       Modules Included
                     </label>
                     <select 
-                      value={status} 
-                      onChange={e => setStatus(e.target.value)}
+                      value={moduleFilter} 
+                      onChange={e => setModuleFilter(e.target.value)}
                       className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                     >
-                      <option>All Statuses</option>
-                      <option>Paid</option>
-                      <option>Pending</option>
-                      <option>Overdue</option>
+                      <option>All Modules</option>
+                      <option>Attendance Only</option>
+                      <option>Fees Only</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                       Fee Category
+                       Preset Date Range
                     </label>
                     <select 
-                      value={category} 
-                      onChange={e => setCategory(e.target.value)}
+                      value={dateFilter} 
+                      onChange={e => setDateFilter(e.target.value)}
                       className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                     >
-                      <option>All Categories</option>
-                      <option>Tuition Fee</option>
-                      <option>Transport Fee</option>
-                      <option>Hostel Fee</option>
+                      <option>Last 30 Days</option>
+                      <option>Last 7 Days</option>
+                      <option>Custom Date Range</option>
                     </select>
                   </div>
                 </div>
                 
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" /> Date Range
+                    <Calendar className="h-3.5 w-3.5" /> Custom Date Range
                   </label>
                   <div className="flex items-center gap-4">
-                    <input type="date" className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                    <input 
+                      type="date" 
+                      value={startDate}
+                      onChange={handleStartDateChange}
+                      className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 outline-none transition-all" 
+                    />
                     <span className="text-xs font-bold text-slate-400 uppercase">TO</span>
-                    <input type="date" className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 outline-none transition-all" />
+                    <input 
+                      type="date" 
+                      value={endDate}
+                      onChange={handleEndDateChange}
+                      className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 outline-none transition-all" 
+                    />
                   </div>
                 </div>
               </div>
@@ -274,7 +293,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
           <p className="text-xs font-medium text-slate-500">
             All exports are tracked, timestamped, and audited for security compliance.
           </p>

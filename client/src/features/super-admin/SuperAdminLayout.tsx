@@ -30,7 +30,6 @@ export const SuperAdminLayout: React.FC = () => {
     { label: 'Schools', path: '/superadmin/schools', icon: Building2 },
     { label: 'Billing & Subscriptions', path: '/superadmin/billing', icon: CreditCard },
     { label: 'Demo Requests', path: '/superadmin/demo-requests', icon: PhoneCall },
-    { label: 'Data Integrity', path: '/superadmin/data-health', icon: Database },
     { label: 'Support Desk', path: '/superadmin/support', icon: LifeBuoy },
     { label: 'Security & Audit', path: '/superadmin/audit', icon: ShieldAlert },
   ];

@@ -56,9 +56,6 @@ export const SupportPortal: React.FC = () => {
                    className="w-full bg-slate-50 border border-slate-200 text-sm text-slate-900 rounded-xl pl-9 pr-3 py-2 focus:ring-2 focus:ring-primary outline-none placeholder-slate-400"
                  />
               </div>
-              <button className="p-2 bg-white hover:bg-slate-50 rounded-xl text-slate-700 border border-slate-200 shadow-sm">
-                 <Filter className="w-4 h-4" />
-              </button>
            </div>
            
            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">

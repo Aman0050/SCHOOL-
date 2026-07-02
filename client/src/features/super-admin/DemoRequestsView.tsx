@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superAdminApi } from './api/superAdminApi';
 import { format } from 'date-fns';
 import { CheckCircle2, Circle, Clock, Mail, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { DemoRequestModal } from './DemoRequestModal';
 
 export const DemoRequestsView: React.FC = () => {
   const queryClient = useQueryClient();
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['superAdminDemoRequests'],
@@ -27,7 +29,8 @@ export const DemoRequestsView: React.FC = () => {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 max-w-7xl mx-auto relative">
+      <DemoRequestModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Demo Requests</h1>
         <p className="text-slate-400">Manage incoming inquiries and demo bookings from the marketing site.</p>
@@ -47,7 +50,11 @@ export const DemoRequestsView: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {requests.map((req: any) => (
-                <tr key={req.id} className="hover:bg-slate-50 transition-colors">
+                <tr 
+                  key={req.id} 
+                  className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                  onClick={() => setSelectedRequest(req)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-slate-900">{format(new Date(req.createdAt), 'MMM d, yyyy')}</span>
                     <span className="block text-xs text-slate-400 mt-0.5">{format(new Date(req.createdAt), 'h:mm a')}</span>
@@ -79,7 +86,7 @@ export const DemoRequestsView: React.FC = () => {
                       {req.campusesCount} Campus(es)
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={req.status}
                       onChange={(e) => updateStatusMutation.mutate({ id: req.id, status: e.target.value })}

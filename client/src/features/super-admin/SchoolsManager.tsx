@@ -25,6 +25,13 @@ export const SchoolsManager: React.FC = () => {
     }
   });
 
+  const deleteTenantMutation = useMutation({
+    mutationFn: (id: string) => superAdminApi.deleteTenant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superAdminTenants'] });
+    }
+  });
+
   const filteredSchools = schools?.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     s.subdomain.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,9 +75,6 @@ export const SchoolsManager: React.FC = () => {
                className="w-full bg-slate-50 border border-slate-200 text-sm text-slate-900 rounded-xl pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-primary outline-none placeholder-slate-400"
              />
            </div>
-           <button className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 rounded-xl text-sm font-semibold text-slate-700 transition-colors border border-slate-200">
-             <Filter className="w-4 h-4" /> Filter
-           </button>
         </div>
 
         {/* Header */}
@@ -147,7 +151,7 @@ export const SchoolsManager: React.FC = () => {
                     <div className="flex-1 p-4 text-center text-xs text-slate-400 font-medium truncate">
                       {new Date(school.createdAt).toLocaleDateString()}
                     </div>
-                    <div className="flex-1 p-4 pr-6 text-right relative flex justify-end">
+                    <div className="flex-1 p-4 pr-6 text-right relative flex justify-end gap-2">
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
@@ -161,6 +165,19 @@ export const SchoolsManager: React.FC = () => {
                         title={school.isActive ? 'Suspend School' : 'Activate School'}
                       >
                         {toggleStatusMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : school.isActive ? 'Suspend' : 'Activate'}
+                      </button>
+
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Are you absolutely sure you want to completely delete ${school.name}? This action cannot be undone and will destroy all school data.`)) {
+                            deleteTenantMutation.mutate(school.id);
+                          }
+                        }}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors bg-red-600/10 border-red-600/20 text-red-600 hover:bg-red-600/20 hover:text-red-700"
+                        title="Delete School"
+                      >
+                        {deleteTenantMutation.isPending && deleteTenantMutation.variables === school.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Delete'}
                       </button>
                     </div>
                   </div>

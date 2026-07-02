@@ -25,18 +25,13 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       });
     }
 
-    // If cache missed, fire background job and return pending structure
-    // (This usually only happens on cold boot before cron fires)
-    superAdminQueue.add('aggregate-dashboard', {});
+    // If cache missed, compute it on the fly
+    const { processSuperAdminJob } = await import('../workers/superAdminQueue');
+    const freshData = await processSuperAdminJob({ name: 'aggregate-dashboard' });
     
     return res.json({
       success: true,
-      data: {
-        metrics: { totalSchools: 0, activeSchools: 0, trialSchools: 0, expiredSchools: 0, mrr: 0, arr: 0, totalStudents: 0, churnRate: "0.0", mrrLost: 0, healthScore: 100, healthStatus: 'Loading...' },
-        revenueTrend: [],
-        alerts: [{ id: 99, type: 'warning', message: 'Aggregating live analytics. Dashboard will refresh momentarily.' }],
-        forecasts: []
-      }
+      data: freshData
     });
   } catch (error) {
     next(error);
@@ -83,33 +78,96 @@ export const exportDashboard = async (req: Request, res: Response, next: NextFun
     } 
     
     if (format === 'pdf') {
-      const doc = new PDFDocument({ margin: 50 });
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'attachment; filename="eduxeno-executive-report.pdf"');
       
       doc.pipe(res);
       
-      doc.fontSize(24).text('EduXeno Executive Dashboard Report', { align: 'center' });
-      doc.moveDown();
-      doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
+      // Top Header Banner
+      doc.rect(0, 0, doc.page.width, 100).fill('#0f172a'); // slate-900
+      
+      doc.fillColor('#ffffff')
+         .fontSize(24)
+         .font('Helvetica-Bold')
+         .text('EduXeno Command Center', 50, 35);
+         
+      doc.fillColor('#94a3b8') // slate-400
+         .fontSize(12)
+         .font('Helvetica')
+         .text('Executive Dashboard Report', 50, 65);
+         
+      // Reset position after absolute positioning
+      doc.y = 130;
+      
+      // Metadata
+      doc.fillColor('#64748b')
+         .fontSize(10)
+         .text(`Generated on: ${new Date().toLocaleString()}`, { align: 'right' });
+         
       doc.moveDown(2);
       
-      doc.fontSize(16).text('Key Performance Indicators', { underline: true });
-      doc.moveDown();
+      // Section Title
+      doc.fillColor('#1e293b') // slate-800
+         .fontSize(16)
+         .font('Helvetica-Bold')
+         .text('Key Performance Indicators');
+         
+      doc.moveDown(1);
       
-      const addMetric = (label: string, value: any) => {
-        doc.fontSize(12).text(`${label}:`, { continued: true }).text(` ${value}`, { align: 'right' });
-        doc.moveDown(0.5);
+      // Draw Table Header
+      const tableTop = doc.y;
+      doc.rect(50, tableTop, doc.page.width - 100, 30).fill('#1e293b');
+      doc.fillColor('#ffffff').fontSize(12).font('Helvetica-Bold');
+      doc.text('Metric', 60, tableTop + 8);
+      doc.text('Value', doc.page.width - 200, tableTop + 8, { width: 140, align: 'right' });
+      
+      let currentY = tableTop + 30;
+      
+      const drawRow = (label: string, value: string, isEven: boolean, colorOverride?: string) => {
+        // Zebra striping
+        doc.rect(50, currentY, doc.page.width - 100, 30).fill(isEven ? '#f8fafc' : '#ffffff');
+        
+        doc.fillColor('#334155').fontSize(11).font('Helvetica');
+        doc.text(label, 60, currentY + 8);
+        
+        if (colorOverride) {
+            doc.fillColor(colorOverride).font('Helvetica-Bold');
+        } else {
+            doc.fillColor('#0f172a').font('Helvetica-Bold');
+        }
+        
+        doc.text(value, doc.page.width - 200, currentY + 8, { width: 140, align: 'right' });
+        
+        currentY += 30;
+      };
+      
+      let isEven = false;
+      const addMetric = (label: string, value: string, color?: string) => {
+        drawRow(label, value, isEven, color);
+        isEven = !isEven;
       };
 
-      addMetric('Total Organizations', metrics.totalSchools);
-      addMetric('Paid Subscriptions', metrics.activeSchools);
-      addMetric('Active Trials', metrics.trialSchools);
-      addMetric('Churned / Expired', metrics.expiredSchools);
-      addMetric('Monthly Recurring Revenue (MRR)', `$${metrics.mrr.toLocaleString()}`);
-      addMetric('Annual Recurring Revenue (ARR)', `$${metrics.arr.toLocaleString()}`);
+      addMetric('Total Organizations', metrics.totalSchools.toString());
+      addMetric('Paid Subscriptions', metrics.activeSchools.toString(), '#10b981'); // emerald
+      addMetric('Active Trials', metrics.trialSchools.toString());
+      addMetric('Churned / Expired', metrics.expiredSchools.toString(), '#ef4444'); // red
+      addMetric('Monthly Recurring Revenue (MRR)', `$${metrics.mrr.toLocaleString()}`, '#4f46e5'); // indigo
+      addMetric('Annual Recurring Revenue (ARR)', `$${metrics.arr.toLocaleString()}`, '#4f46e5');
       addMetric('Active Students (Global)', metrics.totalStudents.toLocaleString());
-      addMetric('Global Health Score', `${metrics.healthScore} (${metrics.healthStatus})`);
+      
+      let healthColor = '#10b981';
+      if (metrics.healthStatus.toLowerCase().includes('warning')) healthColor = '#f59e0b';
+      if (metrics.healthStatus.toLowerCase().includes('critical')) healthColor = '#ef4444';
+      addMetric('Global Health Score', `${metrics.healthScore} (${metrics.healthStatus})`, healthColor);
+      
+      // Borders for the table
+      doc.rect(50, tableTop, doc.page.width - 100, currentY - tableTop).stroke('#e2e8f0');
+
+      // Footer
+      doc.y = doc.page.height - 50;
+      doc.fillColor('#94a3b8').fontSize(9).font('Helvetica');
+      doc.text('© EduXeno Inc. Confidential & Proprietary.', 50, doc.y, { align: 'center' });
       
       doc.end();
       return;

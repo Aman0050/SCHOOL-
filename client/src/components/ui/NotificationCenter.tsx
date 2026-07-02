@@ -4,35 +4,18 @@ import { Bell, X, Check, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Mock notifications for demonstration
-const initialNotifications = [
-  { id: '1', type: 'alert', title: 'FEE PAYMENT RECEIVED', description: 'John Doe paid ₹15,000 for Term 1 tuition fees.', time: '10 min ago', read: false },
-  { id: '2', type: 'alert', title: 'LOW ATTENDANCE ALERT', description: 'Class 10-A has dropped to 65% attendance today.', time: '1 hour ago', read: false },
-  { id: '3', type: 'success', title: 'NEW ADMISSION', description: 'Sarah Smith application requires administrative review.', time: '2 hours ago', read: true },
-  { id: '4', type: 'success', title: 'SYSTEM UPDATE', description: 'EduXeno updated to v2.4.0 with Enterprise UI.', time: '1 day ago', read: true },
-];
+const initialNotifications: Array<{id: string, type: string, title: string, description: string, time: string, read: boolean}> = [];
 
 export const NotificationCenter: React.FC = () => {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Simulate real-time incoming notification and listen for custom open events
+  // Listen for custom open events
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setNotifications(prev => [{
-        id: Date.now().toString(),
-        type: 'alert',
-        title: 'SERVER LOAD WARNING',
-        description: 'Database query times have increased slightly during peak hours.',
-        time: 'Just now',
-        read: false
-      }, ...prev]);
-    }, 15000);
-
     const handleOpen = () => setIsOpen(true);
     window.addEventListener('open-notifications', handleOpen);
 
     return () => {
-      clearTimeout(timer);
       window.removeEventListener('open-notifications', handleOpen);
     };
   }, []);

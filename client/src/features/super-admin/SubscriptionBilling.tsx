@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { superAdminApi } from './api/superAdminApi';
 import { Receipt, FileText, Download, Loader2 } from 'lucide-react';
+import { exportToExcel } from '../../utils/excelExport';
 
 export const SubscriptionBilling: React.FC = () => {
   const { data: invoices, isLoading } = useQuery({
@@ -13,26 +14,40 @@ export const SubscriptionBilling: React.FC = () => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
   };
 
-  const handleExport = () => {
-    const headers = ['Invoice ID', 'School', 'Plan', 'Amount', 'Status', 'Date'];
-    const csvData = (invoices || []).map((inv: any) => [
-      inv.id.split('-')[0].toUpperCase(),
-      `"${inv.tenant?.name || 'Unknown'}"`,
-      `"${inv.subscription?.plan?.name || 'CUSTOM'}"`,
-      inv.amount,
-      inv.status,
-      new Date(inv.createdAt).toLocaleDateString()
-    ]);
+  const handleExport = async () => {
+    if (!invoices) return;
     
-    const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'eduxeno-billing-report.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const formattedData = invoices.length > 0 ? invoices.map((inv: any) => ({
+      id: inv.id.split('-')[0].toUpperCase(),
+      school: inv.tenant?.name || 'Unknown',
+      plan: inv.subscription?.plan?.name || 'CUSTOM',
+      amount: inv.amount,
+      status: inv.status,
+      date: new Date(inv.createdAt).toLocaleDateString()
+    })) : [{
+      id: '-',
+      school: 'No invoices found',
+      plan: '-',
+      amount: 0,
+      status: '-',
+      date: '-'
+    }];
+
+    await exportToExcel({
+      filename: 'eduxeno-billing-report.xlsx',
+      sheetName: 'Billing & Revenue',
+      title: 'EduXeno Global Billing Report',
+      subtitle: `Generated on ${new Date().toLocaleString()}`,
+      data: formattedData,
+      columns: [
+        { header: 'Invoice ID', key: 'id', width: 20 },
+        { header: 'School Name', key: 'school', width: 35 },
+        { header: 'Subscription Plan', key: 'plan', width: 25 },
+        { header: 'Amount', key: 'amount', width: 20 },
+        { header: 'Payment Status', key: 'status', width: 20 },
+        { header: 'Billing Date', key: 'date', width: 20 }
+      ]
+    });
   };
 
   return (
