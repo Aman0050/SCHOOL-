@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
 import { Bell, X, Check, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,44 +34,44 @@ export const NotificationCenter: React.FC = () => {
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Trigger asChild>
-        <button className="relative text-slate-400 hover:text-slate-200 transition-colors focus:outline-none group">
-          <Bell className="h-5 w-5 group-hover:scale-110 transition-transform" />
-          <AnimatePresence>
-            {unreadCount > 0 && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-lg border-2 border-white dark:border-slate-900"
-              >
-                {unreadCount}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </button>
-      </Dialog.Trigger>
+    <>
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="relative text-slate-400 hover:text-slate-200 transition-colors focus:outline-none group"
+      >
+        <Bell className="h-5 w-5 group-hover:scale-110 transition-transform" />
+        <AnimatePresence>
+          {unreadCount > 0 && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-lg border-2 border-white dark:border-slate-900"
+            >
+              {unreadCount}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </button>
       
       <AnimatePresence>
         {isOpen && (
-          <Dialog.Portal forceMount>
-            <Dialog.Overlay asChild>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-slate-900/20 dark:bg-black/40 backdrop-blur-sm" 
-              />
-            </Dialog.Overlay>
-            <Dialog.Content asChild className="fixed z-[110] right-0 top-0 bottom-0 w-full sm:w-[400px] outline-none">
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="h-full bg-slate-50 dark:bg-[#0B0F19] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col"
-              >
+          <div className="fixed inset-0 z-[100] flex justify-end">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 backdrop-blur-sm cursor-pointer" 
+            />
+            
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative z-[110] w-full sm:w-[400px] h-full bg-slate-50 dark:bg-[#0B0F19] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col outline-none"
+            >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-8 border-b border-slate-200 dark:border-slate-800/50 bg-white dark:bg-[#0B0F19]">
                   <div>
@@ -84,11 +83,9 @@ export const NotificationCenter: React.FC = () => {
                       {unreadCount} UNREAD NOTIFICATIONS
                     </p>
                   </div>
-                  <Dialog.Close asChild>
-                    <button className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </Dialog.Close>
+                  <button onClick={() => setIsOpen(false)} className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {/* Notifications List */}
@@ -158,10 +155,9 @@ export const NotificationCenter: React.FC = () => {
                   </div>
                 )}
               </motion.div>
-            </Dialog.Content>
-          </Dialog.Portal>
+            </div>
         )}
       </AnimatePresence>
-    </Dialog.Root>
+    </>
   );
 };
