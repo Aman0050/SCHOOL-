@@ -68,7 +68,8 @@ export const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ student }) => {
       <div>
         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Fee Assignments</h3>
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto w-full">
+<table className="w-full text-left text-sm">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 uppercase text-xs">
               <tr>
                 <th className="px-6 py-4 font-semibold">Fee Structure</th>
@@ -111,6 +112,7 @@ export const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ student }) => {
               })}
             </tbody>
           </table>
+</div>
         </div>
       </div>
     </div>

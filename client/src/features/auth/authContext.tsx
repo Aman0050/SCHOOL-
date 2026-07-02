@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import api, { getSubdomain } from '../../lib/api';
 
 interface Profile {
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [tenantSubdomain, setTenantSubdomain] = useState<string | null>(getSubdomain() || 'greenwood');
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const response = await api.get('/auth/me');
       if (response.data.success) {
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -80,9 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.removeEventListener('auth-expired', handleAuthExpired);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [refreshUser]);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const response = await api.post('/auth/login', { email, password });
@@ -98,9 +98,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
     try {
       await api.post('/auth/logout');
@@ -111,16 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const setTenant = (subdomain: string) => {
+  const setTenant = useCallback((subdomain: string) => {
     localStorage.setItem('tenant_subdomain', subdomain);
     setTenantSubdomain(subdomain);
     // Apply appropriate class on root element to trigger Tailwind CSS theme switches
     const rootEl = document.documentElement;
     rootEl.className = ''; // reset
     rootEl.classList.add(`theme-${subdomain}`);
-  };
+  }, []);
 
   // Sync theme on load
   useEffect(() => {
@@ -131,19 +131,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [tenantSubdomain]);
 
+  const contextValue = useMemo(() => ({
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    tenantSubdomain,
+    login,
+    logout,
+    setTenant,
+    refreshUser,
+  }), [user, isLoading, tenantSubdomain, login, logout, setTenant, refreshUser]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        tenantSubdomain,
-        login,
-        logout,
-        setTenant,
-        refreshUser,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

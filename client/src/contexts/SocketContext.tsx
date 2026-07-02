@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../features/auth/authContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -63,8 +63,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [tenantSubdomain, queryClient]);
 
+  const contextValue = useMemo(() => ({ socket, isConnected }), [socket, isConnected]);
+
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <SocketContext.Provider value={contextValue}>
       {children}
     </SocketContext.Provider>
   );

@@ -12,7 +12,7 @@ import { TopBarLoader } from './components/ui/TopBarLoader';
 // Lazy loaded feature views
 const Login = React.lazy(() => import('./features/auth/Login'));
 const Unauthorized = React.lazy(() => import('./features/auth/Unauthorized'));
-import DashboardLayout from './components/shared/DashboardLayout';
+const DashboardLayout = React.lazy(() => import('./components/shared/DashboardLayout'));
 const DashboardHome = React.lazy(() => import('./features/dashboard/DashboardHome'));
 const AcademicManagement = React.lazy(() => import('./features/academics/AcademicManagement'));
 const StudentManagement = React.lazy(() => import('./features/academics/StudentManagement'));
@@ -54,15 +54,15 @@ const AuditLogs = React.lazy(() => import('./features/super-admin/AuditLogs').th
 const DemoRequestsView = React.lazy(() => import('./features/super-admin/DemoRequestsView'));
 
 // Marketing
-import { LandingPage } from './features/marketing/LandingPage';
-import EnterprisePage from './features/marketing/EnterprisePage';
-import DocumentationPage from './features/marketing/DocumentationPage';
-import HelpCenterPage from './features/marketing/HelpCenterPage';
-import ApiReferencePage from './features/marketing/ApiReferencePage';
-import BlogPage from './features/marketing/BlogPage';
-import PrivacyPolicyPage from './features/marketing/PrivacyPolicyPage';
-import TermsOfServicePage from './features/marketing/TermsOfServicePage';
-import CookiePolicyPage from './features/marketing/CookiePolicyPage';
+const LandingPage = React.lazy(() => import('./features/marketing/LandingPage').then(m => ({ default: m.LandingPage })));
+const EnterprisePage = React.lazy(() => import('./features/marketing/EnterprisePage'));
+const DocumentationPage = React.lazy(() => import('./features/marketing/DocumentationPage'));
+const HelpCenterPage = React.lazy(() => import('./features/marketing/HelpCenterPage'));
+const ApiReferencePage = React.lazy(() => import('./features/marketing/ApiReferencePage'));
+const BlogPage = React.lazy(() => import('./features/marketing/BlogPage'));
+const PrivacyPolicyPage = React.lazy(() => import('./features/marketing/PrivacyPolicyPage'));
+const TermsOfServicePage = React.lazy(() => import('./features/marketing/TermsOfServicePage'));
+const CookiePolicyPage = React.lazy(() => import('./features/marketing/CookiePolicyPage'));
 
 export const App: React.FC = () => {
   return (
@@ -96,7 +96,7 @@ export const App: React.FC = () => {
 
                   {/* Core Protected App Layout (Checks Tenant Resolution & Auth) */}
                   <Route element={<ProtectedRoute />}>
-                    <Route element={<DashboardLayout />}>
+                    <Route element={<Suspense fallback={<TopBarLoader />}><DashboardLayout /></Suspense>}>
                       {/* Available to all authenticated Tenant users */}
                       <Route path="/dashboard" element={<Suspense fallback={<TopBarLoader />}><DashboardHome /></Suspense>} />
                       
