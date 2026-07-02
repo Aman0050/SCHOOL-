@@ -8,7 +8,7 @@ import { useSocket } from '../../hooks/useSocket';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { exportToExcel } from '../../utils/excelExport';
 
 export const SuperDashboard: React.FC = () => {
@@ -86,7 +86,7 @@ export const SuperDashboard: React.FC = () => {
   const { metrics, revenueTrend, alerts, forecasts } = data || { metrics: null, revenueTrend: {}, alerts: [], forecasts: [] };
   const activeTrend = Array.isArray(revenueTrend) ? revenueTrend : (revenueTrend?.[selectedTimeframe] || []);
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -94,7 +94,7 @@ export const SuperDashboard: React.FC = () => {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
