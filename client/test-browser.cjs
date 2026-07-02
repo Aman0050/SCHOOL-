@@ -15,7 +15,7 @@ const { chromium } = require('playwright');
   });
   
   try {
-    await page.goto('http://localhost:5173', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:4173', { waitUntil: 'networkidle' });
   } catch (err) {
     console.log('Navigation failed:', err.message);
   }

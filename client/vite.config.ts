@@ -82,23 +82,5 @@ export default defineConfig({
         ]
       }
     })
-  ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('lucide-react')) return 'icons';
-            if (id.includes('recharts')) return 'charts';
-            if (id.includes('@tanstack')) return 'query';
-            if (id.includes('framer-motion')) return 'animation';
-            if (id.includes('@radix-ui')) return 'radix';
-            if (id.includes('react/') || id.includes('react-dom/') || id.includes('react-router-dom')) return 'vendor';
-            return 'core';
-          }
-        }
-      }
-    },
-    chunkSizeWarningLimit: 1000
-  }
+  ]
 })
